@@ -1,6 +1,6 @@
 # scenic
 
-This is a project to do ... something.
+This is a toy demo/graphics toolkit. Built using CEPL.
 
 ## License
 

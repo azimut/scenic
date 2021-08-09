@@ -1,10 +1,15 @@
 (in-package #:scenic)
 
+(defmethod free ((obj null)))
+(defmethod free ((obj list))
+  (mapc #'free obj))
+
 (defun init ()
   #+slynk
   (slynk-mrepl::send-prompt
    (find (bt:current-thread) (slynk::channels)
          :key #'slynk::channel-thread))
+  (free *state*)
   (init-state
    (list
     (make-scene
@@ -32,4 +37,6 @@
   (play-render :start))
 
 (defun stop ()
-  (play-render :stop))
+  (play-render :stop)
+  (free *state*))
+

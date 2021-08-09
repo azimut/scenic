@@ -7,12 +7,12 @@
   :pathname "src"
   :components ((:file "package")
                (:file "assets")
-               (:file "actors")
                (:file "camera")
                (:file "misc-gpu")
                (:file "render")
                (:file "light")
-               (:file "scenic"))
+               (:file "scenic")
+               (:file "actors"))
   :depends-on (#:alexandria
                #:arrow-macros
                #:cepl

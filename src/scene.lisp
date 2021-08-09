@@ -15,6 +15,9 @@
 (defun init-state (scenes)
   (setf *state* (make-instance 'state :scenes scenes)))
 
+(defmethod free ((obj state))
+  (mapc #'free (scenes obj)))
+
 (defclass scene ()
   ((cameras      :initarg :cameras
                  :initform      (error ":cameras must be specified")
@@ -34,6 +37,11 @@
    :actors ()
    :camera-index 0)
   (:documentation "a single scene"))
+
+(defmethod free ((obj scene))
+  (mapc #'free (cameras obj))
+  (mapc #'free (lights obj))
+  (mapc #'free (actors obj)))
 
 (defun make-scene (cameras lights)
   (make-instance 'scene :cameras cameras :lights lights))

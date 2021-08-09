@@ -27,6 +27,10 @@
                                          :minify-filter  :nearest
                                          :magnify-filter :nearest))))
 
+(defmethod free ((obj light))
+  (free (sam obj))
+  (free (tex obj)))
+
 (defclass directional (orth light)
   ((fbo :reader fbo-changed
         :documentation "light camera fbo")

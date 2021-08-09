@@ -27,9 +27,9 @@
                   (:wrap :clap-to-border :minify-filter :nearest :magnify-filter :nearest)))
   (:documentation "an fbo sampler pair"))
 
-#+nil
-((0 :dimensions (128 128) :element-type :layers 1)
- (1 :dimensions (128 128) :element-type :layers 1))
+(defmethod free ((obj renderable))
+  (free (fbo obj))
+  (free (tex obj)))
 
 (defmethod initialize-instance :before ((obj renderable) &key texture-opts sample-opts)
   (assert (length= texture-opts sample-opts)))
