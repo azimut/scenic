@@ -5,10 +5,10 @@
 (defclass light ()
   ((tex  :reader  tex
          :allocation :class
-         :documentation "common shadow textures")
+         :documentation "common shadow textures array")
    (sam  :reader  sam
          :allocation :class
-         :documentation "common shadow samplers")
+         :documentation "common shadow samplers array")
    (dim  :initarg :dim
          :reader     dim-changed
          :allocation    :class
@@ -32,7 +32,6 @@
         :documentation "light camera fbo")
    (idx :initarg :idx
         :initform (error ":idx must be specified")
-        :reader idx
         :documentation "light index on texture"))
   (:default-initargs
    :fs (v2! 10)

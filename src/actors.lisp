@@ -22,3 +22,14 @@
 ;;--------------------------------------------------
 (defgeneric update (actor dt))
 (defmethod update (actor dt))
+
+(defmethod draw ((actor actor) (camera renderable) time)
+  (with-fbo-bound ((fbo camera))
+    (with-slots (fbo buf scale color) actor
+      (map-g #'flag-3d-frag buf
+             :model-world (model->world actor)
+             :world-view (world->view camera)
+             :view-clip (projection camera)
+             :scale scale
+             :color color
+             :time time))))
