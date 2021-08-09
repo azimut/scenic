@@ -204,7 +204,7 @@
                (dirt:load-image-to-texture
                 (if absolutep
                     path
-                    (asdf:system-relative-pathname :incandescent path))
+                    (asdf:system-relative-pathname :scenic path))
                 image-format
                 mipmap
                 t))))))
@@ -227,5 +227,5 @@
               (dirt:load-image-to-c-array
                (if absolutep
                    path
-                   (asdf:system-relative-pathname :incandescent path))
+                   (asdf:system-relative-pathname :scenic path))
                image-format)))))

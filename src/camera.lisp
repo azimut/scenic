@@ -5,7 +5,8 @@
    (rot  :initarg :rot  :accessor rot)
    (near :initarg :near :accessor near)
    (far  :initarg :far  :accessor far)
-   (fs   :initarg :fs   :accessor fs))
+   (fs   :initarg :fs   :accessor fs)
+   (dim  :initarg :dim))
   (:default-initargs
    :pos (v! 0 0 0)
    :rot (q:identity)
@@ -13,11 +14,68 @@
    :far 400f0
    :fs nil))
 
-(defclass orth (camera) ())
-(defclass pers (camera)
+(defclass renderable ()
+  ((fbo :reader fbo :documentation "fbo to render to")
+   (tex :reader tex :documentation "texture")
+   (sam :reader sam :documentation "sample of the fbo texture")
+   (texture-opts :initarg :texture-opts :documentation "texture options")
+   (sample-opts  :initarg :sample-opts  :documentation "options for sample"))
+  (:default-initargs
+   :texture-opts '((0 (:dimensions (128 128) :element-type :r8))
+                   (:d (:dimensions (128 128) :element-type :depth-component24)))
+   :sample-opts '((:wrap :clap-to-border :minify-filter :nearest :magnify-filter :nearest)
+                  (:wrap :clap-to-border :minify-filter :nearest :magnify-filter :nearest)))
+  (:documentation "an fbo sampler pair"))
+
+#+nil
+((0 :dimensions (128 128) :element-type :layers 1)
+ (1 :dimensions (128 128) :element-type :layers 1))
+
+(defmethod initialize-instance :before ((obj renderable) &key texture-opts sample-opts)
+  (assert (length= texture-opts sample-opts)))
+
+(defun alloc-textures (texture-opts)
+  "returns a list textures"
+  (loop :for opt :in texture-opts
+        :collect (apply #'make-texture nil (rest opt))))
+
+(defun alloc-fbos (textures texture-opts)
+  "returns 1 fbo"
+  (let ((newopts (loop :for opt :in texture-opts
+                       :for tex :in textures
+                       :collect (list (first opt) tex))))
+    (apply #'make-fbo newopts)))
+
+(defun alloc-samplers (textures sample-opts)
+  "returns a list of samples"
+  (loop :for tex :in textures
+        :for opt :in sample-opts
+        :collect (apply #'sample tex sample-opts)))
+
+(defmethod initialize-instance :after ((obj renderable) &key texture-opts sample-opts)
+  (with-slots (fbo tex sam) obj
+    (setf tex (alloc-textures texture-opts))
+    (setf fbo (alloc-fbos tex texture-opts))
+    (setf sam (alloc-samplers tex sample-opts))))
+
+(defclass orth (camera renderable) ())
+(defclass pers (camera renderable)
   ((fov :initarg :fov :accessor fov))
   (:default-initargs
    :fov 60f0))
+
+#+nil
+(defmethod initialize-instance :after ((obj pers) &key)
+  (with-slots (fbo sam dim) obj
+    (setf fbo (make-fbo `(0  :dimensions ,dim :element-type :rgba32f)
+                        `(:d :dimensions ,dim)))
+    (setf sam (sample fbo))))
+
+(defun make-orth (&rest args)
+  (apply #'make-instance 'orth args))
+
+(defun make-pers (&rest args)
+  (apply #'make-instance 'pers args))
 
 ;; (defun distance-to-camera (pos distance)
 ;;   (< (v3:length (v3:- pos (pos *currentcamera*)))

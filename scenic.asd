@@ -9,6 +9,7 @@
                (:file "assets")
                (:file "actors")
                (:file "camera")
+               (:file "misc-gpu")
                (:file "render")
                (:file "light")
                (:file "scenic"))
