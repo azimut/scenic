@@ -11,6 +11,7 @@
                (:file "misc-gpu")
                (:file "render")
                (:file "light")
+               (:file "scene")
                (:file "scenic")
                (:file "actors"))
   :depends-on (#:alexandria

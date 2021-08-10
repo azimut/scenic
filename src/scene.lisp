@@ -32,7 +32,11 @@
                  :documentation "camera index of the active camera")
    (actors       :initarg :actors
                  :accessor      actors
-                 :documentation "list of scene actors"))
+                 :documentation "list of scene actors")
+   (post         :initarg :post
+                 :initform (error ":post must be specified")
+                 :reader post
+                 :documentation "post processing function")   )
   (:default-initargs
    :actors ()
    :camera-index 0)
@@ -43,8 +47,8 @@
   (mapc #'free (lights obj))
   (mapc #'free (actors obj)))
 
-(defun make-scene (cameras lights)
-  (make-instance 'scene :cameras cameras :lights lights))
+(defun make-scene (cameras lights post)
+  (make-instance 'scene :cameras cameras :lights lights :post post))
 
 (defun current-scene ()
   (let ((state *state*))

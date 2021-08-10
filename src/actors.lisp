@@ -10,7 +10,7 @@
    :buf (box))
   (:documentation "base object"))
 
-(defmethod free (object) t)
+
 
 (defun model->world (actor)
   (with-slots (pos rot) actor

@@ -1,6 +1,8 @@
 (in-package #:scenic)
 
-(defmethod free ((obj null)))
+(defgeneric free (obj))
+(defmethod free (obj) t)
+(defmethod free ((obj null)) t)
 (defmethod free ((obj list))
   (mapc #'free obj))
 
