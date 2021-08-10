@@ -21,11 +21,11 @@
    (texture-opts :initarg :texture-opts :documentation "texture options")
    (sample-opts  :initarg :sample-opts  :documentation "options for sample"))
   (:default-initargs
-   :texture-opts '((0 (:dimensions (128 128) :element-type :r8))
-                   (:d (:dimensions (128 128) :element-type :depth-component24)))
-   :sample-opts '((:wrap :clap-to-border :minify-filter :nearest :magnify-filter :nearest)
-                  (:wrap :clap-to-border :minify-filter :nearest :magnify-filter :nearest)))
-  (:documentation "an fbo sampler pair"))
+   :texture-opts '((0 :dimensions (128 128) :element-type :r8)
+                   (:d :dimensions (128 128) :element-type :depth-component24))
+   :sample-opts '((:wrap :clamp-to-border :minify-filter :nearest :magnify-filter :nearest)
+                  (:wrap :clamp-to-border :minify-filter :nearest :magnify-filter :nearest)))
+  (:documentation "an fbo-sampler pair"))
 
 (defmethod free ((obj renderable))
   (free (fbo obj))
@@ -50,7 +50,7 @@
   "returns a list of samples"
   (loop :for tex :in textures
         :for opt :in sample-opts
-        :collect (apply #'sample tex sample-opts)))
+        :collect (apply #'sample tex opt)))
 
 (defmethod initialize-instance :after ((obj renderable) &key texture-opts sample-opts)
   (with-slots (fbo tex sam) obj
@@ -58,24 +58,18 @@
     (setf fbo (alloc-fbos tex texture-opts))
     (setf sam (alloc-samplers tex sample-opts))))
 
-(defclass orth (camera renderable) ())
-(defclass pers (camera renderable)
+(defclass orth (camera) ())
+(defclass pers (camera)
   ((fov :initarg :fov :accessor fov))
   (:default-initargs
    :fov 60f0))
+(defun make-orth (&rest args) (apply #'make-instance 'orth args))
+(defun make-pers (&rest args) (apply #'make-instance 'pers args))
 
-#+nil
-(defmethod initialize-instance :after ((obj pers) &key)
-  (with-slots (fbo sam dim) obj
-    (setf fbo (make-fbo `(0  :dimensions ,dim :element-type :rgba32f)
-                        `(:d :dimensions ,dim)))
-    (setf sam (sample fbo))))
-
-(defun make-orth (&rest args)
-  (apply #'make-instance 'orth args))
-
-(defun make-pers (&rest args)
-  (apply #'make-instance 'pers args))
+(defclass orthogonal (renderable orth) ())
+(defclass perspective (renderable pers) ())
+(defun make-orthogonal (&rest args) (apply #'make-instance 'orthogonal args))
+(defun make-perspective (&rest args) (apply #'make-instance 'perspective args))
 
 ;; (defun distance-to-camera (pos distance)
 ;;   (< (v3:length (v3:- pos (pos *currentcamera*)))
@@ -175,4 +169,6 @@
 (defgeneric update (camera dt))
 (defmethod update ((camera orth) dt))
 (defmethod update ((camera pers) dt))
+(defmethod update ((camera orthogonal) dt))
+(defmethod update ((camera perspective) dt))
 

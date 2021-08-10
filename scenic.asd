@@ -13,6 +13,7 @@
                (:file "light")
                (:file "scene")
                (:file "scenic")
+               (:file "postprocess")
                (:file "actors"))
   :depends-on (#:alexandria
                #:arrow-macros

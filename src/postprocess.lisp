@@ -9,8 +9,6 @@
   (unless (slot-boundp obj 'bs)
     (setf (slot-value obj 'bs) (make-buffer-stream nil :primitive :points))))
 
-(defgeneric post (obj))
-
 (defclass simple (postprocess)
   ((exposure :initarg :exposure
              :initform (error ":exposure must be specified")
@@ -29,15 +27,14 @@
 (defpipeline-g generic-2d-pipe (:points)
   :fragment (frag-2d :vec2))
 
-(defmethod post :around ((obj simple))
+(defmethod draw :around ((obj simple) camera time)
   (with-setf* ((depth-test-function) nil
                (depth-mask)          nil
                (cull-face)           nil)
     (call-next-method)))
 
-(defmethod post ((obj simple))
-  (let ((camera (current-camera)))
-    (with-slots (exposure bs) obj
-      (map-g #'generic-2d-pipe bs
-             :sam  (nth 0 (sam camera))
-             :exposure exposure))))
+(defmethod draw ((obj simple) camera time)
+  (with-slots (exposure bs) obj
+    (map-g #'generic-2d-pipe bs
+           :sam (first (sam camera))
+           :exposure exposure)))
