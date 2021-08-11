@@ -22,8 +22,7 @@
   (let* ((final-color (s~ (texture sam uv) :xyz))
          (ldr (tone-map-acesfilm final-color exposure))
          (luma (rgb->luma-bt601 ldr)))
-    (v! ldr luma)
-    final-color));; FIXME
+    (v! ldr luma)))
 
 (defpipeline-g generic-2d-pipe (:points)
   :fragment (frag-2d :vec2))

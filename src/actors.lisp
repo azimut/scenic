@@ -39,6 +39,6 @@
                :model-world (model->world actor)
                :world-view (world->view camera)
                :view-clip (projection camera)
-               :scale 1f0 ; FIXME
-               :color (v! 0 1 0)
-               :time 1f0)))))
+               :scale scale
+               :color color
+               :time time)))))
