@@ -2,6 +2,8 @@
 
 This is a toy demo/graphics toolkit. Built using CEPL.
 
+Next iteration after, azimut/shiny and azimut/incandescent.
+
 ## License
 
 MIT

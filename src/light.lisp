@@ -28,11 +28,12 @@
                                          :magnify-filter :nearest))))
 
 (defmethod free ((obj light))
-  (free (sam obj))
-  (free (tex obj)))
+  ;;(free (sam obj))
+  ;;(free (tex obj))
+  )
 
 (defclass directional (orth light)
-  ((fbo :reader fbo-changed
+  ((fbo :reader fbo
         :documentation "light camera fbo")
    (idx :initarg :idx
         :initform (error ":idx must be specified")
@@ -40,8 +41,7 @@
   (:default-initargs
    :fs (v2! 10)
    :near  1f0
-   :far 100f0
-   :rot nil)
+   :far 100f0)
   (:documentation "simple directional light"))
 
 (defmethod initialize-instance :after ((obj directional) &key idx)

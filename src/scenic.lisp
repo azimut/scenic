@@ -8,9 +8,8 @@
 
 (defun slynk-hook ()
   #+slynk
-  (slynk-mrepl::send-prompt
-   (find (bt:current-thread) (slynk::channels)
-         :key #'slynk::channel-thread)))
+  (slynk-mrepl::send-prompt (find (bt:current-thread) (slynk::channels)
+                                  :key #'slynk::channel-thread)))
 
 (defun init ()
   (free *state*)
@@ -19,11 +18,13 @@
    (list
     (make-scene
      (list (make-perspective
-            :pos (v! -4 0 -4)
-            :rot (q:look-at (v! 0 1 0) (v! -4 0 -4) (v! 0 0 0))))
+            :pos (v! 2 2 2)
+            :rot (q:look-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0))))
      (list (make-directional
-            :pos (v! 100 0 100)))
-     (make-simple-postprocess)))))
+            :pos (v! 100 100 100)))
+     (make-simple-postprocess))))
+  (push (make-instance 'actor :pos (v! 0 0 0))
+        (actors (current-scene))))
 
 (def-simple-main-loop play-render (:on-start #'init)
   (let* ((scene  (current-scene))
@@ -31,10 +32,13 @@
          (camera (active-camera scene))
          (lights (lights scene))
          (time 0f0))
+    #+nil
     (dolist (l lights)
       (dolist (a actors)
         (draw a l time)))
+    (update camera 0f0)
     (dolist (a actors)
+      (update a time)
       (draw a camera time))
     (as-frame
       (draw (post scene) camera time))))
@@ -45,3 +49,4 @@
 (defun stop ()
   (play-render :stop)
   (free *state*))
+

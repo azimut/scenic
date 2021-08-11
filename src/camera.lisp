@@ -21,10 +21,9 @@
    (texture-opts :initarg :texture-opts :documentation "texture options")
    (sample-opts  :initarg :sample-opts  :documentation "options for sample"))
   (:default-initargs
-   :texture-opts '((0 :dimensions (128 128) :element-type :r8)
+   :texture-opts '((0 :dimensions (128 128) :element-type :rgba32f)
                    (:d :dimensions (128 128) :element-type :depth-component24))
-   :sample-opts '((:wrap :clamp-to-border :minify-filter :nearest :magnify-filter :nearest)
-                  (:wrap :clamp-to-border :minify-filter :nearest :magnify-filter :nearest)))
+   :sample-opts '((:wrap :clamp-to-edge) (:wrap :clamp-to-edge)))
   (:documentation "an fbo-sampler pair"))
 
 (defmethod free ((obj renderable))
@@ -170,5 +169,8 @@
 (defmethod update ((camera orth) dt))
 (defmethod update ((camera pers) dt))
 (defmethod update ((camera orthogonal) dt))
-(defmethod update ((camera perspective) dt))
-
+(defmethod update ((camera perspective) dt)
+  (let ((pos (v! 3 3 3)))
+    (setf (pos camera) pos)
+    (setf (rot camera) (q:point-at (v! 0 1 0) pos (v! 0 0 0)))
+    (setf (near camera) .1)))

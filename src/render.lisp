@@ -112,13 +112,11 @@
 
 ;;----------------------------------------
 
-(defun-g flat-3d-frag ((uv :vec2)
-                       (frag-norm :vec3)
-                       (frag-pos :vec3)
-                       &uniform
-                       (time :float)
-                       (color :vec3))
-  (v! color 1))
+(defun-g flat-3d-frag ((uv :vec2) (frag-norm :vec3) (frag-pos :vec3)
+                       &uniform (time :float) (color :vec3))
+  ;;(v! color 1)
+  (v! 0 1 0 1); FIXME
+  )
 
 (defpipeline-g flat-3d-pipe ()
   :vertex (vert g-pnt)

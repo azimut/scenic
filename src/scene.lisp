@@ -63,3 +63,4 @@
 
 (defun active-camera (scene)
   (nth (camera-index scene) (cameras scene)))
+
