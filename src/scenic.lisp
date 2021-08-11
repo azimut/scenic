@@ -31,15 +31,14 @@
          (actors (actors scene))
          (camera (active-camera scene))
          (lights (lights scene))
-         (time 0f0))
+         (time 0f0)
+         (dt 0f0))
     #+nil
     (dolist (l lights)
       (dolist (a actors)
         (draw a l time)))
-    (update camera 0f0)
-    (dolist (a actors)
-      (update a time)
-      (draw a camera time))
+    (draw scene camera time)
+    (update scene dt)
     (as-frame
       (draw (post scene) camera time))))
 
@@ -47,6 +46,5 @@
   (play-render :start))
 
 (defun stop ()
-  (play-render :stop)
-  (free *state*))
+  (play-render :stop))
 

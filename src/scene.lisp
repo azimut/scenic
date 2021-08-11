@@ -50,6 +50,21 @@
 (defun make-scene (cameras lights post)
   (make-instance 'scene :cameras cameras :lights lights :post post))
 
+(defmethod update ((obj scene) dt)
+  (dolist (c (cameras obj))
+    (update c dt))
+  (dolist (a (actors obj))
+    (update a dt)))
+
+(defmethod draw :around ((obj scene) (camera renderable) time)
+  (let ((fbo (fbo camera)))
+    (with-fbo-bound (fbo)
+      (clear-fbo fbo)
+      (call-next-method))))
+(defmethod draw ((obj scene) camera time)
+  (dolist (a (actors obj))
+    (draw a camera time)))
+
 (defun current-scene ()
   (let ((state *state*))
     (nth (scene-index state) (scenes state))))

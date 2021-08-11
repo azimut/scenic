@@ -26,19 +26,17 @@
 (defmethod update (actor dt))
 
 (defmethod update ((actor actor) dt)
-  (setf (pos actor) (v! 0 0 0))
-  (setf (rot actor) (q:from-axis-angle (v! 0 1 0) (radians 11)))
+  ;; (setf (pos actor) (v! 0 0 0))
+  ;;(setf (rot actor) (q:from-axis-angle (v! 0 1 0) (radians 0)))
   )
 
 (defmethod draw ((actor actor) (camera renderable) time)
   (let ((bar (fbo camera)))
-    (with-fbo-bound (bar)
-      (clear bar)
-      (with-slots (buf scale color) actor
-        (map-g #'flat-3d-pipe buf
-               :model-world (model->world actor)
-               :world-view (world->view camera)
-               :view-clip (projection camera)
-               :scale scale
-               :color color
-               :time time)))))
+    (with-slots (buf scale color) actor
+      (map-g #'flat-3d-pipe buf
+             :model-world (model->world actor)
+             :world-view (world->view camera)
+             :view-clip (projection camera)
+             :scale scale
+             :color color
+             :time time))))

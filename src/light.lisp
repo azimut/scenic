@@ -50,14 +50,19 @@
 (defun make-directional (&rest args &key (idx 0) &allow-other-keys)
   (apply #'make-instance 'directional :idx idx args))
 
+(defmethod draw :around ((actor scene) (camera light) time)
+  (let ((fbo (fbo camera)))
+    (with-fbo-bound (fbo :attachment-for-size :d)
+      (clear-fbo fbo :d)
+      (call-next-method))))
+
 (defmethod draw (actor (camera directional) time)
   "Simple pass to draw actor from light's POV"
-  (with-fbo-bound ((fbo camera) :attachment-for-size :d)
-    (with-slots (buf scale color) actor
-      (map-g #'flat-3d-frag buf
-             :model-world (model->world actor)
-             :world-view (world->view camera)
-             :view-clip (projection camera)
-             :scale scale
-             :color color
-             :time time))))
+  (with-slots (buf scale color) actor
+    (map-g #'flat-3d-frag buf
+           :model-world (model->world actor)
+           :world-view (world->view camera)
+           :view-clip (projection camera)
+           :scale scale
+           :color color
+           :time time)))
