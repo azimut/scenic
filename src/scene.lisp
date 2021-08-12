@@ -54,7 +54,9 @@
   (dolist (c (cameras obj))
     (update c dt))
   (dolist (a (actors obj))
-    (update a dt)))
+    (update a dt))
+  (dolist (l (lights obj))
+    (update l dt)))
 
 (defmethod draw :around ((obj scene) (camera renderable) time)
   (let ((fbo (fbo camera)))
