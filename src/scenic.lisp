@@ -20,9 +20,11 @@
      (list (make-perspective
             :pos (v! 2 2 2)
             :rot (q:point-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0))))
-     (list (make-directional
-            :pos (v! 100 100 100)
-            :rot (q:point-at (v! 0 1 0) (v! 100 100 100) (v! 0 0 0))))
+     (make-lights
+      :collection
+      (list (make-directional
+             :pos (v! 100 100 100)
+             :rot (q:point-at (v! 0 1 0) (v! 100 100 100) (v! 0 0 0)))))
      (make-simple-postprocess))))
   (push (make-instance 'actor :pos (v! 0 0 0))
         (actors (current-scene))))
@@ -31,7 +33,7 @@
   (let* ((scene  (current-scene))
          (actors (actors scene))
          (camera (active-camera scene))
-         (lights (lights scene))
+         (lights (collection (lights scene)))
          (time 0f0)
          (dt 0f0))
     ;;#+nil
@@ -49,7 +51,6 @@
 
 (defun stop ()
   (play-render :stop))
-
 
 (defun-g multi-frag ((uv :vec2) &uniform (sams :sampler-2d-array))
   (v! (* 1000 (x (texture sams (v! uv 0))))

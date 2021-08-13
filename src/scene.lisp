@@ -26,7 +26,7 @@
    (lights       :initarg :lights
                  :initform      (error ":lights must be specified")
                  :reader        lights
-                 :documentation "list of lights")
+                 :documentation "LIGHTS instance")
    (camera-index :initarg :camera-index
                  :reader  camera-index
                  :documentation "camera index of the active camera")
@@ -43,8 +43,8 @@
   (:documentation "a single scene"))
 
 (defmethod free ((obj scene))
+  (free (lights obj))
   (mapc #'free (cameras obj))
-  (mapc #'free (lights obj))
   (mapc #'free (actors obj)))
 
 (defun make-scene (cameras lights post)
@@ -55,7 +55,7 @@
     (update c dt))
   (dolist (a (actors obj))
     (update a dt))
-  (dolist (l (lights obj))
+  (dolist (l (collection (lights obj)))
     (update l dt)))
 
 (defmethod draw :around ((obj scene) (camera renderable) time)
@@ -76,7 +76,7 @@
     (nth (camera-index scene) (cameras scene))))
 
 (defun current-lights ()
-  (lights (current-scene)))
+  (collection (lights (current-scene))))
 
 (defun active-camera (scene)
   (nth (camera-index scene) (cameras scene)))
