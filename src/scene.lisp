@@ -55,7 +55,9 @@
     (update c dt))
   (dolist (a (actors obj))
     (update a dt))
-  (dolist (l (collection (lights obj)))
+  (dolist (l (point-lights (lights obj)))
+    (update l dt))
+  (dolist (l (dir-lights (lights obj)))
     (update l dt)))
 
 (defmethod draw :around ((obj scene) (camera renderable) time)
@@ -76,7 +78,7 @@
     (nth (camera-index scene) (cameras scene))))
 
 (defun current-lights ()
-  (collection (lights (current-scene))))
+  (dir-lights (lights (current-scene))));; fixme: add poitnlights
 
 (defun active-camera (scene)
   (nth (camera-index scene) (cameras scene)))

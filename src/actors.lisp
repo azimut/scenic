@@ -31,12 +31,18 @@
   )
 
 (defun-g actor-frag ((uv :vec2) (frag-norm :vec3) (frag-pos :vec3)
-                     &uniform (time :float) (color :vec3) (lights light-data :ubo))
+                     &uniform (time :float) (color :vec3) (dirlights dir-light-data :ubo) (pointlights point-light-data :ubo))
   (let ((final-color (v! 0 0 0)))
-    (dotimes (i (light-data-size lights))
-      (setf final-color (dir-light-apply color
-                                         (aref (light-data-colors lights) i)
-                                         (aref (light-data-positions lights) i)
+    (dotimes (i (size dirlights))
+      (incf final-color (dir-light-apply color
+                                         (aref (colors dirlights) i)
+                                         (aref (positions dirlights) i)
+                                         frag-pos
+                                         frag-norm)))
+    (dotimes (i (size pointlights))
+      (incf final-color (dir-light-apply color
+                                         (aref (colors pointlights) i)
+                                         (aref (positions pointlights) i)
                                          frag-pos
                                          frag-norm)))
     (v! final-color 1)))
@@ -53,5 +59,6 @@
            :view-clip (projection camera)
            :scale scale
            :color color
-           :lights (ubo (lights (current-scene)))
+           :dirlights (dir-ubo (lights (current-scene)))
+           :pointlights (point-ubo (lights (current-scene)))
            :time time)))

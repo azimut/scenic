@@ -35,14 +35,14 @@
 
 ;;--------------------------------------------------
 
-(defun-g point-light-apply ((color :vec3)
+(defun-g point-light-apply ((color       :vec3)
                             (light-color :vec3)
-                            (light-pos :vec3)
-                            (frag-pos :vec3)
-                            (normal :vec3)
-                            (constant :float)
-                            (linear :float)
-                            (quadratic :float))
+                            (light-pos   :vec3)
+                            (frag-pos    :vec3)
+                            (normal      :vec3)
+                            (constant    :float)
+                            (linear      :float)
+                            (quadratic   :float))
   (let* ((light-dir   (normalize (- light-pos frag-pos)))
          (diff        (saturate (dot normal light-dir)))
          (distance    (length (- light-pos frag-pos)))

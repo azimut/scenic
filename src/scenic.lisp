@@ -21,10 +21,14 @@
             :pos (v! 2 2 2)
             :rot (q:point-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0))))
      (make-lights
-      :collection
+      :dir-lights
       (list (make-directional
              :pos (v! 100 50 50)
-             :rot (q:point-at (v! 0 1 0) (v! 100 100 100) (v! 0 0 0)))))
+             :rot (q:point-at (v! 0 1 0) (v! 100 100 100) (v! 0 0 0))))
+      :point-lights
+      (list (make-point :pos (v! 4 4 4) :color (v! 0 1 0)
+                        :linear .2
+                        :quadratic .883)))
      (make-simple-postprocess))))
   (push (make-instance 'actor :pos (v! 0 0 0))
         (actors (current-scene))))
@@ -33,7 +37,7 @@
   (let* ((scene  (current-scene))
          (actors (actors scene))
          (camera (active-camera scene))
-         (lights (collection (lights scene)))
+         (lights (dir-lights (lights scene)))
          (time 0f0)
          (dt 0f0))
     ;;#+nil

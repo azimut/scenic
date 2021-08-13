@@ -1,6 +1,6 @@
 # scenic
 
-Yet another demo/graphics toolkit. Built using CEPL.
+Yet another toy demo/graphics toolkit. Using CEPL.
 
 Next iteration after, azimut/shiny and azimut/incandescent.
 
@@ -8,7 +8,7 @@ Next iteration after, azimut/shiny and azimut/incandescent.
 
 Clean repo.
 Stop relying of loosely related global variables.
-Have a common way to define multiple lights/shadows.
+Have a easy way to define multiple lights/shadows.
 
 ## License
 
