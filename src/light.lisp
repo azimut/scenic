@@ -22,11 +22,11 @@
     (free ubo)
     (mapc #'free collection)))
 
-(defmethod initialize-instance :before ((obj light) &key dim collection)
+(defmethod initialize-instance :before ((obj lights) &key dim collection)
   (check-type collection list)
   (check-type dim (integer 256 4096)))
 
-(defmethod initialize-instance :after ((obj light) &key dim collection)
+(defmethod initialize-instance :after ((obj lights) &key dim collection)
   (with-slots (tex sam ubo) obj
     (setf tex (make-texture NIL :dimensions `(,dim ,dim) :layer-count 5 :element-type :depth-component24))
     (setf sam (sample tex :wrap :clamp-to-border :minify-filter :nearest :magnify-filter :nearest))
@@ -39,21 +39,19 @@
   "takes care of calling each individual light initialization, once we know their IDX position on the collection"
   (let ((idx 0))
     (dolist (light (collection lights))
-      (init-light light idx (ubo lights))
+      (init-light light idx (ubo lights) (tex lights))
       (incf idx))))
 
-(defgeneric init-light (obj idx ubo))
+(defgeneric init-light (obj idx ubo tex))
 
 (defun make-lights (&rest args)
   (apply #'make-instance 'lights args))
 
 (defclass directional (orth)
-  ((fbo :reader fbo
-        :documentation "light camera fbo")
-   (idx :reader idx
-        :documentation "light index on texture")
-   (ubo :reader ubo
-        :documentation "reference to scene ubo with light data")
+  ((fbo :reader fbo :documentation "light camera fbo")
+   (idx :reader idx :documentation "light index on texture")
+   (ubo :reader ubo :documentation "reference to scene ubo with light data")
+   (tex :reader tex :documentation "reference to scene tex with light data")
    (color :initarg :color :accessor color :documentation "light color"))
   (:default-initargs
    :color (v! 1 1 1)
@@ -62,11 +60,11 @@
    :far 100f0)
   (:documentation "simple directional light"))
 
-(defmethod init-light ((obj directional) idx ubo)
+(defmethod init-light ((obj directional) idx ubo tex)
   (setf (slot-value obj 'idx) idx)
-  (setf (slot-value obj 'fbo) (make-fbo `(:d ,(texref (slot-value ubo 'tex) :layer idx))))
+  (setf (slot-value obj 'fbo) (make-fbo `(:d ,(texref tex :layer idx))))
   (setf (slot-value obj 'ubo) ubo)
-  (with-gpu-array-as-c-array (c (ubo-data (ubo ubo)))
+  (with-gpu-array-as-c-array (c (ubo-data ubo))
     (setf (aref-c (light-data-positions (aref-c c 0)) idx) (pos   obj))
     (setf (aref-c (light-data-rotations (aref-c c 0)) idx) (rot   obj))
     (setf (aref-c (light-data-colors    (aref-c c 0)) idx) (color obj))))
@@ -84,7 +82,7 @@
 (defun make-directional (&rest args)
   (apply #'make-instance 'directional args))
 
-(defmethod draw :around ((actor scene) (camera light) time)
+(defmethod draw :around ((actor scene) (camera directional) time)
   (let ((fbo (fbo camera)))
     (with-fbo-bound (fbo :attachment-for-size :d)
       (clear-fbo fbo :d)
