@@ -30,13 +30,28 @@
   ;;(setf (rot actor) (q:from-axis-angle (v! 0 1 0) (radians 0)))
   )
 
+(defun-g actor-frag ((uv :vec2) (frag-norm :vec3) (frag-pos :vec3)
+                     &uniform (time :float) (color :vec3) (lights light-data :ubo))
+  (let ((final-color (v! 0 0 0)))
+    (dotimes (i (light-data-size lights))
+      (setf final-color (dir-light-apply color
+                                         (aref (light-data-colors lights) i)
+                                         (aref (light-data-positions lights) i)
+                                         frag-pos
+                                         frag-norm)))
+    (v! final-color 1)))
+
+(defpipeline-g actor-pipe ()
+  :vertex (vert g-pnt)
+  :fragment (actor-frag :vec2 :vec3 :vec3))
+
 (defmethod draw ((actor actor) (camera renderable) time)
-  (let ((bar (fbo camera)))
-    (with-slots (buf scale color) actor
-      (map-g #'flat-3d-pipe buf
-             :model-world (model->world actor)
-             :world-view (world->view camera)
-             :view-clip (projection camera)
-             :scale scale
-             :color color
-             :time time))))
+  (with-slots (buf scale color) actor
+    (map-g #'actor-pipe buf
+           :model-world (model->world actor)
+           :world-view (world->view camera)
+           :view-clip (projection camera)
+           :scale scale
+           :color color
+           :lights (ubo (lights (current-scene)))
+           :time time)))
