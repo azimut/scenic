@@ -34,17 +34,23 @@
                      &uniform (time :float) (color :vec3) (dirlights dir-light-data :ubo) (pointlights point-light-data :ubo))
   (let ((final-color (v! 0 0 0)))
     (dotimes (i (size dirlights))
-      (incf final-color (dir-light-apply color
-                                         (aref (colors dirlights) i)
-                                         (aref (positions dirlights) i)
-                                         frag-pos
-                                         frag-norm)))
+      (incf final-color
+            (dir-light-apply color
+                             (aref (colors dirlights) i)
+                             (aref (positions dirlights) i)
+                             frag-pos
+                             frag-norm)))
     (dotimes (i (size pointlights))
-      (incf final-color (dir-light-apply color
-                                         (aref (colors pointlights) i)
-                                         (aref (positions pointlights) i)
-                                         frag-pos
-                                         frag-norm)))
+      (incf final-color
+            (point-light-apply
+             color
+             (aref (colors pointlights) i)
+             (aref (positions pointlights) i)
+             frag-pos
+             frag-norm
+             1
+             (aref (point-light-data-linear pointlights) i)
+             (aref (point-light-data-quadratic pointlights) i))))
     (v! final-color 1)))
 
 (defpipeline-g actor-pipe ()
