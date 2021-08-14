@@ -5,8 +5,7 @@
    (rot  :initarg :rot  :accessor rot)
    (near :initarg :near :accessor near)
    (far  :initarg :far  :accessor far)
-   (fs   :initarg :fs   :accessor fs)
-   (dim  :initarg :dim))
+   (fs   :initarg :fs   :accessor fs))
   (:default-initargs
    :pos (v! 0 0 0)
    :rot (q:identity)
@@ -18,11 +17,11 @@
   ((fbo :reader fbo :documentation "fbo to render to")
    (tex :reader tex :documentation "texture")
    (sam :reader sam :documentation "sample of the fbo texture")
+   (dim :accessor dim :initarg :dim :documentation "list pair of fbo dimensions")
    (texture-opts :initarg :texture-opts :documentation "texture options")
-   (sample-opts  :initarg :sample-opts  :documentation "options for sample"))
+   (sample-opts  :initarg :sample-opts  :documentation "options for sample")   )
   (:default-initargs
-   :texture-opts '((0 :dimensions (128 128) :element-type :rgba32f)
-                   (:d :dimensions (128 128) :element-type :depth-component24))
+   :texture-opts '((0 :element-type :rgba32f) (:d :element-type :depth-component24))
    :sample-opts '((:wrap :clamp-to-edge) (:wrap :clamp-to-edge)))
   (:documentation "an fbo-sampler pair"))
 
@@ -30,13 +29,28 @@
   (free (fbo obj))
   (free (tex obj)))
 
-(defmethod initialize-instance :before ((obj renderable) &key texture-opts sample-opts)
-  (assert (length= texture-opts sample-opts)))
+(defmethod (setf dim) :before (val (obj renderable))
+  (check-type val list)
+  (assert (length= 2 val)))
+(defmethod (setf dim) :after (new-val (obj renderable))
+  (with-slots (texture-opts sample-opts (old-fbo fbo) (old-tex tex) (old-sam sam)) obj
+    (let* ((new-tex (alloc-textures texture-opts new-val))
+           (new-sam (alloc-samplers new-tex sample-opts))
+           (new-fbo (alloc-fbos new-tex texture-opts)))
+      (rotatef new-tex old-tex)
+      (rotatef new-fbo old-fbo)
+      (rotatef new-sam old-sam)
+      (free new-fbo))))
 
-(defun alloc-textures (texture-opts)
+(defmethod initialize-instance :before ((obj renderable) &key texture-opts sample-opts dim)
+  (check-type dim list)
+  (assert (length= texture-opts sample-opts))
+  (assert (length= 2 dim)))
+
+(defun alloc-textures (texture-opts dim)
   "returns a list textures"
   (loop :for opt :in texture-opts
-        :collect (apply #'make-texture nil (rest opt))))
+        :collect (apply #'make-texture nil (append (list :dimensions dim) (rest opt)))))
 
 (defun alloc-fbos (textures texture-opts)
   "returns 1 fbo"
@@ -51,9 +65,9 @@
         :for opt :in sample-opts
         :collect (apply #'sample tex opt)))
 
-(defmethod initialize-instance :after ((obj renderable) &key texture-opts sample-opts)
+(defmethod initialize-instance :after ((obj renderable) &key texture-opts sample-opts dim)
   (with-slots (fbo tex sam) obj
-    (setf tex (alloc-textures texture-opts))
+    (setf tex (alloc-textures texture-opts dim))
     (setf fbo (alloc-fbos tex texture-opts))
     (setf sam (alloc-samplers tex sample-opts))))
 

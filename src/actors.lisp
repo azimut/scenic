@@ -31,31 +31,38 @@
   )
 
 (defun-g actor-frag ((uv :vec2) (frag-norm :vec3) (frag-pos :vec3)
-                     &uniform (time :float) (color :vec3) (dirlights dir-light-data :ubo) (pointlights point-light-data :ubo))
+                     &uniform
+                     (time        :float)
+                     (color       :vec3)
+                     (dirlights   dir-light-data   :ubo)
+                     (pointlights point-light-data :ubo))
   (let ((final-color (v! 0 0 0)))
     (dotimes (i (size dirlights))
-      (incf final-color
-            (dir-light-apply color
-                             (aref (colors dirlights) i)
-                             (aref (positions dirlights) i)
-                             frag-pos
-                             frag-norm)))
+      (incf final-color (dir-light-apply color
+                                         (aref (colors dirlights) i)
+                                         (aref (positions dirlights) i)
+                                         frag-pos
+                                         frag-norm)))
     (dotimes (i (size pointlights))
-      (incf final-color
-            (point-light-apply
-             color
-             (aref (colors pointlights) i)
-             (aref (positions pointlights) i)
-             frag-pos
-             frag-norm
-             1
-             (aref (point-light-data-linear pointlights) i)
-             (aref (point-light-data-quadratic pointlights) i))))
+      (with-slots (colors positions linear quadratic) pointlights
+        (incf final-color (point-light-apply color
+                                             (aref colors i)
+                                             (aref positions i)
+                                             frag-pos
+                                             frag-norm
+                                             (aref linear i)
+                                             (aref quadratic i)))))
     (v! final-color 1)))
 
 (defpipeline-g actor-pipe ()
   :vertex (vert g-pnt)
   :fragment (actor-frag :vec2 :vec3 :vec3))
+
+(defmethod update ((actor actor) dt)
+  #+nil
+  (setf (rot actor)
+        (q:* (q:from-axis-angle (v! 1 0 0) (radians 69))
+             (q:from-axis-angle (v! 0 0 1) (radians 18)))))
 
 (defmethod draw ((actor actor) (camera renderable) time)
   (with-slots (buf scale color) actor

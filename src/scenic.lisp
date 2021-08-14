@@ -14,6 +14,8 @@
 (defun init ()
   (free *state*)
   (slynk-hook)
+  (skitter-cleanup)
+  (skitter:listen-to #'window-listener-trampoline (skitter:window 0) :size)
   (init-state
    (list
     (make-scene
@@ -54,4 +56,19 @@
 
 (defun stop ()
   (play-render :stop))
+
+(defun skitter-cleanup-controls (source slot-name)
+  (loop :for listener :across (skitter-hidden::uvec2-control-listeners
+                               (skitter::get-control source slot-name nil t))
+        :do (skitter:stop-listening listener)))
+(defun skitter-cleanup ()
+  (skitter-cleanup-controls (skitter:window 0) :size))
+
+(defun window-listener (dim)
+  (setf (dim (current-camera)) (list (x dim) (y dim)))
+  (setf (resolution (current-viewport)) (v! (x dim) (y dim))))
+(defun window-listener-trampoline (&rest args)
+  (window-listener (first args)))
+
+
 

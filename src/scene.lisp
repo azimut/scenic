@@ -65,6 +65,7 @@
     (with-fbo-bound (fbo)
       (clear-fbo fbo)
       (call-next-method))))
+
 (defmethod draw ((obj scene) camera time)
   (dolist (a (actors obj))
     (draw a camera time)))
