@@ -12,6 +12,13 @@
    :dim 1024)
   (:documentation "light resources for the scene"))
 
+(defmethod print-object ((obj lights) stream)
+  (print-unreadable-object (obj stream :type T :identity T)
+    (format stream "DIM:~a D: ~a P: ~a"
+            (slot-value obj 'dim)
+            (length (slot-value obj 'dir-lights))
+            (length (slot-value obj 'point-lights)))))
+
 (defstruct-g (dir-light-data :layout :std-140)
   (positions (:vec3 5) :accessor positions)
   (colors    (:vec3 5) :accessor colors)
@@ -92,6 +99,10 @@
   ()
   (:documentation "simple directional light"))
 
+(defmethod print-object ((obj directional) stream)
+  (print-unreadable-object (obj stream :type T :identity T)
+    (format stream "POS: ~a" (slot-value obj 'pos))))
+
 (defun make-directional (&rest args)
   (apply #'make-instance 'directional args))
 
@@ -109,6 +120,13 @@
    :linear 0.14
    :quadratic 0.07)
   (:documentation "simple pointlight light"))
+
+(defmethod print-object ((obj point) stream)
+  (print-unreadable-object (obj stream :type T :identity T)
+    (format stream "POS: ~a LINEAR: ~a QUADRATIC: ~a"
+            (slot-value obj 'pos)
+            (slot-value obj 'linear)
+            (slot-value obj 'quadratic))))
 
 (defmethod (setf linear) :after (val (obj point))
   (with-gpu-array-as-c-array (c (ubo-data (ubo obj)))

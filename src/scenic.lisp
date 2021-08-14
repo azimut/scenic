@@ -69,6 +69,3 @@
   (setf (resolution (current-viewport)) (v! (x dim) (y dim))))
 (defun window-listener-trampoline (&rest args)
   (window-listener (first args)))
-
-
-
