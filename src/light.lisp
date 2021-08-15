@@ -54,6 +54,7 @@
   (with-slots (dir-tex dir-sam dir-ubo point-ubo) obj
     (setf dir-tex   (make-texture NIL :dimensions `(,dim ,dim) :layer-count 3 :element-type :depth-component24))
     (setf dir-sam   (sample dir-tex :wrap :clamp-to-border :minify-filter :nearest :magnify-filter :nearest))
+    (setf (cepl.samplers::border-color dir-sam) (v! 1 1 1 1))
     (setf dir-ubo   (make-ubo NIL 'dir-light-data))
     (setf point-ubo (make-ubo NIL 'point-light-data))
     (with-gpu-array-as-c-array (c (ubo-data dir-ubo))
@@ -71,6 +72,11 @@
       (incf idx))))
 
 (defgeneric init-light (obj idx ubo tex))
+
+(defmethod draw ((obj scene) (lights lights) time)
+  (dolist (i (dir-lights lights))   (draw obj i time))
+  ;;(dolist (i (point-lights lights)) (draw obj i time))
+  )
 
 (defun make-lights (&rest args)
   (apply #'make-instance 'lights args))
@@ -101,9 +107,30 @@
     (setf (aref-c (positions (aref-c c 0)) idx) (pos   obj))
     (setf (aref-c (colors    (aref-c c 0)) idx) (color obj))))
 
+(defmethod draw ((obj scene) (light light) time)
+  (let ((fbo (fbo light))
+        ;;(fbo *shadow-fbo*)
+        )
+    (with-setf (cull-face) :front
+      (with-fbo-bound (fbo :attachment-for-size :d)
+        (clear-fbo fbo :d)
+        (dolist (a (actors obj))
+          (draw a light time))))))
+
 (defclass directional (orth light)
   ()
   (:documentation "simple directional light"))
+
+
+(defmethod update ((obj directional) dt)
+  (let* ((new-pos (v3:*s (v! -50 30 50) 1f0))
+         (new-dis (v3:distance new-pos (v! 0 0 0))))
+    ;; (setf (pos obj) new-pos)
+    ;; (setf (rot obj) (q:point-at (v! 0 1 0) new-pos (v! 0 0 0)))
+    ;; (setf (far obj) (+ new-dis (* new-dis .1)))
+    ;; (setf (near obj) (- new-dis (* new-dis .01)))
+    ;; (setf (fs obj) (v2! 10))
+    ))
 
 (defun upload-transform (light)
   "uploads to the fbo the light matrix"
@@ -155,21 +182,20 @@
   (apply #'make-instance 'point args))
 
 ;; TODO: init fbo for pointlight
-(defmethod init-light :after ((obj directional) idx ubo tex))
 
-(defmethod draw :around ((actor scene) (camera directional) time)
-  (let ((fbo (fbo camera)))
-    (with-fbo-bound (fbo :attachment-for-size :d)
-      (clear-fbo fbo :d)
-      (call-next-method))))
+(defun-g simplest-3d-frag ((uv :vec2) (frag-norm :vec3) (frag-pos :vec3))
+  (v! 0 0 1 0))
+
+(defpipeline-g simplest-3d-pipe ()
+  :vertex   (vert g-pnt)
+  :fragment (simplest-3d-frag :vec2 :vec3 :vec3))
 
 (defmethod draw (actor (camera directional) time)
   "Simple pass to draw actor from light's POV"
-  (with-slots (buf scale color) actor
-    (map-g #'flat-3d-pipe buf
+  (with-setf (cull-face) :front)
+  (with-slots (buf scale) actor
+    (map-g #'simplest-3d-pipe buf
            :model-world (model->world actor)
            :world-view (world->view camera)
            :view-clip (projection camera)
-           :scale scale
-           :color color
-           :time time)))
+           :scale scale)))

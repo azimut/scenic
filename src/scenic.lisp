@@ -1,5 +1,21 @@
 (in-package #:scenic)
 
+
+(defvar *shadow-fbo* nil)
+(defvar *shadow-sam* nil)
+(defun init-shadow ()
+  (unless *shadow-fbo*
+    (setf *shadow-fbo* (make-fbo `(:d :dimensions (1024 1024)
+                                      ;;:element-type :depth-component32
+                                      ))))
+  (unless *shadow-sam*
+    (setf *shadow-sam* (sample (attachment-tex *shadow-fbo* :d)
+                               :wrap           :clamp-to-border
+                               :minify-filter  :nearest
+                               :magnify-filter :nearest))
+    (setf (cepl.samplers::border-color *shadow-sam*) (v! 1 1 1 1))))
+
+
 (defgeneric free (obj))
 (defmethod free (obj) t)
 (defmethod free ((obj null)) t)
@@ -15,6 +31,7 @@
   (free *state*)
   (slynk-hook)
   (skitter-cleanup)
+  (init-shadow)
   (skitter:listen-to #'window-listener-trampoline (skitter:window 0) :size)
   (init-state
    (list
@@ -28,27 +45,27 @@
              :pos (v! 100 50 50)
              :rot (q:point-at (v! 0 1 0) (v! 100 100 100) (v! 0 0 0))))
       :point-lights
-      (list (make-point :pos (v! 4 4 4) :color (v! 0 1 0)
-                        :linear .2
-                        :quadratic .883)))
+      (list (make-point :pos (v! 8 10 10) :color (v! 0 1 0)
+                        :linear 0.14
+                        :quadratic 0.07)))
      (make-simple-postprocess))))
-  (push (make-instance 'actor :pos (v! 0 0 0))
-        (actors (current-scene))))
+  (push (make-actor :h 5f0) (actors (current-scene)))
+  (push (make-actor :w 10f0 :d 10f0) (actors (current-scene)))
+  )
 
 (def-simple-main-loop play-render (:on-start #'init)
   (let* ((scene  (current-scene))
          (actors (actors scene))
          (camera (active-camera scene))
-         (lights (dir-lights (lights scene)))
          (time 0f0)
          (dt 0f0))
-    (dolist (l lights)
-      (dolist (a actors)
-        (draw a l time)))
+    (draw scene (lights scene) time)
     (draw scene camera time)
     (update scene dt)
     (as-frame
-      (draw (post scene) camera time))))
+      (draw (post scene) camera time)
+      ;;(draw-tex-br *shadow-sam*)
+      )))
 
 (defun start ()
   (play-render :start))
