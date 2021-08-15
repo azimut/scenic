@@ -13,6 +13,7 @@
    :far 400f0
    :fs nil))
 
+;; TODO: add a *scale* value, with ceiling of 1.0 to scale down the texture displayed
 (defclass renderable ()
   ((fbo :reader fbo :documentation "fbo to render to")
    (tex :reader tex :documentation "texture")
@@ -22,7 +23,8 @@
    (sample-opts  :initarg :sample-opts  :documentation "options for sample")   )
   (:default-initargs
    :texture-opts '((0 :element-type :rgba32f) (:d :element-type :depth-component24))
-   :sample-opts '((:wrap :clamp-to-edge) (:wrap :clamp-to-edge)))
+   :sample-opts '((:wrap :clamp-to-edge) (:wrap :clamp-to-edge))
+   :dim '(128 128))
   (:documentation "an fbo-sampler pair"))
 
 (defmethod free ((obj renderable))

@@ -1,15 +1,19 @@
 (in-package #:scenic)
 
 (defclass lights ()
-  ((point-lights :reader point-lights :documentation "list of point lights"         :initarg :point-lights)
-   (dir-lights   :reader dir-lights   :documentation "list of directional lights"   :initarg :dir-lights)
-   (dim          :reader dim          :documentation "shadow dimensions NxN"        :initarg :dim)
-   (tex          :reader tex          :documentation "common shadow textures array")
-   (sam          :reader sam          :documentation "common shadow samplers array")
+  ((dir-lights   :reader dir-lights   :documentation "list of directional lights"   :initarg :dir-lights)
+   (dir-tex      :reader dir-tex      :documentation "common shadow textures array")
+   (dir-sam      :reader dir-sam      :documentation "common shadow samplers array")
    (dir-ubo      :reader dir-ubo      :documentation "common directional lights ubo")
-   (point-ubo    :reader point-ubo    :documentation "common point lights ubo"))
+   (point-lights :reader point-lights :documentation "list of point lights"         :initarg :point-lights)
+   (point-tex    :reader point-tex    :documentation "common shadow textures array")
+   (point-sam    :reader point-sam    :documentation "common shadow samplers array")
+   (point-ubo    :reader point-ubo    :documentation "common point lights ubo")
+   (dim          :reader dim          :documentation "shadow dimensions NxN"        :initarg :dim))
   (:default-initargs
-   :dim 1024)
+   :dim 1024
+   :dir-lights ()
+   :point-lights ())
   (:documentation "light resources for the scene"))
 
 (defmethod print-object ((obj lights) stream)
@@ -20,20 +24,22 @@
             (length (slot-value obj 'point-lights)))))
 
 (defstruct-g (dir-light-data :layout :std-140)
-  (positions (:vec3 5) :accessor positions)
-  (colors    (:vec3 5) :accessor colors)
-  (size       :uint    :accessor size))
+  (positions  (:vec3 3) :accessor positions)
+  (lightspace (:mat4 3) :accessor lightspace)
+  (colors     (:vec3 3) :accessor colors)
+  (size        :uint    :accessor size))
 
 (defstruct-g (point-light-data :layout :std-140)
-  (positions (:vec3 5) :accessor positions)
-  (colors    (:vec3 5) :accessor colors)
-  (linear    (:float 5))
-  (quadratic (:float 5))
-  (size       :uint    :accessor size))
+  (positions  (:vec3 5) :accessor positions)
+  (lightspace (:mat4 5) :accessor lightspace)
+  (colors     (:vec3 5) :accessor colors)
+  (linear     (:float 5))
+  (quadratic  (:float 5))
+  (size        :uint    :accessor size))
 
 (defmethod free ((obj lights))
-  (with-slots (tex dir-ubo point-ubo dir-lights point-lights) obj
-    (free tex)
+  (with-slots (dir-tex dir-ubo point-ubo dir-lights point-lights) obj
+    (free dir-tex)
     (free dir-ubo)
     (free point-ubo)
     (mapc #'free dir-lights)
@@ -45,17 +51,17 @@
   (check-type dim (integer 256 4096)))
 
 (defmethod initialize-instance :after ((obj lights) &key dim dir-lights point-lights)
-  (with-slots (tex sam dir-ubo point-ubo) obj
-    (setf tex       (make-texture NIL :dimensions `(,dim ,dim) :layer-count 10 :element-type :depth-component24))
-    (setf sam       (sample tex :wrap :clamp-to-border :minify-filter :nearest :magnify-filter :nearest))
+  (with-slots (dir-tex dir-sam dir-ubo point-ubo) obj
+    (setf dir-tex   (make-texture NIL :dimensions `(,dim ,dim) :layer-count 3 :element-type :depth-component24))
+    (setf dir-sam   (sample dir-tex :wrap :clamp-to-border :minify-filter :nearest :magnify-filter :nearest))
     (setf dir-ubo   (make-ubo NIL 'dir-light-data))
     (setf point-ubo (make-ubo NIL 'point-light-data))
     (with-gpu-array-as-c-array (c (ubo-data dir-ubo))
       (setf (size (aref-c c 0)) (length dir-lights)))
     (with-gpu-array-as-c-array (c (ubo-data point-ubo))
       (setf (size (aref-c c 0)) (length point-lights)))
-    (init-collection dir-lights   dir-ubo   tex)
-    (init-collection point-lights point-ubo tex)))
+    (init-collection dir-lights   dir-ubo   dir-tex)
+    (init-collection point-lights point-ubo dir-tex)))
 
 (defun init-collection (lights ubo tex)
   "takes care of calling each individual light initialization, once we know their IDX"
@@ -99,6 +105,19 @@
   ()
   (:documentation "simple directional light"))
 
+(defun upload-transform (light)
+  "uploads to the fbo the light matrix"
+  (with-slots (ubo idx) light
+    (with-gpu-array-as-c-array (c (ubo-data ubo))
+      (setf (aref-c (lightspace (aref-c c 0)) idx)
+            (world->clip light)))))
+
+(defmethod (setf fs)   :after (_ (obj directional)) (upload-transform obj))
+(defmethod (setf pos)  :after (_ (obj directional)) (upload-transform obj))
+(defmethod (setf far)  :after (_ (obj directional)) (upload-transform obj))
+(defmethod (setf fov)  :after (_ (obj directional)) (upload-transform obj))
+(defmethod (setf near) :after (_ (obj directional)) (upload-transform obj))
+
 (defmethod print-object ((obj directional) stream)
   (print-unreadable-object (obj stream :type T :identity T)
     (format stream "POS: ~a" (slot-value obj 'pos))))
@@ -107,15 +126,12 @@
   (apply #'make-instance 'directional args))
 
 (defmethod init-light :after ((obj directional) idx ubo tex)
-  (setf (slot-value obj 'fbo) (make-fbo `(:d ,(texref tex :layer idx)))))
+  (setf (slot-value obj 'fbo) (make-fbo `(:d ,(texref tex :layer idx))))
+  (upload-transform obj))
 
 (defclass point (orth light)
-  ((linear    :initarg :linear
-              :accessor linear
-              :documentation "linear factor of pointlight decay")
-   (quadratic :initarg :quadratic
-              :accessor quadratic
-              :documentation "quadratic factor of pointlight decay"))
+  ((linear    :initarg :linear    :accessor linear    :documentation "linear factor of pointlight decay")
+   (quadratic :initarg :quadratic :accessor quadratic :documentation "quadratic factor of pointlight decay"))
   (:default-initargs
    :linear 0.14
    :quadratic 0.07)
@@ -138,9 +154,8 @@
 (defun make-point (&rest args)
   (apply #'make-instance 'point args))
 
-(defmethod init-light :after ((obj directional) idx ubo tex)
-  (let ((offset 5));; HACK: we offset this much to index on the scene lights
-    (setf (slot-value obj 'fbo) (make-fbo `(:d ,(texref tex :layer (+ offset idx)))))))
+;; TODO: init fbo for pointlight
+(defmethod init-light :after ((obj directional) idx ubo tex))
 
 (defmethod draw :around ((actor scene) (camera directional) time)
   (let ((fbo (fbo camera)))

@@ -34,9 +34,11 @@
                      &uniform
                      (time        :float)
                      (color       :vec3)
+                     (shadows     :sampler-2d-array)
                      (dirlights   dir-light-data   :ubo)
                      (pointlights point-light-data :ubo))
-  (let ((final-color (v! 0 0 0)))
+  (let ((final-color (v! 0 0 0))
+        (shadow      (texture shadows (v! uv 0))))
     (dotimes (i (size dirlights))
       (incf final-color (dir-light-apply color
                                          (aref (colors dirlights) i)
@@ -58,20 +60,23 @@
   :vertex (vert g-pnt)
   :fragment (actor-frag :vec2 :vec3 :vec3))
 
-(defmethod update ((actor actor) dt)
-  #+nil
-  (setf (rot actor)
-        (q:* (q:from-axis-angle (v! 1 0 0) (radians 69))
-             (q:from-axis-angle (v! 0 0 1) (radians 18)))))
+(let ((stepper (make-stepper (seconds 5) (seconds 5))))
+  (defmethod update ((actor actor) dt)
+    (when (funcall stepper)
+      (setf (rot actor)
+            (q:* (q:from-axis-angle (v! 1 0 0) (radians (random 90)))
+                 (q:from-axis-angle (v! 0 0 1) (radians (random 90))))))))
 
 (defmethod draw ((actor actor) (camera renderable) time)
-  (with-slots (buf scale color) actor
-    (map-g #'actor-pipe buf
-           :model-world (model->world actor)
-           :world-view (world->view camera)
-           :view-clip (projection camera)
-           :scale scale
-           :color color
-           :dirlights (dir-ubo (lights (current-scene)))
-           :pointlights (point-ubo (lights (current-scene)))
-           :time time)))
+  (let ((scene (current-scene)))
+    (with-slots (buf scale color) actor
+      (map-g #'actor-pipe buf
+             :shadows (dir-sam (lights scene))
+             :model-world (model->world actor)
+             :world-view (world->view camera)
+             :view-clip (projection camera)
+             :scale scale
+             :color color
+             :dirlights (dir-ubo (lights scene))
+             :pointlights (point-ubo (lights scene))
+             :time time))))

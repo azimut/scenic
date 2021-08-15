@@ -42,10 +42,9 @@
          (lights (dir-lights (lights scene)))
          (time 0f0)
          (dt 0f0))
-    ;;#+nil
-    ;; (dolist (l lights)
-    ;;   (dolist (a actors)
-    ;;     (draw a l time)))
+    (dolist (l lights)
+      (dolist (a actors)
+        (draw a l time)))
     (draw scene camera time)
     (update scene dt)
     (as-frame
