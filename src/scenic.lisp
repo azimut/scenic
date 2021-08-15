@@ -45,17 +45,28 @@
              :pos (v! 100 50 50)
              :rot (q:point-at (v! 0 1 0) (v! 100 100 100) (v! 0 0 0))))
       :point-lights
-      (list (make-point :pos (v! 8 10 10) :color (v! 0 1 0)
-                        :linear 0.14
-                        :quadratic 0.07)))
+      (list (make-point
+             :pos (v! 2 2 2)
+             :color (v! 0 .5 0)
+             :linear 0.35 :quadratic 0.44)
+            (make-point
+             :pos (v! -2 2 -2)
+             :color (v! .5 0 0)
+             :linear 0.35 :quadratic 0.44)))
      (make-simple-postprocess))))
-  (push (make-actor :h 5f0) (actors (current-scene)))
+  ;; Actors
   (push (make-actor :w 10f0 :d 10f0) (actors (current-scene)))
+  (dotimes (i 5)
+    (let ((a (make-actor)))
+      (setf (pos a) (v! (- (random 5) 2.5) 1 (- (random 5) 2.5)))
+      (setf (rot a) (q:from-axis-angle (v! 0 1 0) (radians (random 180))))
+      (push a (actors (current-scene)))))
+  ;;(push (make-actor :h 5f0) (actors (current-scene)))
+
   )
 
 (def-simple-main-loop play-render (:on-start #'init)
   (let* ((scene  (current-scene))
-         (actors (actors scene))
          (camera (active-camera scene))
          (time 0f0)
          (dt 0f0))
@@ -64,7 +75,7 @@
     (update scene dt)
     (as-frame
       (draw (post scene) camera time)
-      ;;(draw-tex-br *shadow-sam*)
+      (draw-tex-br (dir-sam (lights scene)) :index 0)
       )))
 
 (defun start ()

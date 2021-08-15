@@ -186,6 +186,6 @@
 (defmethod update ((camera pers) dt))
 (defmethod update ((camera orthogonal) dt))
 (defmethod update ((camera perspective) dt)
-  (let ((pos (v! 4 10 10)))
+  (let ((pos (v! -7 10 10)))
     (setf (pos camera) pos)
     (setf (rot camera) (q:point-at (v! 0 1 0) pos (v! 0 0 0)))))

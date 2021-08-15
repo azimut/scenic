@@ -108,9 +108,7 @@
     (setf (aref-c (colors    (aref-c c 0)) idx) (color obj))))
 
 (defmethod draw ((obj scene) (light light) time)
-  (let ((fbo (fbo light))
-        ;;(fbo *shadow-fbo*)
-        )
+  (let ((fbo (fbo light)))
     (with-setf (cull-face) :front
       (with-fbo-bound (fbo :attachment-for-size :d)
         (clear-fbo fbo :d)
@@ -121,15 +119,14 @@
   ()
   (:documentation "simple directional light"))
 
-
 (defmethod update ((obj directional) dt)
   (let* ((new-pos (v3:*s (v! -50 30 50) 1f0))
          (new-dis (v3:distance new-pos (v! 0 0 0))))
-    ;; (setf (pos obj) new-pos)
-    ;; (setf (rot obj) (q:point-at (v! 0 1 0) new-pos (v! 0 0 0)))
-    ;; (setf (far obj) (+ new-dis (* new-dis .1)))
+    ;;(setf (pos obj) new-pos)
+    ;;(setf (rot obj)  (q:point-at (v! 0 1 0) new-pos (v! 0 0 0)))
+    ;; (setf (far obj)  (+ new-dis (* new-dis .1)))
     ;; (setf (near obj) (- new-dis (* new-dis .01)))
-    ;; (setf (fs obj) (v2! 10))
+    ;;(setf (fs obj) (v2! 9))
     ))
 
 (defun upload-transform (light)
@@ -182,7 +179,6 @@
   (apply #'make-instance 'point args))
 
 ;; TODO: init fbo for pointlight
-
 (defun-g simplest-3d-frag ((uv :vec2) (frag-norm :vec3) (frag-pos :vec3))
   (v! 0 0 1 0))
 
