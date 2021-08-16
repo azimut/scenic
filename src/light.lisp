@@ -29,18 +29,23 @@
   (colors     (:vec3 3) :accessor colors)
   (size        :uint    :accessor size))
 
+(defstruct-g (shadow-projections :layout :std-140)
+  (mats (:mat4 6)))
+
 (defstruct-g (point-light-data :layout :std-140)
-  (positions  (:vec3 5) :accessor positions)
-  (lightspace (:mat4 5) :accessor lightspace)
-  (colors     (:vec3 5) :accessor colors)
-  (linear     (:float 5))
-  (quadratic  (:float 5))
-  (size        :uint    :accessor size))
+  (positions   (:vec3 5) :accessor positions)
+  (lightspace  (:mat4 5) :accessor lightspace)
+  (shadowspace (shadow-projections 6) :accessor shadowspace)
+  (colors      (:vec3 5) :accessor colors)
+  (linear      (:float 5))
+  (quadratic   (:float 5))
+  (size         :uint    :accessor size))
 
 (defmethod free ((obj lights))
-  (with-slots (dir-tex dir-ubo point-ubo dir-lights point-lights) obj
+  (with-slots (dir-tex dir-ubo point-tex point-ubo dir-lights point-lights) obj
     (free dir-tex)
     (free dir-ubo)
+    (free point-tex)
     (free point-ubo)
     (mapc #'free dir-lights)
     (mapc #'free point-lights)))
@@ -51,11 +56,13 @@
   (check-type dim (integer 256 4096)))
 
 (defmethod initialize-instance :after ((obj lights) &key dim dir-lights point-lights)
-  (with-slots (dir-tex dir-sam dir-ubo point-ubo) obj
+  (with-slots (dir-tex dir-sam dir-ubo point-ubo point-tex point-sam) obj
     (setf dir-tex   (make-texture NIL :dimensions `(,dim ,dim) :layer-count 3 :element-type :depth-component24))
     (setf dir-sam   (sample dir-tex :wrap :clamp-to-border :minify-filter :nearest :magnify-filter :nearest))
     (setf (cepl.samplers::border-color dir-sam) (v! 1 1 1 1))
     (setf dir-ubo   (make-ubo NIL 'dir-light-data))
+    (setf point-tex (make-texture nil :dimensions dim :element-type :depth-component24 :cubes t :layer-count 5))
+    (setf point-sam (sample point-tex :wrap :clamp-to-edge :minify-filter :nearest :magnify-filter :nearest))
     (setf point-ubo (make-ubo NIL 'point-light-data))
     (with-gpu-array-as-c-array (c (ubo-data dir-ubo))
       (setf (size (aref-c c 0)) (length dir-lights)))
@@ -153,34 +160,8 @@
   (setf (slot-value obj 'fbo) (make-fbo `(:d ,(texref tex :layer idx))))
   (upload-transform obj))
 
-(defclass point (orth light)
-  ((linear    :initarg :linear    :accessor linear    :documentation "linear factor of pointlight decay")
-   (quadratic :initarg :quadratic :accessor quadratic :documentation "quadratic factor of pointlight decay"))
-  (:default-initargs
-   :linear 0.14
-   :quadratic 0.07)
-  (:documentation "simple pointlight light"))
-
-(defmethod print-object ((obj point) stream)
-  (print-unreadable-object (obj stream :type T :identity T)
-    (format stream "POS: ~a LINEAR: ~a QUADRATIC: ~a"
-            (slot-value obj 'pos)
-            (slot-value obj 'linear)
-            (slot-value obj 'quadratic))))
-
-(defmethod (setf linear) :after (val (obj point))
-  (with-gpu-array-as-c-array (c (ubo-data (ubo obj)))
-    (setf (aref-c (point-light-data-linear (aref-c c 0)) (idx obj)) val)))
-(defmethod (setf quadratic) :after (val (obj point))
-  (with-gpu-array-as-c-array (c (ubo-data (ubo obj)))
-    (setf (aref-c (point-light-data-quadratic (aref-c c 0)) (idx obj)) val)))
-
-(defun make-point (&rest args)
-  (apply #'make-instance 'point args))
-
-;; TODO: init fbo for pointlight
 (defun-g simplest-3d-frag ((uv :vec2) (frag-norm :vec3) (frag-pos :vec3))
-  (v! 0 0 1 0))
+  (values (v! 0 0 1 0)))
 
 (defpipeline-g simplest-3d-pipe ()
   :vertex   (vert g-pnt)
@@ -195,3 +176,64 @@
            :world-view (world->view camera)
            :view-clip (projection camera)
            :scale scale)))
+
+(defclass point (pers light)
+  ((linear    :initarg :linear    :accessor linear    :documentation "linear factor of pointlight decay")
+   (quadratic :initarg :quadratic :accessor quadratic :documentation "quadratic factor of pointlight decay"))
+  (:default-initargs
+   :fov 90f0
+   :fs (v! 1 1)
+   :near 0.001
+   :far 50f0
+   :linear 0.14
+   :quadratic 0.07)
+  (:documentation "simple pointlight light"))
+
+(defmethod print-object ((obj point) stream)
+  (print-unreadable-object (obj stream :type T :identity T)
+    (format stream "POS: ~a LIN: ~a QUA: ~a NEAR: ~a FAR: ~a"
+            (slot-value obj 'pos)
+            (slot-value obj 'linear) (slot-value obj 'quadratic)
+            (slot-value obj 'near)   (slot-value obj 'far))))
+
+(defmethod (setf linear) :after (new-val (obj point))
+  (with-gpu-array-as-c-array (c (ubo-data (ubo obj)))
+    (setf (aref-c (point-light-data-linear (aref-c c 0)) (idx obj)) new-val)))
+(defmethod (setf quadratic) :after (new-val (obj point))
+  (with-gpu-array-as-c-array (c (ubo-data (ubo obj)))
+    (setf (aref-c (point-light-data-quadratic (aref-c c 0)) (idx obj)) new-val)))
+
+(defun projection-mats (light)
+  "Returns a list of 6 m4 projection matrices"
+  (let ((projection (projection light))
+        (light-pos  (pos light)))
+    (list
+     (m4:* projection (m4:look-at (v! 0 -1  0) light-pos (v3:+ light-pos (v!  1  0  0))))
+     (m4:* projection (m4:look-at (v! 0 -1  0) light-pos (v3:+ light-pos (v! -1  0  0))))
+     (m4:* projection (m4:look-at (v! 0  0  1) light-pos (v3:+ light-pos (v!  0  1  0))))
+     (m4:* projection (m4:look-at (v! 0  0 -1) light-pos (v3:+ light-pos (v!  0 -1  0))))
+     (m4:* projection (m4:look-at (v! 0 -1  0) light-pos (v3:+ light-pos (v!  0  0  1))))
+     (m4:* projection (m4:look-at (v! 0 -1  0) light-pos (v3:+ light-pos (v!  0  0 -1)))))))
+
+(defun upload-projection (light)
+  (with-gpu-array-as-c-array (c (ubo-data (ubo light)))
+    (setf (aref-c (shadowspace (aref-c c 0)) (idx light))
+          (projection-mats light))))
+
+(defmethod (setf pos)  :after (_ (obj point))
+  (upload-transform obj))
+(defmethod (setf far)  :after (_ (obj point))
+  (upload-projection obj)
+  (upload-transform obj))
+(defmethod (setf near) :after (_ (obj point))
+  (upload-projection obj)
+  (upload-transform obj))
+
+(defmethod init-light :after ((obj directional) idx ubo tex)
+  (setf (slot-value obj 'fbo) (make-fbo `(:d ,(texref tex :layer idx))))
+  (upload-transform obj)
+  (upload-projection obj))
+
+(defun make-point (&rest args)
+  (apply #'make-instance 'point args))
+

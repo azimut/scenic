@@ -1,21 +1,5 @@
 (in-package #:scenic)
 
-
-(defvar *shadow-fbo* nil)
-(defvar *shadow-sam* nil)
-(defun init-shadow ()
-  (unless *shadow-fbo*
-    (setf *shadow-fbo* (make-fbo `(:d :dimensions (1024 1024)
-                                      ;;:element-type :depth-component32
-                                      ))))
-  (unless *shadow-sam*
-    (setf *shadow-sam* (sample (attachment-tex *shadow-fbo* :d)
-                               :wrap           :clamp-to-border
-                               :minify-filter  :nearest
-                               :magnify-filter :nearest))
-    (setf (cepl.samplers::border-color *shadow-sam*) (v! 1 1 1 1))))
-
-
 (defgeneric free (obj))
 (defmethod free (obj) t)
 (defmethod free ((obj null)) t)
@@ -31,7 +15,6 @@
   (free *state*)
   (slynk-hook)
   (skitter-cleanup)
-  (init-shadow)
   (skitter:listen-to #'window-listener-trampoline (skitter:window 0) :size)
   (init-state
    (list
