@@ -79,3 +79,14 @@
   (setf (resolution (current-viewport)) (v! (x dim) (y dim))))
 (defun window-listener-trampoline (&rest args)
   (window-listener (first args)))
+
+
+(defmethod update ((obj directional) dt)
+  (let* ((new-pos (v3:*s (v! -50 30 50) 1f0))
+         (new-dis (v3:distance new-pos (v! 0 0 0))))
+    ;;(setf (pos obj) new-pos)
+    ;;(setf (rot obj)  (q:point-at (v! 0 1 0) new-pos (v! 0 0 0)))
+    ;; (setf (far obj)  (+ new-dis (* new-dis .1)))
+    ;; (setf (near obj) (- new-dis (* new-dis .01)))
+    ;;(setf (fs obj) (v2! 9))
+    ))

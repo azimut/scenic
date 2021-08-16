@@ -5,16 +5,6 @@
   :version "0.0.1"
   :serial t
   :pathname "src"
-  :components ((:file "package")
-               (:file "assets")
-               (:file "camera")
-               (:file "misc-gpu")
-               (:file "render")
-               (:file "scene")
-               (:file "light")
-               (:file "scenic")
-               (:file "postprocess")
-               (:file "actors"))
   :depends-on (#:alexandria
                #:arrow-macros
                #:cepl
@@ -31,4 +21,18 @@
   :defsystem-depends-on (:deploy)
   :build-operation "deploy-op"
   :build-pathname "scenic"
-  :entry-point "scenic:start")
+  :entry-point "scenic:start"
+  :components
+  ((:file "package")
+   (:file "assets")
+   (:file "camera")
+   (:file "misc-gpu")
+   (:file "render")
+   (:file "scene")
+   (:file "lights/lights")
+   (:file "lights/light")
+   (:file "lights/directional")
+   (:file "lights/point")
+   (:file "scenic")
+   (:file "postprocess")
+   (:file "actors")))
