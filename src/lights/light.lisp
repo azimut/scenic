@@ -40,4 +40,3 @@
         (clear-fbo fbo :d)
         (dolist (a (actors obj))
           (draw a light time))))))
-

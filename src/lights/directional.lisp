@@ -12,9 +12,11 @@
 
 (defmethod print-object ((obj directional) stream)
   (print-unreadable-object (obj stream :type T :identity T)
-    (format stream "POS: ~a" (slot-value obj 'pos))))
+    (with-slots (pos near far) obj
+      (format stream "(~a ~a ~a) NEAR:~a FAR:~a" (x pos) (y pos) (z pos) near far))))
 
 (defmethod init-light :after ((obj directional) idx ubo tex)
+  (log4cl:log-info "~a IDX: ~d" obj idx)
   (setf (slot-value obj 'fbo) (make-fbo `(:d ,(texref tex :layer idx))))
   (upload-transform obj))
 
@@ -37,3 +39,17 @@
 
 (defun make-directional (&rest args)
   (apply #'make-instance 'directional args))
+
+(defun-g shadow-factor ((light-sampler      :sampler-2d-array)
+                        (pos-in-light-space :vec4)
+                        (bias               :float)
+                        (light-index        :uint))
+  (let* ((proj-coords   (/ (s~ pos-in-light-space :xyz)
+                           (w  pos-in-light-space)))
+         (proj-coords   (+ .5 (* .5 proj-coords)))
+         (current-depth (z proj-coords))
+         (closest-depth (x (texture light-sampler (v! (s~ proj-coords :xy) light-index))))
+         (shadow        (step (- current-depth bias) closest-depth)))
+    (if (> current-depth 1)
+        1f0
+        shadow)))

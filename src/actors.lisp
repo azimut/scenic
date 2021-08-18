@@ -51,6 +51,10 @@
             (s~ world-pos :xyz)
             light-pos)))
 
+;; NOTE: it needs cepl/core/textures/texture.lisp/allocate-immutable-texture
+;; (:texture-cube-map-array
+;;  (tex-storage-3d texture-type (texture-mipmap-levels texture) (texture-image-format texture)
+;;                  width height (* 6 depth)))
 (defun-g actor-frag ((uv :vec2) (frag-norm :vec3) (frag-pos :vec3)
                      (light-pos (:vec4 3))
                      &uniform
@@ -61,25 +65,16 @@
                      (pointlights point-light-data :ubo))
   (let ((final-color (v! 0 0 0)))
     (dotimes (i (size dirlights))
-      (incf final-color
-            (* (dir-light-apply
-                color
-                (aref (colors dirlights) i)
-                (aref (positions dirlights) i)
-                frag-pos
-                frag-norm)
-               (shadow-factor shadows (aref light-pos i) .001 i))))
+      (with-slots (colors positions) dirlights
+        (incf final-color
+              (* (dir-light-apply color (aref colors i) (aref positions i) frag-pos frag-norm)
+                 (shadow-factor shadows (aref light-pos i) .003 i)))))
     (dotimes (i (size pointlights))
       (with-slots (colors positions linear quadratic) pointlights
-        (incf final-color (point-light-apply
-                           color
-                           (aref colors i)
-                           (aref positions i)
-                           frag-pos
-                           frag-norm
-                           (aref linear i)
-                           (aref quadratic i)))))
-    ;;(incf final-color (v! .01 .01 .01))
+        (incf final-color
+              (point-light-apply color (aref colors i) (aref positions i) frag-pos frag-norm
+                                 (aref linear i) (aref quadratic i)))))
+    (incf final-color (v! .01 .01 .01))
     (v! final-color 1)))
 
 (defpipeline-g actor-pipe ()
@@ -112,16 +107,4 @@
              :pointlights (point-ubo (lights scene))
              :time time))))
 
-(defun-g shadow-factor ((light-sampler      :sampler-2d-array)
-                        (pos-in-light-space :vec4)
-                        (bias               :float)
-                        (light-index        :uint))
-  (let* ((proj-coords   (/ (s~ pos-in-light-space :xyz)
-                           (w  pos-in-light-space)))
-         (proj-coords   (+ .5 (* .5 proj-coords)))
-         (current-depth (z proj-coords))
-         (closest-depth (x (texture light-sampler (v! (s~ proj-coords :xy) light-index))))
-         (shadow        (step (- current-depth bias) closest-depth)))
-    (if (> current-depth 1)
-        1f0
-        shadow)))
+

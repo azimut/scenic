@@ -11,6 +11,7 @@
                #:cepl.sdl2
                #:cepl.skitter.sdl2
                #:dirt
+               #:log4cl
                #:livesupport
                #:nineveh
                #:png

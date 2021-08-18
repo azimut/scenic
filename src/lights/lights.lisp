@@ -34,11 +34,12 @@
 
 (defstruct-g (point-light-data :layout :std-140)
   (positions   (:vec3 5) :accessor positions)
-  (lightspace  (:mat4 5) :accessor lightspace)
-  (shadowspace (shadow-projections 6) :accessor shadowspace)
+  (lightspace  (:mat4 5) :accessor lightspace); 1 world->clip matrix for the lights
+  (shadowspace (shadow-projections 6) :accessor shadowspace); 6 projections matrices
   (colors      (:vec3 5) :accessor colors)
   (linear      (:float 5))
   (quadratic   (:float 5))
+  (far         (:float 5)); FIXME: move to a camera?
   (size         :uint    :accessor size))
 
 (defmethod free ((obj lights))
@@ -61,7 +62,7 @@
     (setf dir-sam   (sample dir-tex :wrap :clamp-to-border :minify-filter :nearest :magnify-filter :nearest))
     (setf (cepl.samplers::border-color dir-sam) (v! 1 1 1 1))
     (setf dir-ubo   (make-ubo NIL 'dir-light-data))
-    (setf point-tex (make-texture nil :dimensions dim :element-type :depth-component24 :cubes t :layer-count 5))
+    (setf point-tex (make-texture nil :dimensions `(,dim ,dim) :element-type :depth-component24 :cubes t :layer-count 5))
     (setf point-sam (sample point-tex :wrap :clamp-to-edge :minify-filter :nearest :magnify-filter :nearest))
     (setf point-ubo (make-ubo NIL 'point-light-data))
     (with-gpu-array-as-c-array (c (ubo-data dir-ubo))
@@ -69,7 +70,7 @@
     (with-gpu-array-as-c-array (c (ubo-data point-ubo))
       (setf (size (aref-c c 0)) (length point-lights)))
     (init-collection dir-lights   dir-ubo   dir-tex)
-    (init-collection point-lights point-ubo dir-tex)))
+    (init-collection point-lights point-ubo point-tex)))
 
 (defun init-collection (lights ubo tex)
   "takes care of calling each individual light initialization, once we know their IDX"
@@ -82,8 +83,7 @@
 
 (defmethod draw ((obj scene) (lights lights) time)
   (dolist (i (dir-lights lights))   (draw obj i time))
-  ;;(dolist (i (point-lights lights)) (draw obj i time))
-  )
+  (dolist (i (point-lights lights)) (draw obj i time)))
 
 (defun make-lights (&rest args)
   (apply #'make-instance 'lights args))

@@ -23,7 +23,8 @@
             :pos (v! 2 2 2)
             :rot (q:point-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0))))
      (make-lights
-      :dir-lights
+      :dir-lights nil
+      #+nil
       (list (make-directional
              :pos (v! 100 50 50)
              :rot (q:point-at (v! 0 1 0) (v! 100 100 100) (v! 0 0 0))))
@@ -32,6 +33,7 @@
              :pos (v! 2 2 2)
              :color (v! 0 .5 0)
              :linear 0.35 :quadratic 0.44)
+            #+nil
             (make-point
              :pos (v! -2 2 -2)
              :color (v! .5 0 0)
@@ -44,21 +46,24 @@
       (setf (pos a) (v! (- (random 5) 2.5) 1 (- (random 5) 2.5)))
       (setf (rot a) (q:from-axis-angle (v! 0 1 0) (radians (random 180))))
       (push a (actors (current-scene)))))
-  ;;(push (make-actor :h 5f0) (actors (current-scene)))
+  (push (make-actor :h 5f0) (actors (current-scene)))
 
   )
 
-(def-simple-main-loop play-render (:on-start #'init)
-  (let* ((scene  (current-scene))
-         (camera (active-camera scene))
-         (time 0f0)
-         (dt 0f0))
-    (draw scene (lights scene) time)
-    (draw scene camera time)
-    (update scene dt)
-    (as-frame
-      (draw (post scene) camera time)
-      (draw-tex-br (dir-sam (lights scene)) :index 0)
+(let ((time 0f0))
+  (def-simple-main-loop play-render (:on-start #'init)
+    (let* ((scene  (current-scene))
+           (camera (active-camera scene))
+           ;;(time 0f0)
+           (dt 0f0))
+      ;;(draw scene (lights scene) time)
+      (draw scene camera time)
+      (update scene dt)
+      (as-frame
+        (draw (post scene) camera time)
+        ;;(draw-tex-br (dir-sam (lights scene)) :index 0)
+        )
+      ;;(incf time .001)
       )))
 
 (defun start ()
@@ -80,13 +85,16 @@
 (defun window-listener-trampoline (&rest args)
   (window-listener (first args)))
 
-
 (defmethod update ((obj directional) dt)
   (let* ((new-pos (v3:*s (v! -50 30 50) 1f0))
          (new-dis (v3:distance new-pos (v! 0 0 0))))
-    ;;(setf (pos obj) new-pos)
-    ;;(setf (rot obj)  (q:point-at (v! 0 1 0) new-pos (v! 0 0 0)))
+    ;; (setf (pos obj) new-pos)
+    ;; (setf (rot obj)  (q:point-at (v! 0 1 0) new-pos (v! 0 0 0)))
     ;; (setf (far obj)  (+ new-dis (* new-dis .1)))
     ;; (setf (near obj) (- new-dis (* new-dis .01)))
-    ;;(setf (fs obj) (v2! 9))
+    ;; (setf (fs obj) (v2! 10))
     ))
+(defmethod update ((camera perspective) dt)
+  (let ((pos (v! 7 10 4)))
+    (setf (pos camera) pos)
+    (setf (rot camera) (q:point-at (v! 0 1 0) pos (v! 0 0 0)))))
