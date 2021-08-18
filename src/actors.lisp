@@ -33,7 +33,8 @@
                      (world-view  :mat4)
                      (view-clip   :mat4)
                      (scale       :float)
-                     (dirlights   dir-light-data   :ubo))
+                     (dirlights   dir-light-data   :ubo)
+                     (pointlights point-light-data :ubo))
   (let* ((pos        (* scale (pos vert)))
          (norm       (norm vert))
          (tex        (tex vert))
@@ -41,46 +42,58 @@
          (world-pos  (* model-world (v! pos 1)))
          (view-pos   (* world-view  world-pos))
          (clip-pos   (* view-clip   view-pos))
-         (light-pos  (vector (v! 0 0 0 0) (v! 0 0 0 0) (v! 0 0 0 0))))
+         (dir-pos    (vector (v! 0 0 0 0) (v! 0 0 0 0) (v! 0 0 0 0)))
+         (point-pos  (vector (v! 0 0 0 0) (v! 0 0 0 0) (v! 0 0 0 0) (v! 0 0 0 0) (v! 0 0 0 0))))
     (dotimes (i (size dirlights))
-      (setf (aref light-pos i)
+      (setf (aref dir-pos i)
             (* (aref (lightspace dirlights) i) world-pos)))
+    (dotimes (i (size pointlights))
+      (setf (aref point-pos i)
+            (* (aref (lightspace pointlights) i) world-pos)))
     (values clip-pos
             tex
             world-norm
             (s~ world-pos :xyz)
-            light-pos)))
+            dir-pos
+            point-pos)))
 
 ;; NOTE: it needs cepl/core/textures/texture.lisp/allocate-immutable-texture
 ;; (:texture-cube-map-array
 ;;  (tex-storage-3d texture-type (texture-mipmap-levels texture) (texture-image-format texture)
 ;;                  width height (* 6 depth)))
 (defun-g actor-frag ((uv :vec2) (frag-norm :vec3) (frag-pos :vec3)
-                     (light-pos (:vec4 3))
+                     (dir-pos   (:vec4 3))
+                     (point-pos (:vec4 5))
                      &uniform
-                     (time        :float)
-                     (color       :vec3)
-                     (shadows     :sampler-2d-array)
-                     (dirlights   dir-light-data   :ubo)
+                     (time         :float)
+                     (color        :vec3)
+                     (dirshadows   :sampler-2d-array)
+                     (dirlights    dir-light-data   :ubo)
+                     (pointshadows :sampler-cube-array)
                      (pointlights point-light-data :ubo))
   (let ((final-color (v! 0 0 0)))
     (dotimes (i (size dirlights))
       (with-slots (colors positions) dirlights
         (incf final-color
               (* (dir-light-apply color (aref colors i) (aref positions i) frag-pos frag-norm)
-                 (shadow-factor shadows (aref light-pos i) .003 i)))))
+                 (shadow-factor dirshadows (aref dir-pos i) .003 i)))))
     (dotimes (i (size pointlights))
-      (with-slots (colors positions linear quadratic) pointlights
+      (with-slots (colors positions linear quadratic far) pointlights
         (incf final-color
-              (point-light-apply color (aref colors i) (aref positions i) frag-pos frag-norm
-                                 (aref linear i) (aref quadratic i)))))
-    (incf final-color (v! .01 .01 .01))
+              (* (point-light-apply color (aref colors i) (aref positions i) frag-pos frag-norm
+                                    (aref linear i) (aref quadratic i))
+                 (shadow-factor pointshadows
+                                frag-pos
+                                (V! 2 4 -2);; (s~ (aref point-pos i) :xyz)
+                                10f0; (aref far i)
+                                .03
+                                i)))))
+    (incf final-color (v! .01 .01 .1))
     (v! final-color 1)))
 
 (defpipeline-g actor-pipe ()
   :vertex (actor-vert g-pnt)
-  :fragment (actor-frag :vec2 :vec3 :vec3
-                        (:vec4 3)))
+  :fragment (actor-frag :vec2 :vec3 :vec3 (:vec4 3) (:vec4 5)))
 
 (let ((stepper (make-stepper (seconds 5) (seconds 5))))
   (defmethod update ((actor actor) dt)
@@ -93,11 +106,11 @@
                             (+ -2.5 (* 5 (cos (mynow)))) 0)))))
 
 (defmethod draw ((actor actor) (camera renderable) time)
-  (let* ((scene (current-scene))
-         (light-camera (first (dir-lights (lights scene)))))
+  (let* ((scene (current-scene)))
     (with-slots (buf scale color) actor
       (map-g #'actor-pipe buf
-             :shadows (dir-sam (lights scene))
+             :dirshadows (dir-sam (lights scene))
+             :pointshadows (point-sam (lights scene))
              :model-world (model->world actor)
              :world-view (world->view camera)
              :view-clip (projection camera)
@@ -106,5 +119,3 @@
              :dirlights (dir-ubo (lights scene))
              :pointlights (point-ubo (lights scene))
              :time time))))
-
-

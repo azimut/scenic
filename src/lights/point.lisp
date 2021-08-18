@@ -6,8 +6,8 @@
   (:default-initargs
    :fov 90f0
    :fs (v! 1 1)
-   :near 0.001
-   :far 50f0
+   :near .1f0
+   :far 25f0
    :linear 0.14
    :quadratic 0.07)
   (:documentation "simple pointlight light"))
@@ -68,11 +68,14 @@
   (declare (output-primitive :kind :triangle-strip
                              :max-vertices 18))
   (dotimes (face 6)
-    (setf gl-layer face)
+    ;; layer*6+face
+    (setf gl-layer (+ (* index 6) face))
+    ;;(setf gl-layer face)
     (dotimes (i 3)
       (let ((pos (gl-position (aref gl-in i))))
         (emit ()
-              (* (aref (shadow-projections-mats (aref (shadowspace pointlights) index))
+              (* (aref (shadow-projections-mats (aref (shadowspace pointlights)
+                                                      index))
                        face)
                  pos)
               pos)))
@@ -82,10 +85,14 @@
 (defun-g shadowmap-point-frag ((frag-pos :vec4) &uniform
                                (pointlights point-light-data :ubo)
                                (index :int))
-  (let* ((light-pos (aref (positions pointlights) index))
-         (far-plane (aref (point-light-data-far pointlights) index))
-         (light-distance (length (- (s~ frag-pos :xyz) light-pos)))
-         (light-distance (/ light-distance far-plane)))
+  (let* ((light-pos       (v! 2 4 -2)     ;(aref (positions pointlights) index)
+                          )
+         (far-plane       10;(aref (point-light-data-far pointlights) index)
+                          )
+         (light-distance (length (- (s~ frag-pos :xyz)
+                                    light-pos)))
+         (light-distance (/ light-distance
+                            far-plane)))
     (setf gl-frag-depth light-distance)
     (values)))
 
@@ -98,8 +105,8 @@
   (with-slots (buf) actor
     (map-g #'shadowmap-point-pipe buf
            :model->world (model->world actor)
-           :index (idx light)
-           :pointlights (ubo light))))
+           :pointlights (ubo light)
+           :index (idx light))))
 
 ;; Naive approach, works fast
 (defun-g shadow-factor ((light-sampler :sampler-cube-array)
@@ -109,7 +116,7 @@
                         (bias          :float)
                         (index         :int))
   (let* ((frag-to-light (- frag-pos light-pos))
-         (closest-depth (* (x (texture light-sampler (v! frag-to-light index)))
+         (closest-depth (* (x (texture light-sampler (v! frag-to-light 1)))
                            far-plane))
          (current-depth (length frag-to-light)))
     (if (> (- current-depth bias) closest-depth)

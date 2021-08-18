@@ -58,18 +58,18 @@
 
 (defmethod initialize-instance :after ((obj lights) &key dim dir-lights point-lights)
   (with-slots (dir-tex dir-sam dir-ubo point-ubo point-tex point-sam) obj
+    ;; DIRECTIONAL
     (setf dir-tex   (make-texture NIL :dimensions `(,dim ,dim) :layer-count 3 :element-type :depth-component24))
     (setf dir-sam   (sample dir-tex :wrap :clamp-to-border :minify-filter :nearest :magnify-filter :nearest))
     (setf (cepl.samplers::border-color dir-sam) (v! 1 1 1 1))
     (setf dir-ubo   (make-ubo NIL 'dir-light-data))
+    (with-gpu-array-as-c-array (c (ubo-data dir-ubo))   (setf (size (aref-c c 0)) (length dir-lights)))
+    (init-collection dir-lights   dir-ubo   dir-tex)
+    ;; POINT
     (setf point-tex (make-texture nil :dimensions `(,dim ,dim) :element-type :depth-component24 :cubes t :layer-count 5))
     (setf point-sam (sample point-tex :wrap :clamp-to-edge :minify-filter :nearest :magnify-filter :nearest))
     (setf point-ubo (make-ubo NIL 'point-light-data))
-    (with-gpu-array-as-c-array (c (ubo-data dir-ubo))
-      (setf (size (aref-c c 0)) (length dir-lights)))
-    (with-gpu-array-as-c-array (c (ubo-data point-ubo))
-      (setf (size (aref-c c 0)) (length point-lights)))
-    (init-collection dir-lights   dir-ubo   dir-tex)
+    (with-gpu-array-as-c-array (c (ubo-data point-ubo)) (setf (size (aref-c c 0)) (length point-lights)))
     (init-collection point-lights point-ubo point-tex)))
 
 (defun init-collection (lights ubo tex)
@@ -82,8 +82,8 @@
 (defgeneric init-light (obj idx ubo tex))
 
 (defmethod draw ((obj scene) (lights lights) time)
-  (dolist (i (dir-lights lights))   (draw obj i time))
-  (dolist (i (point-lights lights)) (draw obj i time)))
+  (dolist (i (point-lights lights)) (draw obj i time))
+  (dolist (i (dir-lights   lights)) (draw obj i time)))
 
 (defun make-lights (&rest args)
   (apply #'make-instance 'lights args))
