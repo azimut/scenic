@@ -7,7 +7,7 @@
    :fov 90f0
    :fs (v! 1 1)
    :near .1f0
-   :far 25f0
+   :far 10f0
    :linear 0.14
    :quadratic 0.07)
   (:documentation "simple pointlight light"))
@@ -45,9 +45,12 @@
 (defmethod (setf pos)  :after (_ (obj point))
   (upload-transform obj))
 
-(defmethod (setf far)  :after (_ (obj point))
+(defmethod (setf far)  :after (new-value (obj point))
   (upload-projection obj)
-  (upload-transform obj))
+  (upload-transform obj)
+  (with-gpu-array-as-c-array (c (ubo-data (ubo obj)))
+    (setf (aref-c (point-light-data-far (aref-c c 0)) (idx obj))
+          new-value)))
 (defmethod (setf near) :after (_ (obj point))
   (upload-projection obj)
   (upload-transform obj))
@@ -56,7 +59,8 @@
   (log4cl:log-info "~a IDX: ~d" obj idx)
   (setf (slot-value obj 'fbo) (make-fbo `(:d ,(texref tex :layer idx :cube-face nil))))
   (upload-transform obj)
-  (upload-projection obj))
+  (upload-projection obj)
+  (setf (far obj) (far obj)))
 
 ;; NOTE: needs patched cbaggers/glsl-spec to make gl-layer a "place"
 ;; TODO: use SCALE
@@ -68,9 +72,7 @@
   (declare (output-primitive :kind :triangle-strip
                              :max-vertices 18))
   (dotimes (face 6)
-    ;; layer*6+face
     (setf gl-layer (+ (* index 6) face))
-    ;;(setf gl-layer face)
     (dotimes (i 3)
       (let ((pos (gl-position (aref gl-in i))))
         (emit ()
@@ -85,10 +87,8 @@
 (defun-g shadowmap-point-frag ((frag-pos :vec4) &uniform
                                (pointlights point-light-data :ubo)
                                (index :int))
-  (let* ((light-pos       (v! 2 4 -2)     ;(aref (positions pointlights) index)
-                          )
-         (far-plane       10;(aref (point-light-data-far pointlights) index)
-                          )
+  (let* ((light-pos       (aref (positions pointlights) index))
+         (far-plane       (aref (point-light-data-far pointlights) index))
          (light-distance (length (- (s~ frag-pos :xyz)
                                     light-pos)))
          (light-distance (/ light-distance
@@ -116,7 +116,7 @@
                         (bias          :float)
                         (index         :int))
   (let* ((frag-to-light (- frag-pos light-pos))
-         (closest-depth (* (x (texture light-sampler (v! frag-to-light 1)))
+         (closest-depth (* (x (texture light-sampler (v! frag-to-light index)))
                            far-plane))
          (current-depth (length frag-to-light)))
     (if (> (- current-depth bias) closest-depth)

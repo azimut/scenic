@@ -37,6 +37,6 @@
   (let ((fbo (fbo light)))
     (with-setf (cull-face) :front)
     (with-fbo-bound (fbo :attachment-for-size :d)
-      (clear-fbo fbo :d)
+      ;;(clear-fbo fbo :d)
       (dolist (a (actors obj))
         (draw a light time)))))

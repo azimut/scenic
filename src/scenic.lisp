@@ -23,24 +23,25 @@
             :pos (v! 2 2 2)
             :rot (q:point-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0))))
      (make-lights
-      :dir-lights nil
-      #+nil
+      :dir-lights
       (list (make-directional
              :pos (v! 100 50 50)
              :rot (q:point-at (v! 0 1 0) (v! 100 100 100) (v! 0 0 0))))
       :point-lights
-      (list (make-point
-             :pos (v! 2 2 2)
-             :color (v! 0 .5 0)
-             :linear 0.35 :quadratic 0.44)
-            #+nil
-            (make-point
-             :pos (v! -2 2 -2)
-             :color (v! .5 0 0)
-             :linear 0.35 :quadratic 0.44)))
+      (list
+       (make-point
+        :pos (v! -2 2 -2)
+        :color (v! 0 .5 0)
+        :linear 0.35 :quadratic 0.44)
+       (make-point
+        :pos (v! 2 2 2)
+        :color (v! 0 0 .5)
+        :linear 0.35 :quadratic 0.44)
+       ))
      (make-simple-postprocess))))
   ;; Actors
   (push (make-actor :w 10f0 :d 10f0) (actors (current-scene)))
+  ;;#+nil
   (dotimes (i 5)
     (let ((a (make-actor)))
       (setf (pos a) (v! (- (random 5) 2.5) 1 (- (random 5) 2.5)))
@@ -96,7 +97,14 @@
     ))
 
 (defmethod update ((obj point) dt)
-  (let* ((new-pos (v! 2 4 -2)))
+  ;;#+nil
+  (let* ((new-pos (v! 3 4 2)))
+    ;;(setf (far obj) 10f0)
+    ;; (setf (pos obj) (pos obj))
+    ;; (setf (far obj)  (far obj))
+    ;; (setf (near obj) (near obj))
+    ;; (setf (linear obj) (linear obj))
+    ;; (setf (quadratic obj) (quadratic obj))
     ;; (setf (pos obj) new-pos)
     ;; (setf (far obj)  10f0)
     ;; (setf (near obj) .001)
@@ -106,6 +114,6 @@
 
 
 (defmethod update ((camera perspective) dt)
-  (let ((pos (v! 3 4 2)))
+  (let ((pos (v! -4 10 7)))
     (setf (pos camera) pos)
     (setf (rot camera) (q:point-at (v! 0 1 0) pos (v! 0 0 0)))))

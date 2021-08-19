@@ -60,7 +60,7 @@
 ;; NOTE: it needs cepl/core/textures/texture.lisp/allocate-immutable-texture
 ;; (:texture-cube-map-array
 ;;  (tex-storage-3d texture-type (texture-mipmap-levels texture) (texture-image-format texture)
-;;                  width height (* 6 depth)))
+;;                  width height (* 6 (texture-layer-count texture))))
 (defun-g actor-frag ((uv :vec2) (frag-norm :vec3) (frag-pos :vec3)
                      (dir-pos   (:vec4 3))
                      (point-pos (:vec4 5))
@@ -71,8 +71,10 @@
                      (dirlights    dir-light-data   :ubo)
                      (pointshadows :sampler-cube-array)
                      (pointlights point-light-data :ubo))
-  (let ((final-color (v! 0 0 0)))
-    (dotimes (i (size dirlights))
+  (let ((final-color (v! 0 0 0))
+        (shadow 0f0))
+    (dotimes (i 0;(size dirlights)
+                )
       (with-slots (colors positions) dirlights
         (incf final-color
               (* (dir-light-apply color (aref colors i) (aref positions i) frag-pos frag-norm)
@@ -80,16 +82,19 @@
     (dotimes (i (size pointlights))
       (with-slots (colors positions linear quadratic far) pointlights
         (incf final-color
-              (* (point-light-apply color (aref colors i) (aref positions i) frag-pos frag-norm
+              (* (point-light-apply color
+                                    (aref colors i) (aref positions i) frag-pos frag-norm
                                     (aref linear i) (aref quadratic i))
                  (shadow-factor pointshadows
                                 frag-pos
-                                (V! 2 4 -2);; (s~ (aref point-pos i) :xyz)
-                                10f0; (aref far i)
+                                (aref positions i)
+                                (aref far i)
                                 .03
                                 i)))))
-    (incf final-color (v! .01 .01 .1))
-    (v! final-color 1)))
+    ;;(incf final-color (v! .01 .01 .01))
+    ;;(v3! shadow)
+    (v! final-color 1)
+    ))
 
 (defpipeline-g actor-pipe ()
   :vertex (actor-vert g-pnt)
