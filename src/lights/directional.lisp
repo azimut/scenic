@@ -2,6 +2,11 @@
 
 (defclass directional (orth light)
   ()
+  (:default-initargs
+   :color (v! 1 1 1)
+   :fs (v2! 10)
+   :near  1f0
+   :far 100f0)
   (:documentation "simple directional light"))
 
 (defmethod (setf fs)   :after (_ (obj directional)) (upload-transform obj))
@@ -21,7 +26,7 @@
   (upload-transform obj))
 
 (defun-g simplest-3d-frag ((uv :vec2) (frag-norm :vec3) (frag-pos :vec3))
-  (values (v! 0 0 1 0)))
+  (values))
 
 (defpipeline-g simplest-3d-pipe ()
   :vertex   (vert g-pnt)

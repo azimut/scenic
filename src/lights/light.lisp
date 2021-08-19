@@ -6,10 +6,7 @@
    (idx :reader idx :documentation "light index on texture")
    (ubo :reader ubo :documentation "reference to scene ubo with light data"))
   (:default-initargs
-   :color (v! 1 1 1)
-   :fs (v2! 10)
-   :near  1f0
-   :far 100f0)
+   :color (v! 1 1 1))
   (:documentation "base class for all lights"))
 
 (defun upload-transform (light)
@@ -37,6 +34,6 @@
   (let ((fbo (fbo light)))
     (with-setf (cull-face) :front)
     (with-fbo-bound (fbo :attachment-for-size :d)
-      ;;(clear-fbo fbo :d)
+      (clear-fbo fbo :d)
       (dolist (a (actors obj))
         (draw a light time)))))
