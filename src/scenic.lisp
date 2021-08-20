@@ -38,11 +38,11 @@
       (list
        (make-point
         :pos (v! -2 2 -2)
-        :color (v! 0 .5 0)
+        :color (v! .1 .1 .3)
         :linear 0.35 :quadratic 0.44)
        (make-point
         :pos (v! 2 2 2)
-        :color (v! 0 0 .5)
+        :color (v! .8 .2 .6)
         :linear 0.35 :quadratic 0.44)
        ))
      (make-simple-postprocess))))
@@ -72,6 +72,7 @@
       (draw scene camera time)
       (as-frame
         (draw (post scene) camera time)
+        ;;(draw-tex-tl (first (sam camera)) :color-scale (v! 10 10 10 1) )
         ;;(draw-tex-br (point-sam (lights scene)) :index 1)
         ;;(draw-tex-br (dir-sam (lights scene)) :index 0)
         )
@@ -125,6 +126,6 @@
 
 
 (defmethod update ((camera perspective) dt)
-  (let ((pos (v! 4 2 -4)))
+  (let ((pos (v! -4 3 -4)))
     (setf (pos camera) pos)
-    (setf (rot camera) (q:point-at (v! 0 1 0) pos (v! -4 -2 3)))))
+    (setf (rot camera) (q:point-at (v! 0 1 0) pos (v! 0 0 0)))))

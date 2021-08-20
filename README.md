@@ -6,7 +6,7 @@ Next iteration after, azimut/shiny and azimut/incandescent.
 
 ## Why?
 
-Clean the repo.
+Clean the old repos.
 Stop relying of loosely related global variables.
 Have an easy way to define multiple lights/shadows.
 To support multiple "scenes".

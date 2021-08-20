@@ -82,7 +82,6 @@
                      (pointlights point-light-data :ubo))
   (let ((final-color (v! 0 0 0))
         (shadow      0f0))
-    ;;(incf final-color (* (v3! 0.01) color))
     (dotimes (i (size dirlights))
       (with-slots (colors positions) dirlights
         (incf final-color
@@ -101,6 +100,7 @@
                 cam-pos
                 (aref (pbr-material-roughness materials) material)
                 (aref (pbr-material-specular  materials) material))
+               ;;#+nil
                (pbr-point-lum (aref positions i) frag-pos cam-pos
                               frag-norm
                               (aref (pbr-material-roughness materials) material)
