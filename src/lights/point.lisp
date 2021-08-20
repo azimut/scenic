@@ -141,25 +141,3 @@
     (with-fbo-bound (fbo :attachment-for-size :d)
       (dolist (a (actors obj))
         (draw a light time)))))
-
-;; For cube map array textures,
-;;   zoffset is the first layer-face to clear,
-;;   depth   is the number of layer-faces to clear.
-#+nil
-(cffi:with-foreign-object (col :float)
-  (setf (cffi:mem-aref col :float) 0s0)
-  (let* ((arr  (texref (point-tex (lights (current-scene)))))
-         (format (element-type arr))
-         (type (pixel-format-type (image-format->pixel-format format)))
-         (dimensions (texture-base-dimensions (point-tex (lights (current-scene)))))
-         (zoffset 0)
-         (depth   6))
-    (%gl:clear-tex-sub-image (texture-id (point-tex (lights (current-scene))))
-                             0 0 0
-                             zoffset
-                             (first  dimensions)
-                             (second dimensions)
-                             depth
-                             :depth-component;;format    ; ENUM
-                             :unsigned-byte;;:int ;type      ; ENUM
-                             col)))
