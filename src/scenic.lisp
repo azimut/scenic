@@ -32,8 +32,7 @@
                :far (+ dis (* dis .1))
                :near (- dis (* dis .1))
                :fs (v2! 10))))
-      :point-lights nil
-      #+il
+      :point-lights
       (list
        (make-point
         :pos (v! -2 2 -2)
@@ -63,13 +62,14 @@
            (camera (active-camera scene))
            ;;(time 0f0)
            (dt 0f0))
+      (upload (lights scene))
+      (update scene dt)
       (draw scene (lights scene) time)
       (draw scene camera time)
-      (update scene dt)
       (as-frame
         (draw (post scene) camera time)
-        ;;(draw-tex-br (point-sam (lights scene)) :index 0)
-        (draw-tex-br (dir-sam (lights scene)) :index 0)
+        (draw-tex-br (point-sam (lights scene)) :index 0)
+        ;;(draw-tex-br (dir-sam (lights scene)) :index 0)
         )
       ;;(incf time .001)
       )))
@@ -94,14 +94,8 @@
   (window-listener (first args)))
 
 (defmethod update ((obj directional) dt)
-  (let* ((new-pos (v3:*s (v! 20 20 -30) 1f0))
+  (let* ((new-pos (v3:*s (v! 20 10 -30) 1f0))
          (new-dis (v3:distance new-pos (v! 0 0 0))))
-    ;; (setf (pos obj) (pos obj))
-    ;; (setf (rot obj) (rot obj))
-    ;; (setf (far obj) (far obj))
-    ;; (setf (near obj) (near obj))
-    ;; (setf (fs obj) (fs obj))
-    ;;
     ;; (setf (pos obj) new-pos)
     ;; (setf (rot obj)  (q:point-at (v! 0 1 0) new-pos (v! 0 0 0)))
     ;; (setf (far obj)  (+ new-dis (* new-dis .1)))
@@ -127,6 +121,6 @@
 
 
 (defmethod update ((camera perspective) dt)
-  (let ((pos (v! 2 3 4)))
+  (let ((pos (v! -3 4 -7)))
     (setf (pos camera) pos)
     (setf (rot camera) (q:point-at (v! 0 1 0) pos (v! 0 0 0)))))

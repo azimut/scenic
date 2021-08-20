@@ -73,13 +73,15 @@
                      (pointlights point-light-data :ubo))
   (let ((final-color (v! 0 0 0))
         (shadow 0f0))
-    (dotimes (i (size dirlights))
+    (dotimes (i 0;;(size dirlights)
+                )
       (with-slots (colors positions) dirlights
         (incf final-color
               (* (dir-light-apply color (aref colors i) (aref positions i) frag-pos frag-norm)
                  (shadow-factor dirshadows (aref dir-pos i) .003 i)))))
-    (dotimes (i 0;(size pointlights)
+    (dotimes (i 1;;(size pointlights)
                 )
+      (incf i 1)
       (with-slots (colors positions linear quadratic far) pointlights
         (incf final-color
               (* (point-light-apply color
