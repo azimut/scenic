@@ -2,8 +2,12 @@
 
 (defclass point (pers light)
   ((linear    :initarg :linear    :accessor linear    :documentation "linear factor of pointlight decay")
-   (quadratic :initarg :quadratic :accessor quadratic :documentation "quadratic factor of pointlight decay"))
+   (quadratic :initarg :quadratic :accessor quadratic :documentation "quadratic factor of pointlight decay")
+   (drawp   :initarg :drawp   :accessor drawp
+            :documentation "if TRUE would draw the scene from the light POV"
+            :allocation :class))
   (:default-initargs
+   :drawp T
    :fov 90f0
    :fs (v! 1 1)
    :near .1f0
@@ -11,6 +15,19 @@
    :linear 0.14
    :quadratic 0.07)
   (:documentation "simple pointlight light"))
+
+(defstruct-g (shadow-projections :layout :std-140)
+  (mats (:mat4 6)))
+
+(defstruct-g (point-light-data :layout :std-140)
+  (positions   (:vec3 5) :accessor positions)
+  (lightspace  (:mat4 5) :accessor lightspace); 1 world->clip matrix for the lights
+  (shadowspace (shadow-projections 6) :accessor shadowspace); 6 projections matrices
+  (colors      (:vec3 5) :accessor colors)
+  (linear      (:float 5))
+  (quadratic   (:float 5))
+  (far         (:float 5)); FIXME: move to a camera?
+  (size         :uint    :accessor size))
 
 (defmethod print-object ((obj point) stream)
   (print-unreadable-object (obj stream :type T :identity T)
@@ -31,11 +48,11 @@
         (setf (shadow-projections-mats (aref-c (shadowspace e) idx))
               (projection-mats obj))))))
 
-(defmethod (setf linear)    :after (_ (obj point)) (setf (uploadp obj) T (drawp obj) T))
-(defmethod (setf quadratic) :after (_ (obj point)) (setf (uploadp obj) T (drawp obj) T))
-(defmethod (setf pos)       :after (_ (obj point)) (setf (uploadp obj) T (drawp obj) T))
-(defmethod (setf far)       :after (_ (obj point)) (setf (uploadp obj) T (drawp obj) T))
-(defmethod (setf near)      :after (_ (obj point)) (setf (uploadp obj) T (drawp obj) T))
+(defmethod (setf linear)    :around (_ (obj point)) (setf (uploadp obj) T (drawp obj) T) (call-next-method))
+(defmethod (setf quadratic) :around (_ (obj point)) (setf (uploadp obj) T (drawp obj) T) (call-next-method))
+(defmethod (setf pos)       :around (_ (obj point)) (setf (uploadp obj) T (drawp obj) T) (call-next-method))
+(defmethod (setf far)       :around (_ (obj point)) (setf (uploadp obj) T (drawp obj) T) (call-next-method))
+(defmethod (setf near)      :around (_ (obj point)) (setf (uploadp obj) T (drawp obj) T) (call-next-method))
 
 (defun projection-mats (light)
   "Returns a list of 6 m4 projection matrices"
@@ -92,13 +109,6 @@
   :geometry (shadowmap-point-geom)
   :fragment (shadowmap-point-frag :vec4))
 
-(defmethod draw (actor (light point) time)
-  (with-slots (buf) actor
-    (map-g #'shadowmap-point-pipe buf
-           :model->world (model->world actor)
-           :pointlights (ubo light)
-           :index (idx light))))
-
 ;; Naive approach, works fast
 (defun-g shadow-factor ((light-sampler :sampler-cube-array)
                         (frag-pos      :vec3)
@@ -119,15 +129,16 @@
 (defun make-point (&rest args)
   (apply #'make-instance 'point args))
 
-(defmethod draw :around ((obj scene) (light point) _)
-  (when (drawp light)
-    (call-next-method)
-    (setf (drawp light) NIL)))
+(defmethod draw (actor (light point) time)
+  (with-slots (buf) actor
+    (map-g #'shadowmap-point-pipe buf
+           :model->world (model->world actor)
+           :pointlights (ubo light)
+           :index (idx light))))
 
 (defmethod draw ((obj scene) (light point) time)
   (let ((fbo (fbo light)))
     (with-fbo-bound (fbo :attachment-for-size :d)
-      (clear-fbo fbo :d)
       (dolist (a (actors obj))
         (draw a light time)))))
 

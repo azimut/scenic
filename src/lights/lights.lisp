@@ -18,29 +18,8 @@
 
 (defmethod print-object ((obj lights) stream)
   (print-unreadable-object (obj stream :type T :identity T)
-    (format stream "DIM:~a D: ~a P: ~a"
-            (slot-value obj 'dim)
-            (length (slot-value obj 'dir-lights))
-            (length (slot-value obj 'point-lights)))))
-
-(defstruct-g (dir-light-data :layout :std-140)
-  (positions  (:vec3 3) :accessor positions)
-  (lightspace (:mat4 3) :accessor lightspace)
-  (colors     (:vec3 3) :accessor colors)
-  (size        :uint    :accessor size))
-
-(defstruct-g (shadow-projections :layout :std-140)
-  (mats (:mat4 6)))
-
-(defstruct-g (point-light-data :layout :std-140)
-  (positions   (:vec3 5) :accessor positions)
-  (lightspace  (:mat4 5) :accessor lightspace); 1 world->clip matrix for the lights
-  (shadowspace (shadow-projections 6) :accessor shadowspace); 6 projections matrices
-  (colors      (:vec3 5) :accessor colors)
-  (linear      (:float 5))
-  (quadratic   (:float 5))
-  (far         (:float 5)); FIXME: move to a camera?
-  (size         :uint    :accessor size))
+    (with-slots (dim dir-lights point-lights) obj
+      (format stream "DIM:~a D: ~a P: ~a" dim (length dir-lights) (length point-lights)))))
 
 (defmethod free ((obj lights))
   (with-slots (dir-tex dir-ubo point-tex point-ubo dir-lights point-lights) obj
@@ -61,8 +40,8 @@
     ;; DIRECTIONAL
     (setf dir-tex   (make-texture NIL :dimensions `(,dim ,dim) :layer-count 3 :element-type :depth-component24))
     (setf dir-sam   (sample dir-tex :wrap :clamp-to-border :minify-filter :nearest :magnify-filter :nearest))
-    (setf (cepl.samplers::border-color dir-sam) (v! 1 1 1 1))
     (setf dir-ubo   (make-ubo NIL 'dir-light-data))
+    (setf (cepl.samplers::border-color dir-sam) (v! 1 1 1 1))
     (with-gpu-array-as-c-array (c (ubo-data dir-ubo))   (setf (size (aref-c c 0)) (length dir-lights)))
     (init-collection dir-lights   dir-ubo   dir-tex)
     ;; POINT
@@ -77,7 +56,7 @@
 (defun init-collection (lights ubo tex)
   "takes care of calling each individual light initialization, once we know their IDX"
   (let ((idx 0))
-    (dolist (light lights)
+    (dolist (lightn lights)
       (init-light light idx ubo tex)
       (incf idx))))
 
@@ -86,7 +65,15 @@
   (dolist (i (dir-lights   obj)) (upload i)))
 
 (defmethod draw ((obj scene) (lights lights) time)
-  (dolist (i (point-lights lights)) (draw obj i time))
+  ;; FIXME: hack, until I can clean a single cube in a cubemaparray, OR I implement an even system?
+  (when-let* ((pointlights (point-lights lights))
+              (first       (first pointlights))
+              (drawp       (drawp first)))
+    (when drawp
+      (clear-fbo (fbo first) :d)
+      (dolist (i pointlights)
+        (draw obj i time))
+      (setf (drawp first) NIL)))
   (dolist (i (dir-lights   lights)) (draw obj i time)))
 
 (defun make-lights (&rest args)

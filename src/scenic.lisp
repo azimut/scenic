@@ -23,15 +23,15 @@
             :pos (v! 2 2 2)
             :rot (q:point-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0))))
      (make-lights
-      :dir-lights
-      (list (let* ((pos (v! -50 30 20))
-                   (dis (v3:distance pos (v! 0 0 0))))
-              (make-directional
-               :pos pos
-               :rot (q:point-at (v! 0 1 0) pos (v! 0 0 0))
-               :far (+ dis (* dis .1))
-               :near (- dis (* dis .1))
-               :fs (v2! 10))))
+      :dir-lights nil
+      ;; (list (let* ((pos (v! -50 30 20))
+      ;;              (dis (v3:distance pos (v! 0 0 0))))
+      ;;         (make-directional
+      ;;          :pos pos
+      ;;          :rot (q:point-at (v! 0 1 0) pos (v! 0 0 0))
+      ;;          :far (+ dis (* dis .1))
+      ;;          :near (- dis (* dis .1))
+      ;;          :fs (v2! 10))))
       :point-lights
       (list
        (make-point
@@ -68,7 +68,7 @@
       (draw scene camera time)
       (as-frame
         (draw (post scene) camera time)
-        (draw-tex-br (point-sam (lights scene)) :index 0)
+        ;;(draw-tex-br (point-sam (lights scene)) :index 1)
         ;;(draw-tex-br (dir-sam (lights scene)) :index 0)
         )
       ;;(incf time .001)
@@ -121,6 +121,6 @@
 
 
 (defmethod update ((camera perspective) dt)
-  (let ((pos (v! -3 4 -7)))
+  (let ((pos (v! -4 2 -3)))
     (setf (pos camera) pos)
     (setf (rot camera) (q:point-at (v! 0 1 0) pos (v! 0 0 0)))))

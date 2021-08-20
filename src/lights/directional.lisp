@@ -1,12 +1,20 @@
 (in-package #:scenic)
 
 (defclass directional (orth light)
-  ()
+  ((drawp   :initarg :drawp   :accessor drawp
+            :documentation "if TRUE would draw the scene from the light POV"))
   (:default-initargs
+   :drawp T
    :fs (v2! 10)
    :near  1f0
    :far 100f0)
   (:documentation "simple directional light"))
+
+(defstruct-g (dir-light-data :layout :std-140)
+  (positions  (:vec3 3) :accessor positions)
+  (lightspace (:mat4 3) :accessor lightspace)
+  (colors     (:vec3 3) :accessor colors)
+  (size        :uint    :accessor size))
 
 (defmethod (setf fs)   :after (_ (obj directional)) (setf (uploadp obj) T (drawp obj) T))
 (defmethod (setf far)  :after (_ (obj directional)) (setf (uploadp obj) T (drawp obj) T))
@@ -21,9 +29,10 @@
 (defmethod upload ((obj directional))
   (with-slots (pos color ubo idx) obj
     (with-gpu-array-as-c-array (c (ubo-data ubo))
-      (setf (aref-c (lightspace (aref-c c 0)) idx) (world->clip obj))
-      (setf (aref-c (positions  (aref-c c 0)) idx) pos)
-      (setf (aref-c (colors     (aref-c c 0)) idx) color))))
+      (let ((e (aref-c c 0)))
+        (setf (aref-c (lightspace e) idx) (world->clip obj))
+        (setf (aref-c (positions  e) idx) pos)
+        (setf (aref-c (colors     e) idx) color)))))
 
 (defmethod init-light :after ((obj directional) idx ubo tex)
   (log4cl:log-info "~a IDX: ~d" obj idx)
@@ -37,8 +46,6 @@
   :fragment (simplest-3d-frag :vec2 :vec3 :vec3))
 
 (defmethod draw (actor (camera directional) time)
-  "Simple pass to draw actor from light's POV"
-  (with-setf (cull-face) :front)
   (with-slots (buf scale) actor
     (map-g #'simplest-3d-pipe buf
            :model-world (model->world actor)
@@ -52,6 +59,7 @@
     (setf (drawp light) NIL)))
 
 (defmethod draw ((obj scene) (light directional) time)
+  ;;(with-setf (cull-face) :front)
   (let ((fbo (fbo light)))
     (with-fbo-bound (fbo :attachment-for-size :d)
       (clear-fbo fbo :d)
