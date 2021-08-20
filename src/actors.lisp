@@ -1,12 +1,14 @@
 (in-package #:scenic)
 
 (defclass actor ()
-  ((pos   :initarg :pos   :accessor pos   :documentation "3d position")
-   (rot   :initarg :rot   :accessor rot   :documentation "3d rotation")
-   (buf   :initarg :buf   :accessor buf   :documentation "buffer stream")
-   (color :initarg :color :accessor color :documentation "base color")
-   (scale :initarg :scale :accessor scale :documentation "vextex fudge scale"))
+  ((pos      :initarg :pos      :accessor pos      :documentation "3d position")
+   (rot      :initarg :rot      :accessor rot      :documentation "3d rotation")
+   (buf      :initarg :buf      :accessor buf      :documentation "buffer stream")
+   (color    :initarg :color    :accessor color    :documentation "base color")
+   (scale    :initarg :scale    :accessor scale    :documentation "vextex fudge scale")
+   (material :initarg :material :accessor material :documentation "material index"))
   (:default-initargs
+   :material 0
    :color (v! 1 1 1)
    :pos (v! 0 0 0 0)
    :rot (q:identity)
@@ -14,13 +16,23 @@
    :buf (box))
   (:documentation "base object"))
 
+(defmethod specular  ((obj actor)) (specular  (nth (material obj) (materials *state*))))
+(defmethod metallic  ((obj actor)) (metallic  (nth (material obj) (materials *state*))))
+(defmethod emissive  ((obj actor)) (emissive  (nth (material obj) (materials *state*))))
+(defmethod roughness ((obj actor)) (roughness (nth (material obj) (materials *state*))))
+
+(defmethod (setf specular)  (new-value (obj actor)) (setf (specular  (nth (material obj) (materials *state*))) new-value))
+(defmethod (setf metallic)  (new-value (obj actor)) (setf (metallic  (nth (material obj) (materials *state*))) new-value))
+(defmethod (setf emissive)  (new-value (obj actor)) (setf (emissive  (nth (material obj) (materials *state*))) new-value))
+(defmethod (setf roughness) (new-value (obj actor)) (setf (roughness (nth (material obj) (materials *state*))) new-value))
+
 (defun model->world (actor)
   (with-slots (pos rot) actor
     (m4:* (m4:translation pos)
           (q:to-mat4      rot))))
 
-(defun make-actor (&key (w 1f0) (h 1f0) (d 1f0) (pos (v! 0 0 0)))
-  (make-instance 'actor :buf (box w h d) :pos pos))
+(defun make-actor (&key (w 1f0) (h 1f0) (d 1f0) (pos (v! 0 0 0)) (material 0))
+  (make-instance 'actor :buf (box w h d) :pos pos :material material))
 
 ;;--------------------------------------------------
 ;; UPDATE
@@ -65,6 +77,9 @@
                      (dir-pos   (:vec4 3))
                      (point-pos (:vec4 5))
                      &uniform
+                     (material     :int)
+                     (materials    pbr-material :ubo)
+                     (cam-pos      :vec3)
                      (time         :float)
                      (color        :vec3)
                      (dirshadows   :sampler-2d-array)
@@ -73,9 +88,8 @@
                      (pointlights point-light-data :ubo))
   (let ((final-color (v! 0 0 0))
         (shadow      0f0))
-    (incf final-color (* (v3! 0.01) color))
-    (dotimes (i 0;;(size dirlights)
-                )
+    ;;(incf final-color (* (v3! 0.01) color))
+    (dotimes (i (size dirlights))
       (with-slots (colors positions) dirlights
         (incf final-color
               (* (dir-light-apply color (aref colors i) (aref positions i) frag-pos frag-norm)
@@ -86,7 +100,10 @@
         (incf final-color
               (* (point-light-apply color
                                     (aref colors i) (aref positions i) frag-pos frag-norm
-                                    (aref linear i) (aref quadratic i))
+                                    1f0 (aref linear i) (aref quadratic i)
+                                    cam-pos
+                                    (aref (pbr-material-roughness materials) material)
+                                    (aref (pbr-material-specular  materials) material))
                  (shadow-factor pointshadows
                                 frag-pos
                                 (aref positions i)
@@ -114,8 +131,9 @@
 
 (defmethod draw ((actor actor) (camera renderable) time)
   (let* ((scene (current-scene)))
-    (with-slots (buf scale color) actor
+    (with-slots (buf scale color material) actor
       (map-g #'actor-pipe buf
+             :cam-pos (pos camera)
              :dirshadows (dir-sam (lights scene))
              :pointshadows (point-sam (lights scene))
              :model-world (model->world actor)
@@ -123,6 +141,8 @@
              :view-clip (projection camera)
              :scale scale
              :color color
+             :material material
+             :materials (materials-ubo *state*)
              :dirlights (dir-ubo (lights scene))
              :pointlights (point-ubo (lights scene))
              :time time))))

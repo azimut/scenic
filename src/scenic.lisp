@@ -14,9 +14,11 @@
 (defun init ()
   (free *state*)
   (slynk-hook)
+  (reset-pbr-counter)
   (skitter-cleanup)
   (skitter:listen-to #'window-listener-trampoline (skitter:window 0) :size)
   (init-state
+   (list (make-pbr))
    (list
     (make-scene
      (list (make-perspective
@@ -62,6 +64,8 @@
            (camera (active-camera scene))
            ;;(time 0f0)
            (dt 0f0))
+      (dolist (m (materials *state*))
+        (upload m))
       (upload (lights scene))
       (update scene dt)
       (draw scene (lights scene) time)
@@ -121,6 +125,6 @@
 
 
 (defmethod update ((camera perspective) dt)
-  (let ((pos (v! -4 2 -3)))
+  (let ((pos (v! 0 2 5)))
     (setf (pos camera) pos)
     (setf (rot camera) (q:point-at (v! 0 1 0) pos (v! 0 0 0)))))
