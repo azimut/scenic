@@ -34,12 +34,6 @@
 (defun make-actor (&key (w 1f0) (h 1f0) (d 1f0) (pos (v! 0 0 0)) (material 0))
   (make-instance 'actor :buf (box w h d) :pos pos :material material))
 
-;;--------------------------------------------------
-;; UPDATE
-;;--------------------------------------------------
-(defgeneric update (actor dt))
-(defmethod update (actor dt))
-
 (defun-g actor-vert ((vert g-pnt) &uniform
                      (model-world :mat4)
                      (world-view  :mat4)
@@ -118,16 +112,6 @@
 (defpipeline-g actor-pipe ()
   :vertex (actor-vert g-pnt)
   :fragment (actor-frag :vec2 :vec3 :vec3 (:vec4 3) (:vec4 5)))
-
-(let ((stepper (make-stepper (seconds 5) (seconds 5))))
-  (defmethod update ((actor actor) dt)
-    #+nil
-    (when (funcall stepper)
-      (setf (rot actor)
-            (q:* (q:from-axis-angle (v! 1 0 0) (radians (random 90)))
-                 (q:from-axis-angle (v! 0 0 1) (radians (random 90)))))
-      (setf (pos actor) (v! (+ -2.5 (* 5 (sin (mynow)))) 0
-                            (+ -2.5 (* 5 (cos (mynow)))) 0)))))
 
 (defmethod draw ((actor actor) (camera renderable) time)
   (let* ((scene (current-scene)))

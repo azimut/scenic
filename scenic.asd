@@ -29,6 +29,7 @@
    (:file "camera")
    (:file "misc-gpu")
    (:file "render")
+   (:file "pbr")
    (:file "scene")
    (:file "lights/light")
    (:file "lights/directional")

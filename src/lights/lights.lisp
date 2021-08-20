@@ -56,7 +56,7 @@
 (defun init-collection (lights ubo tex)
   "takes care of calling each individual light initialization, once we know their IDX"
   (let ((idx 0))
-    (dolist (lightn lights)
+    (dolist (light lights)
       (init-light light idx ubo tex)
       (incf idx))))
 
