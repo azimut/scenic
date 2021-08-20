@@ -92,18 +92,28 @@
       ;;(incf i 1)
       (with-slots (colors positions linear quadratic far) pointlights
         (incf final-color
-              (* (point-light-apply color
-                                    (aref colors i) (aref positions i) frag-pos frag-norm
-                                    1f0 (aref linear i) (aref quadratic i)
-                                    cam-pos
-                                    (aref (pbr-material-roughness materials) material)
-                                    (aref (pbr-material-specular  materials) material))
-                 (shadow-factor pointshadows
-                                frag-pos
-                                (aref positions i)
-                                (aref far i)
-                                .03
-                                i)))))
+              (*
+               #+nil
+               (point-light-apply
+                color
+                (aref colors i) (aref positions i) frag-pos frag-norm
+                1f0 (aref linear i) (aref quadratic i)
+                cam-pos
+                (aref (pbr-material-roughness materials) material)
+                (aref (pbr-material-specular  materials) material))
+               (pbr-point-lum (aref positions i) frag-pos cam-pos
+                              frag-norm
+                              (aref (pbr-material-roughness materials) material)
+                              (aref (pbr-material-metallic materials) material)
+                              color
+                              (aref (pbr-material-specular materials) material)
+                              (aref linear i) (aref quadratic i) (aref colors i))
+               (shadow-factor pointshadows
+                              frag-pos
+                              (aref positions i)
+                              (aref far i)
+                              .03
+                              i)))))
     ;;(incf final-color (v! .01 .01 .01))
     ;;(v3! shadow)
     (v! final-color 1)

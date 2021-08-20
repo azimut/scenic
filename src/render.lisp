@@ -1,8 +1,5 @@
 (in-package #:scenic)
 
-;;--------------------------------------------------
-;; 3D - g-pnt mesh without tangents
-
 (defun-g vert ((vert g-pnt) &uniform
                (model-world :mat4)
                (world-view  :mat4)
