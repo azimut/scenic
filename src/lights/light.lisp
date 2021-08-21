@@ -2,7 +2,7 @@
 
 (defclass light ()
   ((fbo :reader fbo :documentation "light camera fbo")
-   (idx :reader idx :documentation "light index on texture")
+   (idx :reader idx :documentation "light index on texture, for the type")
    (ubo :reader ubo :documentation "reference to scene ubo with light data")
    (color   :initarg :color   :accessor color   :documentation "light color")
    (uploadp :initarg :uploadp :accessor uploadp :documentation "if TRUE, upload the information to the GPU"))
@@ -20,9 +20,8 @@
     (call-next-method)
     (setf (uploadp obj) NIL)))
 
-(defmethod init-light ((obj light) idx ubo tex)
+(defmethod init-light ((obj light) ubo tex)
   "ran by LIGHTS container object, when we know the IDX"
-  (setf (slot-value obj 'idx) idx)
   (setf (slot-value obj 'ubo) ubo)
   (upload obj))
 

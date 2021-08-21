@@ -14,6 +14,7 @@
    :far 10f0
    :linear 0.14
    :quadratic 0.07)
+  (:metaclass counted-class)
   (:documentation "simple pointlight light"))
 
 (defstruct-g (shadow-projections :layout :std-140)
@@ -28,6 +29,14 @@
   (quadratic   (:float 5))
   (far         (:float 5)); FIXME: move to a camera?
   (size         :uint    :accessor size))
+
+(defun reset-point-counter ()
+  (setf (slot-value (find-class 'point) 'counter) 0))
+(defun current-point-counter ()
+  (slot-value (find-class 'point) 'counter))
+(defmethod initialize-instance :after ((obj point) &key)
+  (print "initializing")
+  (setf (slot-value obj 'idx) (current-point-counter)))
 
 (defmethod print-object ((obj point) stream)
   (print-unreadable-object (obj stream :type T :identity T)
@@ -66,9 +75,10 @@
      (m4:* projection (m4:look-at (v! 0 -1  0) light-pos (v3:+ light-pos (v!  0  0  1))))
      (m4:* projection (m4:look-at (v! 0 -1  0) light-pos (v3:+ light-pos (v!  0  0 -1)))))))
 
-(defmethod init-light :after ((obj point) idx ubo tex)
-  (log4cl:log-info "~a IDX: ~d" obj idx)
-  (setf (slot-value obj 'fbo) (make-fbo `(:d ,(texref tex :layer idx :cube-face nil)))))
+(defmethod init-light :after ((obj point) ubo tex)
+  (let ((idx (idx obj)))
+    (log4cl:log-info "~a IDX: ~d" obj idx)
+    (setf (slot-value obj 'fbo) (make-fbo `(:d ,(texref tex :layer idx :cube-face nil))))))
 
 ;; NOTE: needs patched cbaggers/glsl-spec to make gl-layer a "place"
 ;; TODO: use SCALE

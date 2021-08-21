@@ -51,14 +51,12 @@
     (with-gpu-array-as-c-array (c (ubo-data point-ubo)) (setf (size (aref-c c 0)) (length point-lights)))
     (init-collection point-lights point-ubo point-tex)))
 
-(defgeneric init-light (obj idx ubo tex))
+(defgeneric init-light (obj ubo tex))
 
 (defun init-collection (lights ubo tex)
   "takes care of calling each individual light initialization, once we know their IDX"
-  (let ((idx 0))
-    (dolist (light lights)
-      (init-light light idx ubo tex)
-      (incf idx))))
+  (dolist (light lights)
+    (init-light light ubo tex)))
 
 (defmethod upload ((obj lights))
   (dolist (i (point-lights obj)) (upload i))

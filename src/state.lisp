@@ -4,19 +4,22 @@
 
 (defclass state ()
   ((scenes        :initarg :scenes
-                  :initform (error ":scenes must be specified")
-                  :accessor scenes)
-   (scene-index   :initarg :scene-index
+                  :accessor scenes
+                  :initform (error ":scenes must be specified"))
+   (scene-index   :reader   scene-index
                   :initform 0
-                  :reader   scene-index
                   :documentation "current scene index")
    (materials     :initarg :materials
+                  :accessor materials
                   :initform (error ":materials must be specified")
-                  :reader materials
                   :documentation "list of materials")
-   (materials-ubo :initarg :materials-ubo
-                  :reader materials-ubo
-                  :documentation "ubo of materials"))
+   (materials-ubo :reader   materials-ubo
+                  :documentation "ubo of materials")
+   (last-time     :initarg :last-time
+                  :accessor last-time
+                  :documentation "previous loop time"))
+  (:default-initargs
+   :last-time (get-internal-real-time))
   (:documentation "main state"))
 
 (defmethod initialize-instance :after ((obj state) &key materials)

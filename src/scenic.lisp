@@ -11,73 +11,37 @@
   (slynk-mrepl::send-prompt (find (bt:current-thread) (slynk::channels)
                                   :key #'slynk::channel-thread)))
 
+(defun init-all-the-things ())
+
 (defun init ()
   (free *state*)
   (slynk-hook)
   (reset-pbr-counter)
+  (reset-point-counter)
+  (reset-directional-counter)
   (skitter-cleanup)
+  (init-all-the-things)
   (skitter:listen-to #'window-listener-trampoline (skitter:window 0) :size)
-  (init-state
-   (list (make-pbr))
-   (list
-    (make-scene
-     (list (make-perspective
-            :pos (v! 2 2 2)
-            :rot (q:point-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0))))
-     (make-lights
-      :dir-lights nil
-      ;; (list (let* ((pos (v! -50 30 20))
-      ;;              (dis (v3:distance pos (v! 0 0 0))))
-      ;;         (make-directional
-      ;;          :pos pos
-      ;;          :rot (q:point-at (v! 0 1 0) pos (v! 0 0 0))
-      ;;          :far (+ dis (* dis .1))
-      ;;          :near (- dis (* dis .1))
-      ;;          :fs (v2! 10))))
-      :point-lights
-      (list
-       (make-point
-        :pos (v! -2 2 -2)
-        :color (v! .1 .1 .3)
-        :linear 0.35 :quadratic 0.44)
-       (make-point
-        :pos (v! 2 2 2)
-        :color (v! .8 .2 .6)
-        :linear 0.35 :quadratic 0.44)
-       ))
-     (make-simple-postprocess))))
-  ;; Actors
-  (push (make-actor :w 10f0 :d 10f0) (actors (current-scene)))
-  ;;#+nil
-  (dotimes (i 5)
-    (let ((a (make-actor)))
-      (setf (pos a) (v! (- (random 5) 2.5) 1 (- (random 5) 2.5)))
-      (setf (rot a) (q:from-axis-angle (v! 0 1 0) (radians (random 180))))
-      (push a (actors (current-scene)))))
-  (push (make-actor :h 5f0) (actors (current-scene)))
+  (setf (last-time *state*) (get-internal-real-time)))
 
-  )
-
-(let ((time 0f0))
-  (def-simple-main-loop play-render (:on-start #'init)
-    (let* ((scene  (current-scene))
-           (camera (active-camera scene))
-           ;;(time 0f0)
-           (dt 0f0))
-      (dolist (m (materials *state*))
-        (upload m))
-      (upload (lights scene))
-      (update scene dt)
-      (draw scene (lights scene) time)
-      (draw scene camera time)
-      (as-frame
-        (draw (post scene) camera time)
-        ;;(draw-tex-tl (first (sam camera)) :color-scale (v! 10 10 10 1) )
-        ;;(draw-tex-br (point-sam (lights scene)) :index 1)
-        ;;(draw-tex-br (dir-sam (lights scene)) :index 0)
-        )
-      ;;(incf time .001)
-      )))
+(def-simple-main-loop play-render (:on-start #'init)
+  (let* ((scene  (current-scene))
+         (camera (active-camera scene))
+         (now    (get-internal-real-time))
+         (dt     (* (- now (last-time *state*) .001)))
+         (dt     (if (> dt .16) .00001 dt)))
+    (setf (last-time *state*) now)
+    (upload scene)
+    (update scene dt)
+    (draw scene (lights scene) dt)
+    (draw scene camera dt)
+    (as-frame
+      (draw (post scene) camera dt)
+      ;;(draw-tex-tl (first (sam camera)) :color-scale (v! 10 10 10 1) )
+      ;;(draw-tex-br (point-sam (lights scene)) :index 1)
+      ;;(draw-tex-br (dir-sam (lights scene)) :index 0)
+      )
+    ))
 
 (defun start ()
   (play-render :start))

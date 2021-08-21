@@ -51,3 +51,11 @@
    X=Distance
    Y=Linear
    Z=Quadratic")
+
+
+(defvar *vec3-right*   (v!  1  0  0))
+(defvar *vec3-left*    (v! -1  0  0))
+(defvar *vec3-up*      (v!  0  1  0))
+(defvar *vec3-down*    (v!  0 -1  0))
+(defvar *vec3-forward* (v!  0  0  1))
+(defvar *vec3-back*    (v!  0  0 -1))

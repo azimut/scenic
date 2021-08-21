@@ -66,3 +66,7 @@
 (defun active-camera (scene)
   (nth (camera-index scene) (cameras scene)))
 
+(defmethod upload ((obj scene))
+  (dolist (m (materials *state*))
+    (upload m))
+  (upload (lights obj)))
