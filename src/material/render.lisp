@@ -80,3 +80,42 @@
                      radiance
                      n-dot-l)))
     (* attenuation lo)))
+
+(defun-g pbr-direct-lum ((light-pos         :vec3)
+                         (frag-pos          :vec3)
+                         (cam-pos           :vec3)
+                         (n                 :vec3)
+                         (roughness         :float)
+                         (metallic          :float)
+                         (albedo            :vec3)
+                         (specular-strength :float)
+                         (light-color       :vec3))
+  (let* ((v  (normalize (- cam-pos frag-pos)))
+         (f0 (vec3 0.04))
+         (f0 (mix f0 albedo metallic))
+         (l  (normalize (- light-pos frag-pos)))
+         (h  (normalize (+ v l)))
+         ;;
+         (radiance light-color)
+         ;; pbr - cook-torrance brdf
+         (ndf (distribution-ggx n h roughness))
+         (g   (geometry-smith n v l roughness))
+         (f   (fresnel-schlick (max (dot h v) 0) f0))
+         ;;
+         (ks f)
+         (kd (- 1 ks))
+         (kd (* kd (- 1 metallic)))
+         ;;
+         (numerator   (* ndf g f))
+         (denominator (+ 0.001
+                         (* (max (dot n v) 0)
+                            (max (dot n l) 0)
+                            4)))
+         (specular    (* specular-strength
+                         (/ numerator denominator)))
+         ;; add to outgoing radiance lo
+         (n-dot-l (max (dot n l) 0))
+         (lo (* (+ specular (/ (* kd albedo) +PI+))
+                radiance
+                n-dot-l)))
+    lo))

@@ -16,6 +16,13 @@
    :buf (box))
   (:documentation "base object"))
 
+(defmethod print-object ((obj actor) stream)
+  (print-unreadable-object (obj stream :type T :identity T)
+    (with-slots (pos) obj
+      (format stream "(~a ~a ~a)" (x pos) (y pos) (z pos)))))
+
+(defmethod update (actor dt))
+
 (defmethod specular  ((obj actor)) (specular  (nth (material obj) (materials *state*))))
 (defmethod metallic  ((obj actor)) (metallic  (nth (material obj) (materials *state*))))
 (defmethod emissive  ((obj actor)) (emissive  (nth (material obj) (materials *state*))))
@@ -85,35 +92,31 @@
     (dotimes (i (size dirlights))
       (with-slots (colors positions) dirlights
         (incf final-color
-              (* (dir-light-apply color (aref colors i) (aref positions i) frag-pos frag-norm)
+              (* (pbr-direct-lum (aref positions i) frag-pos cam-pos frag-norm
+                                 (aref (pbr-material-roughness materials) material)
+                                 (aref (pbr-material-metallic materials) material)
+                                 color
+                                 (aref (pbr-material-specular materials) material)
+                                 (aref colors i))
                  (shadow-factor dirshadows (aref dir-pos i) .003 i)))))
-    (dotimes (i (size pointlights))
+    (dotimes (i (size pointlights)
+                )
       ;;(incf i 1)
       (with-slots (colors positions linear quadratic far) pointlights
         (incf final-color
-              (*
-               #+nil
-               (point-light-apply
-                color
-                (aref colors i) (aref positions i) frag-pos frag-norm
-                1f0 (aref linear i) (aref quadratic i)
-                cam-pos
-                (aref (pbr-material-roughness materials) material)
-                (aref (pbr-material-specular  materials) material))
-               ;;#+nil
-               (pbr-point-lum (aref positions i) frag-pos cam-pos
-                              frag-norm
-                              (aref (pbr-material-roughness materials) material)
-                              (aref (pbr-material-metallic materials) material)
-                              color
-                              (aref (pbr-material-specular materials) material)
-                              (aref linear i) (aref quadratic i) (aref colors i))
-               (shadow-factor pointshadows
-                              frag-pos
-                              (aref positions i)
-                              (aref far i)
-                              .03
-                              i)))))
+              (* (pbr-point-lum (aref positions i) frag-pos cam-pos
+                                frag-norm
+                                (aref (pbr-material-roughness materials) material)
+                                (aref (pbr-material-metallic materials) material)
+                                color
+                                (aref (pbr-material-specular materials) material)
+                                (aref linear i) (aref quadratic i) (aref colors i))
+                 (shadow-factor pointshadows
+                                frag-pos
+                                (aref positions i)
+                                (aref far i)
+                                .03
+                                i)))))
     ;;(incf final-color (v! .01 .01 .01))
     ;;(v3! shadow)
     (v! final-color 1)
