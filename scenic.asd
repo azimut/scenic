@@ -25,10 +25,9 @@
   :entry-point "scenic:start"
   :components
   ((:file "package")
-   (:file "screenshoot")
+   (:file "screenshot")
    (:file "assets")
    (:file "camera")
-   (:file "misc-gpu")
    (:file "render")
    (:file "material/render")
    (:file "material/pbr")
