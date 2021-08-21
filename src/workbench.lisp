@@ -1,0 +1,33 @@
+(in-package #:scenic)
+
+(defmethod update ((obj directional) dt)
+  (let* ((new-pos (v3:*s (v! 20 10 -30) 1f0))
+         (new-dis (v3:distance new-pos (v! 0 0 0))))
+    ;; (setf (pos obj) new-pos)
+    ;; (setf (rot obj)  (q:point-at (v! 0 1 0) new-pos (v! 0 0 0)))
+    ;; (setf (far obj)  (+ new-dis (* new-dis .1)))
+    ;; (setf (near obj) (- new-dis (* new-dis .1)))
+    ;; (setf (fs obj) (v2! 10))
+    ))
+
+(defmethod update ((obj point) dt)
+  ;;#+nil
+  (let* ((new-pos (v! 3 4 2)))
+    ;;(setf (far obj) 10f0)
+    ;; (setf (pos obj) (pos obj))
+    ;; (setf (far obj)  (far obj))
+    ;; (setf (near obj) (near obj))
+    ;; (setf (linear obj) (linear obj))
+    ;; (setf (quadratic obj) (quadratic obj))
+    ;; (setf (pos obj) new-pos)
+    ;; (setf (far obj)  10f0)
+    ;; (setf (near obj) .001)
+    ;; (setf (linear obj) 0.35)
+    ;; (setf (quadratic obj) 0.44)
+    ))
+
+
+(defmethod update ((camera perspective) dt)
+  (let ((pos (v! 3.5 5 -4)))
+    (setf (pos camera) pos)
+    (setf (rot camera) (q:point-at (v! 0 1 0) pos (v! 0 0 0)))))
