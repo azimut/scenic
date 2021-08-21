@@ -38,5 +38,6 @@
    (:file "lights/point")
    (:file "lights/lights")
    (:file "scenic")
-   (:file "postprocess")
+   (:file "postprocess/postprocess")
+   (:file "postprocess/simple")
    (:file "actors")))
