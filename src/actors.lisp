@@ -13,8 +13,8 @@
    :pos (v! 0 0 0 0)
    :rot (q:identity)
    :scale 1f0
-   :buf (box))
-  (:documentation "base object"))
+   :buf (box 1 1 1 t))
+  (:documentation "base object, with tangents"))
 
 (defmethod print-object ((obj actor) stream)
   (print-unreadable-object (obj stream :type T :identity T)
@@ -39,7 +39,7 @@
           (q:to-mat4      rot))))
 
 (defun make-actor (&key (w 1f0) (h 1f0) (d 1f0) (pos (v! 0 0 0)) (material 0))
-  (make-instance 'actor :buf (box w h d) :pos pos :material material))
+  (make-instance 'actor :buf (box w h d t) :pos pos :material material))
 
 (defun-g actor-vert ((vert g-pnt) &uniform
                      (model-world :mat4)
@@ -75,8 +75,14 @@
 ;;  (tex-storage-3d texture-type (texture-mipmap-levels texture) (texture-image-format texture)
 ;;                  width height (* 6 (texture-layer-count texture))))
 (defun-g actor-frag ((uv :vec2) (frag-norm :vec3) (frag-pos :vec3)
+                     (tbn :mat3)
                      (dir-pos   (:vec4 2))
                      (spot-pos  (:vec4 2))
+                     (tan-dir-pos (:vec3 2))
+                     (tan-spot-pos (:vec3 2))
+                     (tan-point-pos (:vec3 4))
+                     (tan-cam-pos :vec3)
+                     (tan-frag-pos :vec3)
                      &uniform
                      (material     :int)
                      (materials    pbr-material        :ubo)
@@ -91,7 +97,8 @@
                      (pointshadows :sampler-cube-array))
   (let ((final-color (v! 0 0 0))
         (shadow      0f0))
-    (dotimes (i (size dirlights))
+    (dotimes (i (size dirlights)
+                )
       (with-slots (colors positions) dirlights
         (incf final-color
               (* (pbr-direct-lum (aref positions i) frag-pos cam-pos frag-norm
@@ -101,7 +108,8 @@
                                  (aref (pbr-material-specular materials) material)
                                  (aref colors i))
                  (shadow-factor dirshadows (aref dir-pos i) .003 i)))))
-    (dotimes (i (size pointlights))
+    (dotimes (i (size pointlights)
+                )
       ;;(incf i 1)
       (with-slots (colors positions linear quadratic far) pointlights
         (incf final-color
@@ -118,7 +126,8 @@
                                 (aref far i)
                                 .03
                                 i)))))
-    (dotimes (i (size spotlights))
+    (dotimes (i (size spotlights)
+                )
       (with-slots (colors positions linear quadratic far cutoff outer-cutoff direction) spotlights
         (incf final-color
               (* (pbr-spot-lum (aref positions i) frag-pos cam-pos
@@ -133,15 +142,27 @@
                                (aref outer-cutoff i)
                                (aref linear i)
                                (aref quadratic i))
-                 (shadow-factor spotshadows (aref spot-pos i) .003 i)))))
+                 (shadow-factor spotshadows
+                                ;;(v! (aref tan-spot-pos i) 1)
+                                (aref spot-pos i)
+                                .003 i)))))
     ;;(incf final-color (v! .01 .01 .01))
     ;;(v3! shadow)
     (v! final-color 1)
     ))
 
+#+nil
 (defpipeline-g actor-pipe ()
   :vertex (actor-vert g-pnt)
   :fragment (actor-frag :vec2 :vec3 :vec3 (:vec4 2) (:vec4 2)))
+
+(defpipeline-g actor-pipe ()
+  :vertex (vert-with-tbdata g-pnt tb-data)
+  :fragment (actor-frag
+             :vec2 :vec3 :vec3
+             :mat3 (:vec4 2) (:vec4 2)
+             (:vec3 2) (:vec3 2) (:vec3 4)
+             :vec3 :vec3))
 
 (defmethod draw ((actor actor) (camera renderable) time)
   (let* ((scene (current-scene)))

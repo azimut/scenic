@@ -6,14 +6,6 @@
 (defvar *c-samplers* (make-hash-table :test #'equal)
   "C array objects loaded")
 
-;; CEPL HELPERS
-
-(defun mynow ()
-  ;; Just some number that increases over time that we use
-  ;; in a bunch of places
-  (/ (get-internal-real-time)
-     1000f0))
-
 ;;--------------------------------------------------
 ;; From cepl.tests
 
@@ -96,10 +88,7 @@
 ;; We cache the data based on the the arguments so we don't
 ;; get lots of instances in memory
 
-(defun sphere
-    (&optional (radius 1f0)
-               (lines-of-latitude 30)
-               (lines-of-longitude 30) has-tangents)
+(defun sphere (&optional (radius 1f0) (lines-of-latitude 30) (lines-of-longitude 30) has-tangents)
   (declare (boolean has-tangents))
   (let ((key (list radius
                    lines-of-latitude
@@ -161,8 +150,7 @@
                      :index-array index)
                     (make-buffer-stream vert :index-array index)))))))
 
-(defun lattice
-    (&optional (width 100f0) (height 100f0) (x 500) (y 500) has-tangents)
+(defun lattice (&optional (width 100f0) (height 100f0) (x 500) (y 500) has-tangents)
   (declare (boolean has-tangents))
   (let ((key (list :lat width height x y has-tangents)))
     (or (gethash key *meshes*)
@@ -178,7 +166,6 @@
                      (list vert (tbdata-from-vertex-and-indices vert index))
                      :index-array index)
                     (make-buffer-stream vert :index-array index)))))))
-
 
 ;;----------------------------------------
 ;; Dirt - image loader into CEPL sampler

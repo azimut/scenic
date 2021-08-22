@@ -1,62 +1,188 @@
 (in-package #:scenic)
 
-;; https://lispcookbook.github.io/cl-cookbook/clos.html
-(defclass counted-class (standard-class)
-  ((counter :initform 0)))
-(defmethod closer-mop:validate-superclass ((class counted-class) (superclass standard-class)) t)
-(defmethod make-instance :after ((class counted-class) &key)
-  (incf (slot-value class 'counter)))
+(defun-g distribution-ggx ((n :vec3)
+                           (h :vec3)
+                           (roughness :float))
+  (let* ((a  (* roughness roughness))
+         (a2 (* a a))
+         (n-dot-h  (max (dot n h) 0f0))
+         (n-dot-h2 (* n-dot-h n-dot-h))
+         (num   a2)
+         (denom (1+ (* n-dot-h2 (1- a2))))
+         (denom (* +PI+ denom denom)))
+    (/ num denom)))
 
-(defclass pbr ()
-  ((specular  :accessor specular  :initarg :specular)
-   (metallic  :accessor metallic  :initarg :metallic)
-   (emissive  :accessor emissive  :initarg :emissive)
-   (roughness :accessor roughness :initarg :roughness)
-   (uploadp   :accessor uploadp   :initarg :uploadp)
-   (idx       :reader   idx)
-   (ubo       :reader   ubo))
-  (:default-initargs
-   :uploadp   T
-   :specular  0.2
-   :metallic  0.3
-   :emissive  0.0
-   :roughness 0.3)
-  (:metaclass counted-class)
-  (:documentation "pbr material"))
+(defun-g geometry-schlick-ggx ((n-dot-v :float)
+                               (roughness :float))
+  (let* ((r (1+ roughness))
+         (k (/ (* r r) 8f0))
+         (num n-dot-v)
+         (denom (+ (* n-dot-v (- 1f0 k))
+                   k)))
+    (/ num denom)))
 
-(defun make-pbr (&rest args)
-  (apply #'make-instance 'pbr args))
+(defun-g geometry-smith ((n :vec3)
+                         (v :vec3)
+                         (l :vec3)
+                         (roughness :float))
+  (let* ((n-dot-v (max (dot n v) 0))
+         (n-dot-l (max (dot n l) 0))
+         (ggx2 (geometry-schlick-ggx n-dot-v roughness))
+         (ggx1 (geometry-schlick-ggx n-dot-l roughness)))
+    (* ggx1 ggx2)))
 
-(defmethod print-object ((obj pbr) stream)
-  (print-unreadable-object (obj stream :type T :identity T)
-    (with-slots (specular metallic emissive roughness idx) obj
-      (format stream "IDX:~a R:~a E:~a M:~a S:~a"
-              idx roughness emissive metallic specular))))
+(defun-g fresnel-schlick ((cos-theta :float)
+                          (f0 :vec3))
+  (+ f0
+     (* (- 1f0 f0)
+        (pow (- 1f0 cos-theta) 5f0))))
 
-(defmethod (setf specular)  :after (_ (obj pbr)) (setf (uploadp obj) T))
-(defmethod (setf metallic)  :after (_ (obj pbr)) (setf (uploadp obj) T))
-(defmethod (setf emissive)  :after (_ (obj pbr)) (setf (uploadp obj) T))
-(defmethod (setf roughness) :after (_ (obj pbr)) (setf (uploadp obj) T))
+(defun-g pbr-point-lum ((light-pos         :vec3)
+                        (frag-pos          :vec3)
+                        (cam-pos           :vec3)
+                        (n                 :vec3)
+                        (roughness         :float)
+                        (metallic          :float)
+                        (albedo            :vec3)
+                        (specular-strength :float)
+                        (linear            :float)
+                        (quadratic         :float)
+                        (light-color       :vec3))
+  (let* ((v  (normalize (- cam-pos frag-pos)))
+         (f0 (vec3 0.04))
+         (f0 (mix f0 albedo metallic))
+         (l         (normalize (- light-pos frag-pos)))
+         (h         (normalize (+ v l)))
+         (distance  (length    (- light-pos frag-pos)))
+         (constant  1f0)
+         (attenuation (/ 1f0 (+ constant
+                                (* linear distance)
+                                (* quadratic distance))))
+         (radiance (* light-color attenuation))
+         ;; pbr - cook-torrance brdf
+         (ndf (distribution-ggx n h roughness))
+         (g   (geometry-smith n v l roughness))
+         (f   (fresnel-schlick (max (dot h v) 0) f0))
+         ;;
+         (ks  f)
+         (kd  (- 1 ks))
+         (kd  (* kd (- 1 metallic)))
+         ;;
+         (numerator   (* ndf g f))
+         (denominator (* (max (dot n v) 0)
+                         (max (dot n l) 0)
+                         4))
+         (specular    (* specular-strength
+                         (/ numerator (max denominator .001))))
+         ;; add to outgoing radiance lo
+         (n-dot-l (max (dot n l) 0))
+         (lo      (* (+ specular (/ (* kd albedo) +PI+))
+                     radiance
+                     n-dot-l)))
+    (* attenuation lo)))
 
-(defun reset-pbr-counter ()
-  (setf (slot-value (find-class 'pbr) 'counter) 0))
-(defun current-pbr-counter ()
-  (slot-value (find-class 'pbr) 'counter))
+(defun-g pbr-direct-lum ((light-pos         :vec3)
+                         (frag-pos          :vec3)
+                         (cam-pos           :vec3)
+                         (n                 :vec3)
+                         (roughness         :float)
+                         (metallic          :float)
+                         (albedo            :vec3)
+                         (specular-strength :float)
+                         (light-color       :vec3))
+  (let* ((v  (normalize (- cam-pos frag-pos)))
+         (f0 (vec3 0.04))
+         (f0 (mix f0 albedo metallic))
+         (l  (normalize (- light-pos frag-pos)))
+         (h  (normalize (+ v l)))
+         ;;
+         (radiance light-color)
+         ;; pbr - cook-torrance brdf
+         (ndf (distribution-ggx n h roughness))
+         (g   (geometry-smith n v l roughness))
+         (f   (fresnel-schlick (max (dot h v) 0) f0))
+         ;;
+         (ks f)
+         (kd (- 1 ks))
+         (kd (* kd (- 1 metallic)))
+         ;;
+         (numerator   (* ndf g f))
+         (denominator (+ 0.001
+                         (* (max (dot n v) 0)
+                            (max (dot n l) 0)
+                            4)))
+         (specular    (* specular-strength
+                         (/ numerator denominator)))
+         ;; add to outgoing radiance lo
+         (n-dot-l (max (dot n l) 0))
+         (lo (* (+ specular (/ (* kd albedo) +PI+))
+                radiance
+                n-dot-l)))
+    lo))
 
-;; NOTE: can't upload here, as the UBO is not allocated yet.
-(defmethod initialize-instance :after ((obj pbr) &key)
-  (setf (slot-value obj 'idx) (current-pbr-counter)))
-
-(defstruct-g (pbr-material :layout :std-140)
-  (specular  (:float 5))
-  (metallic  (:float 5))
-  (emissive  (:float 5))
-  (roughness (:float 5)))
-
-(defmethod upload ((obj pbr))
-  (with-slots (ubo idx specular metallic emissive roughness) obj
-    (with-gpu-array-as-c-array (c (ubo-data ubo))
-      (setf (aref-c (pbr-material-specular  (aref-c c 0)) idx) specular)
-      (setf (aref-c (pbr-material-metallic  (aref-c c 0)) idx) metallic)
-      (setf (aref-c (pbr-material-emissive  (aref-c c 0)) idx) emissive)
-      (setf (aref-c (pbr-material-roughness (aref-c c 0)) idx) roughness))))
+(defun-g pbr-spot-lum ((light-pos         :vec3)
+                       (frag-pos          :vec3)
+                       (cam-pos           :vec3)
+                       (n                 :vec3)
+                       (roughness         :float)
+                       (metallic          :float)
+                       (albedo            :vec3)
+                       (specular-strength :float)
+                       (light-color       :vec3)
+                       (light-dir         :vec3)
+                       (cutoff            :float)
+                       (outer-cutoff      :float)
+                       (linear            :float)
+                       (quadratic         :float))
+  (let* ((v  (normalize (- cam-pos frag-pos)))
+         (f0 (vec3 0.04))
+         (f0 (mix f0 albedo metallic))
+         (distance (length (- light-pos frag-pos)))
+         ;;
+         (constant 1f0)
+         ;;#+nil
+         (attenuation (/ 1f0
+                         (+ constant
+                            (* linear distance)
+                            (* quadratic distance distance))))
+         ;;(attenuation (/ 1f0 (* distance distance)))
+         (light-color (* light-color attenuation)) ;? took from learnopengl pbr code
+         ;;
+         (cut-off       (cos cutoff))
+         (outer-cut-off (cos outer-cutoff))
+         ;;
+         (l         (normalize (- light-pos frag-pos)))
+         (theta     (dot l (normalize (- light-dir))))
+         (epsilon   (- cut-off outer-cut-off))
+         (intensity (clamp (/ (- theta outer-cut-off) epsilon) 0f0 1f0))
+         ;;
+         (radiance (* light-color intensity))
+         ;; pbr - cook-torrance brdf
+         (h   (normalize (+ v l)))
+         (ndf (distribution-ggx n h roughness))
+         (g   (geometry-smith n v l roughness))
+         (f   (fresnel-schlick (max (dot h v) 0f0) f0))
+         ;;
+         (numerator   (* ndf g f))
+         (denominator (* (max (dot n v) 0f0)
+                         (max (dot n l) 0f0)
+                         4f0))
+         (specular    (* specular-strength
+                         (/ numerator (max denominator .001))))
+         ;;
+         (ks f) ; is = fresnel
+         ;; for energy conservation, the diffuse and specular light can't
+         ;; be above 1.0 (unless the surface emits light); to preserve this
+         ;; relationship the diffuse component (kD) should equal 1.0 - kS.
+         (kd (- 1f0 ks))
+         ;; multiply kD by the inverse metalness such that only non-metals
+         ;; have diffuse lighting, or a linear blend if partly metal (pure metals
+         ;; have no diffuse light).
+         (kd (* kd (- 1f0 metallic)))
+         ;; scale light by NdotL
+         (n-dot-l (max (dot n l) 0f0))
+         ;; add to outgoing radiance lo
+         (lo      (* (+ specular (/ (* kd albedo) +PI+))
+                     radiance
+                     n-dot-l)))
+    lo))

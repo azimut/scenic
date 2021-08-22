@@ -30,7 +30,9 @@
   (let* ((final-color (s~ (texture sam uv) :xyz))
          (ldr  (tone-map-acesfilm final-color exposure))
          (luma (rgb->luma-bt601 ldr)))
-    (v! ldr luma)))
+    (v! ldr luma)
+    ;;(tone-map-reinhard final-color exposure)
+    ))
 
 (defpipeline-g generic-2d-pipe (:points)
   :fragment (frag-2d :vec2))

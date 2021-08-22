@@ -11,12 +11,10 @@
   (slynk-mrepl::send-prompt (find (bt:current-thread) (slynk::channels)
                                   :key #'slynk::channel-thread)))
 
-(defun init-all-the-things ())
-
 (defun init ()
   (free *state*)
   (slynk-hook)
-  (reset-pbr-counter)
+  (reset-material-counter)
   (reset-point-counter)
   (reset-directional-counter)
   (reset-spot-counter)
@@ -38,7 +36,7 @@
     (draw scene camera dt)
     (as-frame
       (draw (post scene) camera dt)
-      (draw-tex-br (spot-sam (lights scene)))
+      ;;(draw-tex-br (spot-sam (lights scene)))
       ;;(draw-tex-tl (first (sam camera)) :color-scale (v! 10 10 10 1) )
       ;;(draw-tex-br (point-sam (lights scene)) :index 1)
       ;;(draw-tex-br (dir-sam (lights scene)) :index 0)
