@@ -23,7 +23,8 @@
     (when (key-down-p key.s)     (move camera *vec3-back*    mult))  ;; ↓ backwards
     (when (key-down-p key.d)     (move camera *vec3-left*    mult))  ;; → right
     (when (key-down-p key.space) (move camera *vec3-down*    mult))
-    (when (key-down-p key.c)     (move camera *vec3-up*      mult))))
+    (when (key-down-p key.c)     (move camera *vec3-up*      mult)))
+  (pos camera))
 
 (defun full-rot (factor dt camera)
   (let ((angle (radians .4)))

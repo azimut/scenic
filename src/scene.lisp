@@ -37,6 +37,8 @@
     (update c dt))
   (dolist (a (actors obj))
     (update a dt))
+  (dolist (l (spot-lights (lights obj)))
+    (update l dt))
   (dolist (l (point-lights (lights obj)))
     (update l dt))
   (dolist (l (dir-lights (lights obj)))

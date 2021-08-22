@@ -19,6 +19,7 @@
   (reset-pbr-counter)
   (reset-point-counter)
   (reset-directional-counter)
+  (reset-spot-counter)
   (skitter-cleanup)
   (init-all-the-things)
   (skitter:listen-to #'window-listener-trampoline (skitter:window 0) :size)
@@ -37,6 +38,7 @@
     (draw scene camera dt)
     (as-frame
       (draw (post scene) camera dt)
+      (draw-tex-br (spot-sam (lights scene)))
       ;;(draw-tex-tl (first (sam camera)) :color-scale (v! 10 10 10 1) )
       ;;(draw-tex-br (point-sam (lights scene)) :index 1)
       ;;(draw-tex-br (dir-sam (lights scene)) :index 0)

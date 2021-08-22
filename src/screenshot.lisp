@@ -4,7 +4,8 @@
 
 (defun 16bit-texture-p (texture)
   (let ((element-type (symbol-name (texture-element-type texture))))
-    (serapeum:string*= "16" element-type)))
+    (or (serapeum:string*= "16" element-type)
+        (serapeum:string*= "32" element-type))))
 
 (defun map-range (a1 a2 b1 b2 s)
   (+ b1
@@ -16,20 +17,37 @@
   (declare (type single-float color1 exposure))
   (let* ((col (* color1 exposure))
          (r   (/ col (+ 1f0 col))))
-    (expt r #.(/ 2.2))))
+    (cpu-1-linear-to-srgb r)))
+
+(defun cpu-1-linear-to-srgb (c)
+  (expt c #.(/ 2.2)))
+
+(defun cpu-1-tone-map-acesfilm (x exposure)
+  (let ((x (* exposure x))
+        (a 2.51)
+        (b 0.03)
+        (c 2.43)
+        (d 0.59)
+        (e 0.14))
+    (cpu-1-linear-to-srgb
+     (/ (* x (+ b (* a x)))
+        (+ e (* x (+ d (* c x))))))))
 
 (defun get-current-exposure ()
   (exposure (post (current-scene))))
 
 (defun range-function-for-texture (texture)
   "returns an one(1) arg lambda that performs the value mapping"
-  (if (16bit-texture-p texture)
-      (lambda (val)
-        (round
-         (map-range 0f0 1f0 0 65535 (cpu-1-tone-map-reinhard val (get-current-exposure)))))
-      (lambda (val)
-        (round
-         (map-range   0 255 0 65535 val)))))
+  (let ((current-exposure (get-current-exposure)))
+    (if (16bit-texture-p texture)
+        (lambda (val)
+          (round
+           ;;(map-range 0f0 1f0 0 65535 (cpu-1-tone-map-reinhard val current-exposure))
+           (map-range 0f0 1f0 0 65535 (cpu-1-tone-map-acesfilm val current-exposure))
+           ))
+        (lambda (val)
+          (round
+           (map-range   0 255 0 65535 val))))))
 
 (defun filename-extension (filename)
   "returns the extension of filename, lowecased"

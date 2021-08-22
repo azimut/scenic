@@ -12,9 +12,9 @@
   (:documentation "simple directional light"))
 
 (defstruct-g (dir-light-data :layout :std-140)
-  (positions  (:vec3 3) :accessor positions)
-  (lightspace (:mat4 3) :accessor lightspace)
-  (colors     (:vec3 3) :accessor colors)
+  (positions  (:vec3 2) :accessor positions)
+  (lightspace (:mat4 2) :accessor lightspace)
+  (colors     (:vec3 2) :accessor colors)
   (size        :uint    :accessor size))
 
 (defun reset-directional-counter ()

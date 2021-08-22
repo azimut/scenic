@@ -36,6 +36,7 @@
    (:file "lights/light")
    (:file "lights/directional")
    (:file "lights/point")
+   (:file "lights/spot")
    (:file "lights/lights")
    (:file "scenic")
    (:file "postprocess/postprocess")

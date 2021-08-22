@@ -47,7 +47,7 @@
                      (view-clip   :mat4)
                      (scale       :float)
                      (dirlights   dir-light-data   :ubo)
-                     (pointlights point-light-data :ubo))
+                     (spotlights  spot-light-data  :ubo))
   (let* ((pos        (* scale (pos vert)))
          (norm       (norm vert))
          (tex        (tex vert))
@@ -55,38 +55,40 @@
          (world-pos  (* model-world (v! pos 1)))
          (view-pos   (* world-view  world-pos))
          (clip-pos   (* view-clip   view-pos))
-         (dir-pos    (vector (v! 0 0 0 0) (v! 0 0 0 0) (v! 0 0 0 0)))
-         (point-pos  (vector (v! 0 0 0 0) (v! 0 0 0 0) (v! 0 0 0 0) (v! 0 0 0 0) (v! 0 0 0 0))))
+         (dir-pos    (vector (v! 0 0 0 0) (v! 0 0 0 0)))
+         (spot-pos   (vector (v! 0 0 0 0) (v! 0 0 0 0))))
     (dotimes (i (size dirlights))
       (setf (aref dir-pos i)
             (* (aref (lightspace dirlights) i) world-pos)))
-    (dotimes (i (size pointlights))
-      (setf (aref point-pos i)
-            (* (aref (lightspace pointlights) i) world-pos)))
+    (dotimes (i (size spotlights))
+      (setf (aref spot-pos i)
+            (* (aref (lightspace spotlights) i) world-pos)))
     (values clip-pos
             tex
             world-norm
             (s~ world-pos :xyz)
             dir-pos
-            point-pos)))
+            spot-pos)))
 
 ;; NOTE: it needs cepl/core/textures/texture.lisp/allocate-immutable-texture
 ;; (:texture-cube-map-array
 ;;  (tex-storage-3d texture-type (texture-mipmap-levels texture) (texture-image-format texture)
 ;;                  width height (* 6 (texture-layer-count texture))))
 (defun-g actor-frag ((uv :vec2) (frag-norm :vec3) (frag-pos :vec3)
-                     (dir-pos   (:vec4 3))
-                     (point-pos (:vec4 5))
+                     (dir-pos   (:vec4 2))
+                     (spot-pos  (:vec4 2))
                      &uniform
                      (material     :int)
-                     (materials    pbr-material :ubo)
+                     (materials    pbr-material        :ubo)
+                     (dirlights    dir-light-data      :ubo)
+                     (pointlights  point-light-data    :ubo)
+                     (spotlights   spot-light-data     :ubo)
                      (cam-pos      :vec3)
                      (time         :float)
                      (color        :vec3)
                      (dirshadows   :sampler-2d-array)
-                     (dirlights    dir-light-data   :ubo)
-                     (pointshadows :sampler-cube-array)
-                     (pointlights point-light-data :ubo))
+                     (spotshadows  :sampler-2d-array)
+                     (pointshadows :sampler-cube-array))
   (let ((final-color (v! 0 0 0))
         (shadow      0f0))
     (dotimes (i (size dirlights))
@@ -99,8 +101,7 @@
                                  (aref (pbr-material-specular materials) material)
                                  (aref colors i))
                  (shadow-factor dirshadows (aref dir-pos i) .003 i)))))
-    (dotimes (i (size pointlights)
-                )
+    (dotimes (i (size pointlights))
       ;;(incf i 1)
       (with-slots (colors positions linear quadratic far) pointlights
         (incf final-color
@@ -117,6 +118,22 @@
                                 (aref far i)
                                 .03
                                 i)))))
+    (dotimes (i (size spotlights))
+      (with-slots (colors positions linear quadratic far cutoff outer-cutoff direction) spotlights
+        (incf final-color
+              (* (pbr-spot-lum (aref positions i) frag-pos cam-pos
+                               frag-norm
+                               (aref (pbr-material-roughness materials) material)
+                               (aref (pbr-material-metallic materials) material)
+                               color
+                               (aref (pbr-material-specular materials) material)
+                               (aref colors i)
+                               (aref direction i)
+                               (aref cutoff i)
+                               (aref outer-cutoff i)
+                               (aref linear i)
+                               (aref quadratic i))
+                 (shadow-factor spotshadows (aref spot-pos i) .003 i)))))
     ;;(incf final-color (v! .01 .01 .01))
     ;;(v3! shadow)
     (v! final-color 1)
@@ -124,7 +141,7 @@
 
 (defpipeline-g actor-pipe ()
   :vertex (actor-vert g-pnt)
-  :fragment (actor-frag :vec2 :vec3 :vec3 (:vec4 3) (:vec4 5)))
+  :fragment (actor-frag :vec2 :vec3 :vec3 (:vec4 2) (:vec4 2)))
 
 (defmethod draw ((actor actor) (camera renderable) time)
   (let* ((scene (current-scene)))
@@ -133,6 +150,7 @@
              :cam-pos (pos camera)
              :dirshadows (dir-sam (lights scene))
              :pointshadows (point-sam (lights scene))
+             :spotshadows (spot-sam (lights scene))
              :model-world (model->world actor)
              :world-view (world->view camera)
              :view-clip (projection camera)
@@ -142,4 +160,5 @@
              :materials (materials-ubo *state*)
              :dirlights (dir-ubo (lights scene))
              :pointlights (point-ubo (lights scene))
+             :spotlights (spot-ubo (lights scene))
              :time time))))

@@ -21,13 +21,13 @@
   (mats (:mat4 6)))
 
 (defstruct-g (point-light-data :layout :std-140)
-  (positions   (:vec3 5) :accessor positions)
-  (lightspace  (:mat4 5) :accessor lightspace); 1 world->clip matrix for the lights
-  (shadowspace (shadow-projections 6) :accessor shadowspace); 6 projections matrices
-  (colors      (:vec3 5) :accessor colors)
-  (linear      (:float 5))
-  (quadratic   (:float 5))
-  (far         (:float 5)); FIXME: move to a camera?
+  (positions   (:vec3 4) :accessor positions)
+  (lightspace  (:mat4 4) :accessor lightspace); 1 world->clip matrix for the lights
+  (shadowspace (shadow-projections 4) :accessor shadowspace); 6 projections matrices
+  (colors      (:vec3 4) :accessor colors)
+  (linear      (:float 4))
+  (quadratic   (:float 4))
+  (far         (:float 4)); FIXME: move to a camera?
   (size         :uint    :accessor size))
 
 (defun reset-point-counter ()
