@@ -22,7 +22,6 @@
 
 (defstruct-g (point-light-data :layout :std-140)
   (positions   (:vec3 4) :accessor positions)
-  (lightspace  (:mat4 4) :accessor lightspace); 1 world->clip matrix for the lights
   (shadowspace (shadow-projections 4) :accessor shadowspace); 6 projections matrices
   (colors      (:vec3 4) :accessor colors)
   (linear      (:float 4))
@@ -48,7 +47,6 @@
   (with-slots (pos color ubo idx linear quadratic far) obj
     (with-gpu-array-as-c-array (c (ubo-data ubo))
       (let ((e (aref-c c 0)))
-        (setf (aref-c (lightspace e) idx) (world->clip obj))
         (setf (aref-c (positions  e) idx) pos)
         (setf (aref-c (colors     e) idx) color)
         (setf (aref-c (point-light-data-quadratic e) idx) quadratic)
