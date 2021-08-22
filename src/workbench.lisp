@@ -17,7 +17,7 @@
         ;;(setf (color obj) (v! .5 .4 .4))
         ))))
 
-(let ((e (second (point-lights (lights (current-scene))))))
+(let ((e (first (point-lights (lights (current-scene))))))
   (defmethod update ((obj point) dt)
     #+nil
     (when (eq e obj)
@@ -44,13 +44,18 @@
                           (make-point :pos (v! 2 2 2) :color (v! .8 .2 .6) :linear 0.35 :quadratic 0.44)))
      (make-simple-postprocess))))
   ;; Actors
-  (push (make-actor :w 10f0 :d 10f0) (actors (current-scene)))
-  (dotimes (i 5)
-    (let ((a (make-actor)))
+  (push (make-box :w 10f0 :d 10f0) (actors (current-scene)))
+  (dotimes (i 2)
+    (let ((a (make-sphere)))
       (setf (pos a) (v! (- (random 5) 2.5) 1 (- (random 5) 2.5)))
       (setf (rot a) (q:from-axis-angle (v! 0 1 0) (radians (random 180))))
       (push a (actors (current-scene)))))
-  (push (make-actor :h 5f0) (actors (current-scene)))
+  (dotimes (i 2)
+    (let ((a (make-cone)))
+      (setf (pos a) (v! (- (random 5) 2.5) 1 (- (random 5) 2.5)))
+      (setf (rot a) (q:from-axis-angle (v! 0 1 0) (radians (random 180))))
+      (push a (actors (current-scene)))))
+  (push (make-box :h 5f0) (actors (current-scene)))
   )
 
 (defmethod update ((obj directional) dt)

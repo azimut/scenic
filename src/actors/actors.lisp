@@ -151,11 +151,6 @@
     (v! final-color 1)
     ))
 
-#+nil
-(defpipeline-g actor-pipe ()
-  :vertex (actor-vert g-pnt)
-  :fragment (actor-frag :vec2 :vec3 :vec3 (:vec4 2) (:vec4 2)))
-
 (defpipeline-g actor-pipe ()
   :vertex (vert-with-tbdata g-pnt tb-data)
   :fragment (actor-frag

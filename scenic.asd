@@ -44,4 +44,5 @@
    (:file "scenic")
    (:file "postprocess/postprocess")
    (:file "postprocess/simple")
-   (:file "actors/actors")))
+   (:file "actors/actors")
+   (:file "actors/untextured")))
