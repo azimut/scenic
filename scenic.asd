@@ -27,6 +27,7 @@
   ((:file "package")
    (:file "screenshot")
    (:file "assets")
+   (:file "renderable")
    (:file "camera")
    (:file "render")
    (:file "material/lambert")
@@ -43,4 +44,4 @@
    (:file "scenic")
    (:file "postprocess/postprocess")
    (:file "postprocess/simple")
-   (:file "actors")))
+   (:file "actors/actors")))
