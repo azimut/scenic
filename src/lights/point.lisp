@@ -55,11 +55,11 @@
         (setf (shadow-projections-mats (aref-c (shadowspace e) idx))
               (projection-mats obj))))))
 
-(defmethod (setf linear)    :around (_ (obj point)) (setf (uploadp obj) T (drawp obj) T) (call-next-method))
-(defmethod (setf quadratic) :around (_ (obj point)) (setf (uploadp obj) T (drawp obj) T) (call-next-method))
-(defmethod (setf pos)       :around (_ (obj point)) (setf (uploadp obj) T (drawp obj) T) (call-next-method))
-(defmethod (setf far)       :around (_ (obj point)) (setf (uploadp obj) T (drawp obj) T) (call-next-method))
-(defmethod (setf near)      :around (_ (obj point)) (setf (uploadp obj) T (drawp obj) T) (call-next-method))
+(defmethod (setf linear)    :after (_ (obj point)) (setf (uploadp obj) T (drawp obj) T))
+(defmethod (setf quadratic) :after (_ (obj point)) (setf (uploadp obj) T (drawp obj) T))
+(defmethod (setf pos)       :after (_ (obj point)) (setf (uploadp obj) T (drawp obj) T))
+(defmethod (setf far)       :after (_ (obj point)) (setf (uploadp obj) T (drawp obj) T))
+(defmethod (setf near)      :after (_ (obj point)) (setf (uploadp obj) T (drawp obj) T))
 
 (defun projection-mats (light)
   "Returns a list of 6 m4 projection matrices"
