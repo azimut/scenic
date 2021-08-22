@@ -148,8 +148,8 @@
          ;;(attenuation (/ 1f0 (* distance distance)))
          (light-color (* light-color attenuation)) ;? took from learnopengl pbr code
          ;;
-         (cut-off       (cos (radians cutoff)))
-         (outer-cut-off (cos (radians outer-cutoff)))
+         (cut-off       (cos cutoff))
+         (outer-cut-off (cos outer-cutoff))
          ;;
          (l         (normalize (- light-pos frag-pos)))
          (theta     (dot l (normalize (- light-dir))))
