@@ -47,6 +47,20 @@
     (log4cl:log-info "~a IDX:~a" obj idx)
     (setf (slot-value obj 'fbo) (make-fbo `(:d ,(texref tex :layer idx))))))
 
+(defun-g vert ((vert g-pnt) &uniform
+               (model-world :mat4)
+               (world-view  :mat4)
+               (view-clip   :mat4)
+               (scale       :float))
+  (let* ((pos        (* scale (pos vert)))
+         (world-pos  (* model-world (v! pos 1)))
+         (view-pos   (* world-view  world-pos))
+         (clip-pos   (* view-clip   view-pos))
+         (tex        (tex vert))
+         (norm       (norm vert))
+         (world-norm (* (m4:to-mat3 model-world) norm)))
+    (values clip-pos tex world-norm (s~ world-pos :xyz))))
+
 (defun-g simplest-3d-frag ((uv :vec2) (frag-norm :vec3) (frag-pos :vec3))
   (values))
 

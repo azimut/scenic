@@ -52,10 +52,16 @@
    Y=Linear
    Z=Quadratic")
 
-
 (defvar *vec3-right*   (v!  1  0  0))
 (defvar *vec3-left*    (v! -1  0  0))
 (defvar *vec3-up*      (v!  0  1  0))
 (defvar *vec3-down*    (v!  0 -1  0))
 (defvar *vec3-forward* (v!  0  0  1))
 (defvar *vec3-back*    (v!  0  0 -1))
+
+;; https://lispcookbook.github.io/cl-cookbook/clos.html
+(defclass counted-class (standard-class)
+  ((counter :initform 0)))
+(defmethod closer-mop:validate-superclass ((class counted-class) (superclass standard-class)) t)
+(defmethod make-instance :after ((class counted-class) &key)
+  (incf (slot-value class 'counter)))

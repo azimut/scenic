@@ -1,12 +1,5 @@
 (in-package #:scenic)
 
-;; https://lispcookbook.github.io/cl-cookbook/clos.html
-(defclass counted-class (standard-class)
-  ((counter :initform 0)))
-(defmethod closer-mop:validate-superclass ((class counted-class) (superclass standard-class)) t)
-(defmethod make-instance :after ((class counted-class) &key)
-  (incf (slot-value class 'counter)))
-
 (defclass material ()
   ((specular  :accessor specular  :initarg :specular)
    (metallic  :accessor metallic  :initarg :metallic)

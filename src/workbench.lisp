@@ -51,25 +51,31 @@
     (make-scene
      (list (make-perspective :scale .5 :pos (v! 2 2 2) :rot (q:point-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0))))
      (make-lights
-      :dir-lights    nil
-      :spot-lights  (list (make-spot  :pos (v! 4 4 4) :color (v! .8 .8 .8) :linear 0.35 :quadratic 0.44))
       :point-lights (list (make-point :pos (v! -2 2 -2) :color (v! .1 .1 .3) :linear 0.35 :quadratic 0.44)
                           (make-point :pos (v! 2 2 2) :color (v! .8 .2 .6) :linear 0.35 :quadratic 0.44)))
+     (make-simple-postprocess))
+    (make-scene
+     (list (make-perspective :scale .5 :pos (v! 2 2 2) :rot (q:point-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0))))
+     (make-lights
+      :spot-lights  (list (make-spot  :pos (v! 4 4 4) :color (v! .8 .8 .8) :linear 0.35 :quadratic 0.44)))
      (make-simple-postprocess))))
   ;; Actors
-  (push (make-box :w 10f0 :d 10f0) (actors (current-scene)))
-  (dotimes (i 2)
-    (let ((a (make-sphere)))
-      (setf (pos a) (v! (- (random 5) 2.5) 1 (- (random 5) 2.5)))
-      (setf (rot a) (q:from-axis-angle (v! 0 1 0) (radians (random 180))))
-      (push a (actors (current-scene)))))
-  (dotimes (i 2)
-    (let ((a (make-cone)))
-      (setf (pos a) (v! (- (random 5) 2.5) 1 (- (random 5) 2.5)))
-      (setf (rot a) (q:from-axis-angle (v! 0 1 0) (radians (random 180))))
-      (push a (actors (current-scene)))))
-  (push (make-box :h 5f0) (actors (current-scene)))
-  )
+  (let ((scene (first (scenes *state*))))
+    (push (make-box :w 10f0 :d 10f0) (actors scene))
+    (push (make-box :h 5f0) (actors scene)))
+  ;;
+  (let ((scene (second (scenes *state*))))
+    (dotimes (i 2)
+      (let ((a (make-sphere)))
+        (setf (pos a) (v! (- (random 5) 2.5) 1 (- (random 5) 2.5)))
+        (setf (rot a) (q:from-axis-angle (v! 0 1 0) (radians (random 180))))
+        (push a (actors scene))))
+    (dotimes (i 2)
+      (let ((a (make-cone)))
+        (setf (pos a) (v! (- (random 5) 2.5) 1 (- (random 5) 2.5)))
+        (setf (rot a) (q:from-axis-angle (v! 0 1 0) (radians (random 180))))
+        (push a (actors scene))))
+    (push (make-box :w 10f0 :d 10f0) (actors scene))))
 
 (defmethod update ((obj directional) dt)
   (let* ((new-pos (v3:*s (v! 20 10 -30) 1f0))

@@ -1,19 +1,4 @@
 (in-package #:scenic)
-
-(defun-g vert ((vert g-pnt) &uniform
-               (model-world :mat4)
-               (world-view  :mat4)
-               (view-clip   :mat4)
-               (scale       :float))
-  (let* ((pos        (* scale (pos vert)))
-         (world-pos  (* model-world (v! pos 1)))
-         (view-pos   (* world-view  world-pos))
-         (clip-pos   (* view-clip   view-pos))
-         (tex        (tex vert))
-         (norm       (norm vert))
-         (world-norm (* (m4:to-mat3 model-world) norm)))
-    (values clip-pos tex world-norm (s~ world-pos :xyz))))
-
 ;; ?
 ;; From "pushing pixels" don't remember why it's needed
 (defun-g treat-uvs ((uv :vec2))
