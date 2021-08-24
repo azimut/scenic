@@ -1,15 +1,17 @@
 (in-package #:scenic)
 
-(let ((e (first (actors (current-scene)))))
+(let ((e (second (actors (current-scene)))))
   (defmethod update ((obj actor) dt)
-    ;;#+nil
+    ;;(full-rot 1000 dt obj)
+    ;;(setf (rot obj) (q:identity))
+    #+nil
     (when (eq e obj)
       ;;(cloud::upload-source cloud::*engine*)
       (setf (cloud::pos cloud::*engine*) (copy-seq (pos obj))))))
 
 (let ((e (first (lights (current-scene)))))
   (defmethod update ((obj spot) dt)
-    ;;#+nil
+    #+nil
     (when (eq e obj)
       ;;#+nil
       (let* ((new-pos (god-move 2000 dt obj))
@@ -35,8 +37,8 @@
 (defun cloud-get-listener-rot () (rot (current-camera)))
 
 (defmethod update ((camera perspective) dt)
-  (god-move 2000 dt camera)
-  (full-rot 2000 dt camera)
+  ;; (god-move 2000 dt camera)
+  ;; (full-rot 2000 dt camera)
   ;; (let ((pos (v! 2 4 4)))
   ;;   (setf (pos camera) pos)
   ;;   (setf (rot camera) (q:point-at (v! 0 1 0) pos (v! 0 0 0))))

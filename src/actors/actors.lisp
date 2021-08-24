@@ -46,8 +46,9 @@
                      (world-view  :mat4)
                      (view-clip   :mat4)
                      (scale       :float)
-                     (dirlights   dir-light-data   :ubo)
-                     (spotlights  spot-light-data  :ubo))
+                     (scene       scene-data      :ubo)
+                     (dirlights   dir-light-data  :ubo)
+                     (spotlights  spot-light-data :ubo))
   (let* ((pos        (* scale (pos vert)))
          (norm       (norm vert))
          (tex        (tex vert))
@@ -57,10 +58,10 @@
          (clip-pos   (* view-clip   view-pos))
          (dir-pos    (vector (v! 0 0 0 0) (v! 0 0 0 0)))
          (spot-pos   (vector (v! 0 0 0 0) (v! 0 0 0 0))))
-    (dotimes (i (size dirlights))
+    (dotimes (i (scene-data-ndir scene))
       (setf (aref dir-pos i)
             (* (aref (lightspace dirlights) i) world-pos)))
-    (dotimes (i (size spotlights))
+    (dotimes (i (scene-data-nspot scene))
       (setf (aref spot-pos i)
             (* (aref (lightspace spotlights) i) world-pos)))
     (values clip-pos
@@ -85,10 +86,11 @@
                      (tan-frag-pos :vec3)
                      &uniform
                      (material     :int)
-                     (materials    pbr-material        :ubo)
-                     (dirlights    dir-light-data      :ubo)
-                     (pointlights  point-light-data    :ubo)
-                     (spotlights   spot-light-data     :ubo)
+                     (scene        scene-data       :ubo)
+                     (materials    pbr-material     :ubo)
+                     (dirlights    dir-light-data   :ubo)
+                     (pointlights  point-light-data :ubo)
+                     (spotlights   spot-light-data  :ubo)
                      (cam-pos      :vec3)
                      (time         :float)
                      (color        :vec3)
@@ -97,8 +99,7 @@
                      (pointshadows :sampler-cube-array))
   (let ((final-color (v! 0 0 0))
         (shadow      0f0))
-    (dotimes (i (size dirlights)
-                )
+    (dotimes (i (scene-data-ndir scene))
       (with-slots (colors positions) dirlights
         (incf final-color
               (* (pbr-direct-lum (aref positions i) frag-pos cam-pos frag-norm
@@ -108,7 +109,7 @@
                                  (aref (pbr-material-specular materials) material)
                                  (aref colors i))
                  (shadow-factor dirshadows (aref dir-pos i) .003 i)))))
-    (dotimes (i (size pointlights)
+    (dotimes (i (scene-data-npoint scene)
                 )
       ;;(incf i 1)
       (with-slots (colors positions linear quadratic far) pointlights
@@ -126,7 +127,7 @@
                                 (aref far i)
                                 .03
                                 i)))))
-    (dotimes (i (size spotlights)
+    (dotimes (i (scene-data-nspot scene)
                 )
       (with-slots (colors positions linear quadratic far cutoff outer-cutoff direction) spotlights
         (incf final-color

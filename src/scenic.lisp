@@ -43,14 +43,14 @@
 
     (draw scene camera dt)
     (as-frame
-      (draw (post scene) camera dt)
-      ;;(draw-tex-tl (first (sam camera)) :color-scale (v! 10 10 10 1) )
-      ;;(draw-tex-br (spot-sam *state*)))
-      ;;(draw-tex-br (point-sam *state*)) :index 0
-      )
+     (draw (post scene) camera dt)
+     ;;(draw-tex-tl (first (sam camera)) :color-scale (v! 10 10 10 1) )
+     ;;(draw-tex-br (spot-sam *state*)))
+     ;;(draw-tex-br (point-sam *state*)) :index 0
+     )
     ;;(draw-tex-br (dir-sam *state*)) :index 0)
     )
-  ))
+  )
 
 (defun start ()
   (play-render :start))
