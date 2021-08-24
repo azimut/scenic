@@ -1,27 +1,40 @@
 (in-package #:scenic)
 
+(let ((e (first (actors (current-scene)))))
+  (defmethod update ((obj actor) dt)
+    ;;#+nil
+    (when (eq e obj)
+      ;;(cloud::upload-source cloud::*engine*)
+      (setf (cloud::pos cloud::*engine*) (copy-seq (pos obj))))))
+
 (let ((e (first (spot-lights (lights (current-scene))))))
   (defmethod update ((obj spot) dt)
-    #+nil
+                                        ;#+nil
     (when (eq e obj)
+      #+nil
       (let* ((new-pos (god-move 2000 dt obj))
              (new-dis (v3:distance new-pos (v! 0 0 0))))
-        (setf (far obj)  (+ new-dis (* new-dis .2)))
-        (setf (near obj) (- new-dis (* new-dis .1)))
+        ;; (setf (far obj)  (+ new-dis (* new-dis .2)))
+        ;; (setf (near obj) (- new-dis (* new-dis .1)))
         ;;(setf (pos obj) new-pos)
         ;; (setf (cutoff obj)       (radians 13.5))
         ;; (setf (outer-cutoff obj) (radians 17.5))
         ;; (setf (linear obj)    (y (nth 8 *point-light-params*)))
         ;; (setf (quadratic obj) (z (nth 8 *point-light-params*)))
-        ;;(setf (rot obj) (q:point-at (v! 0 1 0) new-pos (v! 0 0 0)))
-        ;;(setf (color obj) (v! .5 .4 .4))
+        (setf (rot obj) (q:point-at (v! 0 1 0) new-pos (v! 0 0 0)))
+        (setf (color obj) (v! 1 1 1))
         ))))
 
-(let ((e (first (point-lights (lights (current-scene))))))
+(let ((e (second (point-lights (lights (current-scene))))))
   (defmethod update ((obj point) dt)
     #+nil
     (when (eq e obj)
       (god-move 5000 dt obj))))
+
+(defun cloud:get-listener-pos ()
+  (pos (current-camera)))
+(defun cloud-get-listener-rot ()
+  (rot (current-camera)))
 
 (defmethod update ((camera perspective) dt)
   (god-move 2000 dt camera)
