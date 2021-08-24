@@ -62,28 +62,3 @@
     (setf dir-ubo (make-ubo NIL 'dir-light-data))
     (setf (cepl.samplers::border-color dir-sam) (v! 1 1 1 1))))
 
-#+nil
-(defun init-collection (lights ubo tex)
-  "takes care of calling each individual light initialization, once we know their IDX"
-  (dolist (light lights)
-    (init-light light ubo tex)))
-
-(defmethod upload ((obj lights))
-  ;; (dolist (i (point-lights obj)) (upload i))
-  ;; (dolist (i (dir-lights   obj)) (upload i))
-  ;; (dolist (i (spot-lights   obj)) (upload i))
-  )
-
-(defmethod draw ((obj scene) (lights lights) time)
-  ;; FIXME: hack, until I can clean a single cube in a cubemaparray, OR I implement an even system?
-  ;; (let* ((pointlights (point-lights lights))
-  ;;        (first       (first pointlights))
-  ;;        (drawp       (drawp first)))
-  ;;   (when drawp
-  ;;     (clear-fbo (fbo first) :d)
-  ;;     (dolist (i pointlights)
-  ;;       (draw obj i time))
-  ;;     (setf (drawp first) NIL)))
-  ;; (dolist (i (dir-lights   lights)) (draw obj i time))
-  ;; (dolist (i (spot-lights   lights)) (draw obj i time))
-  )
