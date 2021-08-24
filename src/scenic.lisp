@@ -15,9 +15,6 @@
   (free *state*)
   (slynk-hook)
   (reset-material-counter)
-  (reset-point-counter)
-  (reset-directional-counter)
-  (reset-spot-counter)
   (skitter-cleanup)
   (init-all-the-things)
   (skitter:listen-to #'window-listener-trampoline (skitter:window 0) :size)
@@ -32,16 +29,28 @@
     (setf (last-time *state*) now)
     (upload scene)
     (update scene dt)
-    (draw scene (lights scene) dt)
+
+    (dolist (l (remove-if #'point-p (lights scene)))
+      (draw scene l dt))
+
+    (when-let ((points (remove-if-not #'point-p (lights scene))))
+      (let ((1-point (first points)))
+        (when (drawp 1-point)
+          (clear-fbo (fbo 1-point) :d)
+          (dolist (p points)
+            (draw scene p dt))
+          (setf (drawp (first points)) NIL))))
+
     (draw scene camera dt)
     (as-frame
       (draw (post scene) camera dt)
-      ;;(draw-tex-br (spot-sam (lights scene)))
       ;;(draw-tex-tl (first (sam camera)) :color-scale (v! 10 10 10 1) )
-      ;;(draw-tex-br (point-sam (lights scene)) :index 1)
-      ;;(draw-tex-br (dir-sam (lights scene)) :index 0)
+      ;;(draw-tex-br (spot-sam *state*)))
+      ;;(draw-tex-br (point-sam *state*)) :index 0
       )
-    ))
+    ;;(draw-tex-br (dir-sam *state*)) :index 0)
+    )
+  ))
 
 (defun start ()
   (play-render :start))

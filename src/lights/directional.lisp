@@ -8,21 +8,12 @@
    :fs (v2! 10)
    :near  1f0
    :far 100f0)
-  (:metaclass counted-class)
   (:documentation "simple directional light"))
 
 (defstruct-g (dir-light-data :layout :std-140)
   (positions  (:vec3 2) :accessor positions)
   (lightspace (:mat4 2) :accessor lightspace)
-  (colors     (:vec3 2) :accessor colors)
-  (size        :uint    :accessor size))
-
-(defun reset-directional-counter ()
-  (setf (slot-value (find-class 'directional) 'counter) 0))
-(defun current-directional-counter ()
-  (slot-value (find-class 'directional) 'counter))
-(defmethod initialize-instance :after ((obj directional) &key)
-  (setf (slot-value obj 'idx) (current-directional-counter)))
+  (colors     (:vec3 2) :accessor colors))
 
 (defmethod (setf fs)   :after (_ (obj directional)) (setf (uploadp obj) T (drawp obj) T))
 (defmethod (setf far)  :after (_ (obj directional)) (setf (uploadp obj) T (drawp obj) T))
@@ -42,10 +33,13 @@
         (setf (aref-c (positions  e) idx) pos)
         (setf (aref-c (colors     e) idx) color)))))
 
-(defmethod init-light :after ((obj directional) ubo tex)
-  (let ((idx (idx obj)))
-    (log4cl:log-info "~a IDX:~a" obj idx)
-    (setf (slot-value obj 'fbo) (make-fbo `(:d ,(texref tex :layer idx))))))
+(defmethod init-light ((obj directional) idx)
+  (log4cl:log-info "IDX:~a" idx)
+  (setf (slot-value obj 'idx) idx)
+  (setf (slot-value obj 'fbo) (make-fbo `(:d ,(texref (dir-tex *state*) :layer idx)))))
+
+(defmethod initialize-instance :after ((obj directional) &key)
+  (setf (slot-value obj 'ubo) (dir-ubo *state*)))
 
 (defun-g vert ((vert g-pnt) &uniform
                (model-world :mat4)
@@ -91,6 +85,8 @@
 
 (defun make-directional (&rest args)
   (apply #'make-instance 'directional args))
+
+(defun directional-p (obj) (typep obj 'directional))
 
 (defun-g shadow-factor ((light-sampler      :sampler-2d-array)
                         (pos-in-light-space :vec4)

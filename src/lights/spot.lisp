@@ -16,7 +16,6 @@
    :fs (v2! 10)
    :near  1f0
    :far 100f0)
-  (:metaclass counted-class)
   (:documentation "simple spot light"))
 
 (defstruct-g (spot-light-data :layout :std-140)
@@ -27,15 +26,7 @@
   (linear       (:float 2))
   (quadratic    (:float 2))
   (cutoff       (:float 2))
-  (outer-cutoff (:float 2))
-  (size          :uint    :accessor size))
-
-(defun reset-spot-counter ()
-  (setf (slot-value (find-class 'spot) 'counter) 0))
-(defun current-spot-counter ()
-  (slot-value (find-class 'spot) 'counter))
-(defmethod initialize-instance :after ((obj spot) &key)
-  (setf (slot-value obj 'idx) (current-spot-counter)))
+  (outer-cutoff (:float 2)))
 
 (defmethod (setf pos)          :after (_ (obj spot)) (setf (uploadp obj) T (drawp obj) T))
 (defmethod (setf cutoff)       :after (_ (obj spot)) (setf (uploadp obj) T (drawp obj) T))
@@ -66,10 +57,13 @@
         (setf (aref-c (spot-light-data-outer-cutoff e) idx) outer-cutoff)
         (setf (aref-c (spot-light-data-direction    e) idx) (q:to-direction rot))))))
 
-(defmethod init-light :after ((obj spot) ubo tex)
-  (let ((idx (idx obj)))
-    (log4cl:log-info "~a IDX:~a" obj idx)
-    (setf (slot-value obj 'fbo) (make-fbo `(:d ,(texref tex :layer idx))))))
+(defmethod initialize-instance :after ((obj spot) &key)
+  (setf (slot-value obj 'ubo) (spot-ubo *state*)))
+
+(defmethod init-light ((obj spot) idx)
+  (log4cl:log-info "IDX:~a" idx)
+  (setf (slot-value obj 'idx) idx)
+  (setf (slot-value obj 'fbo) (make-fbo `(:d ,(texref (spot-tex *state*) :layer idx)))))
 
 (defmethod draw (actor (camera spot) time)
   (with-slots (buf scale) actor
@@ -95,3 +89,4 @@
 (defun make-spot (&rest args)
   (apply #'make-instance 'spot args))
 
+(defun spot-p (obj) (typep obj 'spot))

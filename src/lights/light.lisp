@@ -20,8 +20,3 @@
     (call-next-method)
     (setf (uploadp obj) NIL)))
 
-(defmethod init-light ((obj light) ubo tex)
-  "ran by LIGHTS container object, when we know the IDX"
-  (setf (slot-value obj 'ubo) ubo)
-  (upload obj))
-
