@@ -19,9 +19,13 @@
                  :initform (error ":post must be specified")
                  :reader post
                  :documentation "post processing function")
-   (ubo          :reader ubo :documentation "scene-data UBO"))
+   (ubo          :reader ubo :documentation "scene-data UBO")
+   (color        :initarg :color
+                 :accessor color
+                 :documentation "(clear-color) color"))
   (:default-initargs
    :actors ()
+   :color (v! 0 0 0 0)
    :camera-index 0)
   (:documentation "a single scene"))
 
@@ -35,6 +39,12 @@
     (dolist (light lights)
       (init-light light idx)
       (incf idx))))
+
+(defmethod (setf color) :before (new-value (obj scene))
+  (check-type new-value rtg-math.types:vec4))
+
+(defmethod initialize-instance :before ((obj scene) &key color)
+  (check-type color rtg-math.types:vec4))
 
 (defmethod initialize-instance :after ((obj scene) &key lights)
   (let ((ndir 0) (nspot 0) (npoint 0)
@@ -72,8 +82,9 @@
 (defmethod draw :around ((obj scene) (camera renderable) time)
   (let ((fbo (fbo camera)))
     (with-fbo-bound (fbo)
-      (clear-fbo fbo)
-      (call-next-method))))
+      (with-setf (clear-color) (color obj)
+        (clear-fbo fbo)
+        (call-next-method)))))
 
 (defmethod draw ((obj scene) camera time)
   (dolist (a (actors obj))
