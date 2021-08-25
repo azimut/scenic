@@ -32,6 +32,7 @@
    (:file "state")
    (:file "scene")
    (:file "control")
+   (:file "actors/actor")
    (:file "lights/light")
    (:file "lights/directional")
    (:file "lights/point")
