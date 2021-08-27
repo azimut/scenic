@@ -16,7 +16,7 @@
    :dim '(128 128))
   (:documentation "an fbo-sampler pair"))
 
-(defmethod free ((obj renderable))
+(defmethod free :after ((obj renderable))
   (free (fbo obj))
   (free (tex obj)))
 
@@ -39,7 +39,8 @@
         (rotatef new-tex old-tex)
         (rotatef new-fbo old-fbo)
         (rotatef new-sam old-sam)
-        (free new-fbo)))))
+        (free new-fbo)
+        (free new-tex)))))
 
 (defmethod (setf dim)   :after (_ (obj renderable)) (reallocate-all obj))
 (defmethod (setf scale) :after (_ (obj renderable)) (reallocate-all obj))
@@ -61,7 +62,10 @@
   "returns 1 fbo"
   (let ((newopts (loop :for opt :in texture-opts
                        :for tex :in textures
-                       :collect (list (first opt) tex))))
+                       :if (getf (rest opt) :cubes);; TODO: assumes both have/haven't cubes
+                         :collect (list (first opt) (texref tex :layer nil))
+                       :else
+                         :collect (list (first opt) tex))))
     (apply #'make-fbo newopts)))
 
 (defun alloc-samplers (textures sample-opts)
@@ -73,5 +77,5 @@
 (defmethod initialize-instance :after ((obj renderable) &key texture-opts sample-opts dim scale)
   (with-slots (fbo tex sam) obj
     (setf tex (alloc-textures texture-opts dim scale))
-    (setf fbo (alloc-fbos tex texture-opts))
-    (setf sam (alloc-samplers tex sample-opts))))
+    (setf sam (alloc-samplers tex sample-opts))
+    (setf fbo (alloc-fbos     tex texture-opts))))
