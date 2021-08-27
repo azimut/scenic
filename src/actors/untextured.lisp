@@ -47,6 +47,9 @@
                           (dir-pos   (:vec4 2))
                           (spot-pos  (:vec4 2))
                           &uniform
+                          (brdf         :sampler-2d)
+                          (prefilter    :sampler-cube)
+                          (irradiance   :sampler-cube)
                           (material     :int)
                           (materials    pbr-material        :ubo)
                           (dirlights    dir-light-data      :ubo)
@@ -59,7 +62,14 @@
                           (dirshadows   :sampler-2d-array)
                           (spotshadows  :sampler-2d-array)
                           (pointshadows :sampler-cube-array))
-  (let ((final-color (v! 0 0 0)))
+  (let ((final-color (v! 0 0 0))
+        (ambient (ambient-ibl (normalize (- cam-pos frag-pos))
+                              frag-norm
+                              irradiance
+                              (aref (pbr-material-roughness materials) material)
+                              (aref (pbr-material-metallic materials) material)
+                              color
+                              1f0)))
     (dotimes (i (scene-data-ndir scene))
       (with-slots (colors positions) dirlights
         (incf final-color
@@ -70,8 +80,7 @@
                                  (aref (pbr-material-specular materials) material)
                                  (aref colors i))
                  (shadow-factor dirshadows (aref dir-pos i) .003 i)))))
-    (dotimes (i (scene-data-npoint scene)
-                )
+    (dotimes (i (scene-data-npoint scene))
       ;;(incf i 1)
       (with-slots (colors positions linear quadratic far) pointlights
         (incf final-color
@@ -104,7 +113,9 @@
                                (aref linear i)
                                (aref quadratic i))
                  (shadow-factor spotshadows (aref spot-pos i) .003 i)))))
-    (v! final-color 1)
+    (v! (+ final-color ambient) 1)
+    ;;(v! final-color 1)
+    ;;ambient
     ;;(v! 1 0 0 1)
     ))
 
@@ -116,6 +127,9 @@
   (let* ((scene (current-scene)))
     (with-slots (buf scale color material) actor
       (map-g #'untextured-pipe buf
+             :brdf (brdf-sam *state*)
+             :prefilter (first (sam (prefilter scene)))
+             :irradiance (first (sam (irradiance scene)))
              :scene (ubo scene)
              :cam-pos (pos camera)
              :dirshadows (dir-sam *state*)

@@ -1,8 +1,8 @@
 (in-package #:scenic)
 
 (defclass prefilter (capture)
-  ((buf :initarg :buf)
-   (roughness :initarg :rougness :accessor roughness))
+  ((buf       :initarg :buf)
+   (roughness :initarg :roughness :accessor roughness))
   (:default-initargs
    :roughness 0.8
    :buf (box)
@@ -56,6 +56,7 @@
   :fragment (prefilter-frag :vec4))
 
 (defmethod draw ((scene scene) (camera prefilter) _)
+  (print "Prefilter")
   (with-setf* ((resolution (current-viewport)) (v! 128 128)
                (depth-test-function) #'<=
                (cull-face) :front)
@@ -66,4 +67,7 @@
                :roughness roughness
                :world (model->world camera)
                :projections ubo
-               :sam (first (sam *capture*)))))))
+               :sam (first (sam (capture (current-scene)))))))))
+
+(defun make-prefilter (&rest args)
+  (apply #'make-instance 'prefilter args))

@@ -1,7 +1,7 @@
 (in-package #:scenic)
 
 (defclass irradiance (capture)
-  ((buf :initarg :buf))
+  ((buf :initarg :buf :reader buf))
   (:default-initargs
    :buf (box)
    :dim '(32 32))
@@ -58,13 +58,14 @@
   :fragment (irradiance-frag :vec4))
 
 (defmethod draw ((scene scene) (camera irradiance) time)
+  (print "Irradiance")
   (with-setf* ((resolution (current-viewport)) (v! 32 32)
                (depth-test-function) #'<=
                (cull-face) :front)
     (with-fbo-bound ((fbo camera))
       (clear-fbo (fbo camera))
       (map-g #'irradiance-pipe (buf camera)
-             :world (model->world camera)
              :projections (ubo camera)
-             :sam (first (sam *capture*))))))
+             :world (model->world camera)
+             :sam (first (sam (capture (current-scene))))))))
 

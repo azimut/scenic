@@ -39,7 +39,7 @@
 (defmethod free ((obj capture))
   (free (ubo obj)))
 
-(defmethod upload ((obj capture))
+(defmethod upload :after ((obj capture))
   (with-gpu-array-as-c-array (c (ubo-data (ubo obj)))
     (setf (shadow-projections-mats (aref-c c 0)) (projection-mats obj))))
 
@@ -64,6 +64,7 @@
 
 (defun-g capture-frag ((frag-pos :vec4) (frag-norm :vec3) &uniform
                        (color       :vec3)
+                       (pointshadows :sampler-cube-array)
                        (scene       scene-data       :ubo)
                        (dirlights   dir-light-data   :ubo)
                        (spotlights  spot-light-data  :ubo)
@@ -74,18 +75,23 @@
         (incf final-color (dir-light-apply color (aref colors i) (aref positions i)
                                            (s~ frag-pos :xyz) frag-norm))))
     (dotimes (i (scene-data-npoint scene))
-      (with-slots (colors positions linear quadratic) pointlights
-        (incf final-color (point-light-apply color (aref colors i) (aref positions i)
-                                             (s~ frag-pos :xyz) frag-norm
-                                             (aref linear i) (aref quadratic i)))))
+      (with-slots (colors positions linear quadratic far) pointlights
+        (incf final-color (* (point-light-apply color (aref colors i) (aref positions i)
+                                                (s~ frag-pos :xyz) frag-norm
+                                                (aref linear i) (aref quadratic i))
+                             (shadow-factor pointshadows
+                                            (s~ frag-pos :xyz)
+                                            (aref positions i)
+                                            (aref far i)
+                                            .03
+                                            i)))))
     (dotimes (i (scene-data-nspot scene))
       (with-slots (colors positions linear quadratic far cutoff outer-cutoff direction) spotlights
         (incf final-color (spot-light-apply color (aref colors i) (aref positions i) (aref direction i)
                                             (s~ frag-pos :xyz) frag-norm
                                             (aref linear i) (aref quadratic i)
                                             (aref cutoff i) (aref outer-cutoff i)))))
-    (v! final-color 1)
-    (v! 0 1 0 1)))
+    (v! final-color 1)))
 
 (defpipeline-g capture-pipe ()
   :vertex   (capture-vert g-pnt)
@@ -94,9 +100,10 @@
 
 (defmethod draw :around ((scene scene) (camera capture) time)
   (when (drawp camera)
+    (print "around scene capture")
+    (print (tex camera))
     (let ((fbo (fbo camera)))
       (with-fbo-bound (fbo)
-        (clear-fbo fbo)
         (call-next-method)))
     (setf (drawp camera) NIL)))
 
@@ -106,6 +113,7 @@
 
 ;; NOTE: End of the Road with :around, to avoid other more specific draw calls
 (defmethod draw :around ((actor actor) (camera capture) time)
+  (print "actor")
   (with-slots (buf color) actor
     (map-g #'capture-pipe buf
            :color       color
@@ -114,4 +122,5 @@
            :dirlights   (dir-ubo *state*)
            :spotlights  (spot-ubo *state*)
            :pointlights (point-ubo *state*)
+           :pointshadows (point-sam *state*)
            :projections (ubo camera))))

@@ -1,6 +1,6 @@
 (in-package #:scenic)
 
-(defclass scene ()
+(defclass scene (ibl)
   ((cameras      :initarg :cameras
                  :initform      (error ":cameras must be specified")
                  :accessor      cameras

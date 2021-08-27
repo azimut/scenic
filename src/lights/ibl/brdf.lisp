@@ -1,11 +1,16 @@
 (in-package #:scenic)
 
 (defclass brdf ()
-  (brdf-tex
+  ((bs       :reader bs)
    (brdf-sam :reader brdf-sam)
-   brdf-fbo
-   bs)
+   (brdf-tex :reader brdf-tex)
+   (brdf-fbo :reader brdf-fbo))
   (:documentation "brdf lookup table"))
+
+(defmethod free :after ((obj brdf))
+  (free (bs obj))
+  (free (brdf-fbo obj))
+  (free (brdf-tex obj)))
 
 (defun-g importance-sample-ggx ((xi :vec2)
                                 (n :vec3)
@@ -90,3 +95,6 @@
     (setf sam (sample tex :wrap :clamp-to-edge :magnify-filter :linear :minify-filter :linear))
     (with-setf (resolution (current-viewport)) (v! 512 512)
       (map-g-into fbo #'brdf-pipe bs))))
+
+(defun make-brdf ()
+  (make-instance 'brdf))

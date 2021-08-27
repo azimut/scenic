@@ -14,9 +14,12 @@
 (defmethod (setf pos)   :after (_ (obj light)) (setf (uploadp obj) T))
 (defmethod (setf color) :after (_ (obj light)) (setf (uploadp obj) T))
 
-(defmethod upload :around ((obj light))
-  "uploads once per cycle, per light"
-  (when (uploadp obj)
+(defmethod upload :around ((light light))
+  (when (uploadp light)
     (call-next-method)
-    (setf (uploadp obj) NIL)))
+    (setf (uploadp light) NIL)))
 
+(defmethod draw :around ((actor actor) (light light) _)
+  (when (shadowp actor)
+    (print "shadop")
+    (call-next-method)))
