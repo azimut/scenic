@@ -1,0 +1,92 @@
+(in-package #:scenic)
+
+(defclass brdf ()
+  (brdf-tex
+   (brdf-sam :reader brdf-sam)
+   brdf-fbo
+   bs)
+  (:documentation "brdf lookup table"))
+
+(defun-g importance-sample-ggx ((xi :vec2)
+                                (n :vec3)
+                                (roughness :float))
+  (let* ((a (* roughness roughness))
+         (phi (* 2 +pi+ (x xi)))
+         (cos-theta (sqrt (/ (- 1 (y xi))
+                             (+ 1 (* (1- (* a a)) (y xi))))))
+         (sin-theta (sqrt (- 1 (* cos-theta cos-theta))))
+         ;; from spherical coordinates to cartesian coordinates
+         (h (v! (* (cos phi) sin-theta)
+                (* (sin phi) sin-theta)
+                cos-theta))
+         ;; from tangent-space vector to world-space sample vector
+         (up (if (< (abs (z n)) .999)
+                 (v! 0 0 1)
+                 (v! 1 0 0)))
+         (tangent (normalize (cross up n)))
+         (bitangent (cross n tangent))
+         (sample-vec (+ (* (x h) tangent)
+                        (* (y h) bitangent)
+                        (* (z h) n))))
+    (normalize sample-vec)))
+
+(defun-g integrate-brdf ((n-dot-v :float)
+                         (roughness :float))
+  ;; You might've recalled from the theory tutorial that the geometry
+  ;; term of the BRDF is slightly different when used alongside IBL as
+  ;; its k variable has a slightly different interpretation:
+  (labels ((geometry-schlick-ggx ((n-dot-v :float)
+                                  (roughness :float))
+             (let* ((a roughness)
+                    (k (/ (* a a) 2))
+                    (nom n-dot-v)
+                    (denom (+ k (* n-dot-v (- 1 k)))))
+               (/ nom denom)))
+           (geometry-smith ((n :vec3)
+                            (v :vec3)
+                            (l :vec3)
+                            (roughness :float))
+             (let* ((n-dot-v (max (dot n v) 0))
+                    (n-dot-l (max (dot n l) 0))
+                    (ggx2 (geometry-schlick-ggx n-dot-v roughness))
+                    (ggx1 (geometry-schlick-ggx n-dot-l roughness)))
+               (* ggx1 ggx2))))
+    (let* ((v (v! (sqrt (- 1 (* n-dot-v n-dot-v)))
+                  0
+                  n-dot-v))
+           (a 0f0)
+           (b 0f0)
+           (n (v! 0 0 1)))
+      (dotimes (i 1024)
+        (let* (;; generates a sample vector that's biased towards the
+               ;; preferred alignment direction (importance sampling).
+               (xi (hammersley-nth-2d 1024 i))
+               (h  (importance-sample-ggx xi n roughness))
+               (l  (normalize (+ (- v) (* 2 (dot v h) h))))
+               (n-dot-l (max (z l) 0))
+               (n-dot-h (max (z h) 0))
+               (v-dot-h (max (dot v h) 0)))
+          (when (> n-dot-l 0)
+            (let* ((g (geometry-smith n v l roughness))
+                   (g-vis (/ (* g v-dot-h) (* n-dot-h n-dot-v)))
+                   (fc (pow (- 1 v-dot-h) 5)))
+              (incf a (* (- 1 fc) g-vis))
+              (incf b (* fc g-vis))))))
+      (divf a 1024f0)
+      (divf b 1024f0)
+      (v! a b))))
+
+(defun-g brdf-frag ((uv :vec2))
+  (integrate-brdf (x uv) (y uv)))
+
+(defpipeline-g brdf-pipe (:points)
+  :fragment (brdf-frag :vec2))
+
+(defmethod initialize-instance :after ((obj brdf) &key)
+  (with-slots ((fbo brdf-fbo) (tex brdf-tex) (sam brdf-sam) bs) obj
+    (setf bs  (make-buffer-stream nil :primitive :points))
+    (setf fbo (make-fbo `(0 :element-type :rg16f :dimensions (512 512))))
+    (setf tex (attachment-tex fbo 0))
+    (setf sam (sample tex :wrap :clamp-to-edge :magnify-filter :linear :minify-filter :linear))
+    (with-setf (resolution (current-viewport)) (v! 512 512)
+      (map-g-into fbo #'brdf-pipe bs))))
