@@ -112,7 +112,7 @@
   :vertex (untextured-vert g-pnt)
   :fragment (untextured-frag :vec2 :vec3 :vec3 (:vec4 2) (:vec4 2)))
 
-(defmethod draw ((actor untextured) (camera renderable) time)
+(defmethod draw ((actor untextured) camera time)
   (let* ((scene (current-scene)))
     (with-slots (buf scale color material) actor
       (map-g #'untextured-pipe buf

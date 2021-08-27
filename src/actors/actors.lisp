@@ -137,7 +137,7 @@
              (:vec3 2) (:vec3 2) (:vec3 4)
              :vec3 :vec3))
 
-(defmethod draw ((actor actor) (camera renderable) time)
+(defmethod draw ((actor actor) camera time)
   (let* ((scene (current-scene)))
     (with-slots (buf scale color material) actor
       (map-g #'actor-pipe buf
