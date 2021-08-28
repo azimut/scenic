@@ -21,5 +21,4 @@
 
 (defmethod draw :around ((actor actor) (light light) _)
   (when (shadowp actor)
-    (print "shadop")
     (call-next-method)))

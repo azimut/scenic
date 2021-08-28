@@ -1,6 +1,5 @@
 (in-package #:scenic)
 
-;; TODO: add a *scale* value, with ceiling of 1.0 to scale down the texture displayed
 (defclass renderable ()
   ((fbo :reader fbo :documentation "fbo to render to")
    (tex :reader tex :documentation "texture")

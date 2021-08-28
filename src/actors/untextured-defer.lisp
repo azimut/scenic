@@ -1,0 +1,29 @@
+(in-package #:scenic)
+
+(defun-g untextured-defer-frag ((uv :vec2) (frag-norm :vec3) (frag-pos :vec3)
+                                &uniform
+                                (color     :vec3)
+                                (material  :int)
+                                (materials pbr-material :ubo))
+  (with-slots (roughness specular metallic emissive) materials
+    (let ((ao 1f0))
+      (values (v! color (aref roughness material))
+              (v! frag-pos ao)
+              (v! frag-norm (aref specular material))
+              (v! (aref metallic material) (aref emissive material))))))
+
+(defpipeline-g untextured-defer-pipe ()
+  :vertex (vert g-pnt)
+  :fragment (untextured-defer-frag :vec2 :vec3 :vec3))
+
+(defmethod draw ((actor untextured) (camera defered) time)
+  (with-slots (buf scale color material) actor
+    (map-g #'untextured-defer-pipe buf
+           :model-world (model->world actor)
+           :world-view (world->view camera)
+           :view-clip (projection camera)
+           :scale scale
+           :color color
+           :material material
+           :materials (materials-ubo *state*))))
+

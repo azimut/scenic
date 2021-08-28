@@ -1,6 +1,6 @@
 (in-package #:scenic)
 
-(defclass scene (ibl)
+(defclass scene ()
   ((cameras      :initarg :cameras
                  :initform      (error ":cameras must be specified")
                  :accessor      cameras
@@ -33,6 +33,9 @@
   (ndir   :int)
   (nspot  :int)
   (npoint :int))
+
+(defun make-scene (cameras lights post &key (color (v! 0 0 0 0)))
+  (make-instance 'scene :cameras cameras :lights lights :post post :color color))
 
 (defun init-collection (lights)
   (let ((idx 0))
@@ -67,9 +70,6 @@
 (defmethod free ((obj scene))
   (mapc #'free (cameras obj))
   (mapc #'free (actors obj)))
-
-(defun make-scene (cameras lights post)
-  (make-instance 'scene :cameras cameras :lights lights :post post))
 
 (defmethod update ((obj scene) dt)
   (dolist (c (cameras obj))

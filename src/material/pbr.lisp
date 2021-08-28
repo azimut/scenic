@@ -137,17 +137,10 @@
   (let* ((v  (normalize (- cam-pos frag-pos)))
          (f0 (vec3 0.04))
          (f0 (mix f0 albedo metallic))
-         (distance (length (- light-pos frag-pos)))
-         ;;
-         (constant 1f0)
-         ;;#+nil
-         (attenuation (/ 1f0
-                         (+ constant
-                            (* linear distance)
+         (distance    (length (- light-pos frag-pos)))
+         (attenuation (/ (+ 1 (* linear distance)
                             (* quadratic distance distance))))
-         ;;(attenuation (/ 1f0 (* distance distance)))
          (light-color (* light-color attenuation)) ;? took from learnopengl pbr code
-         ;;
          (cut-off       (cos cutoff))
          (outer-cut-off (cos outer-cutoff))
          ;;

@@ -63,8 +63,19 @@
                           (spotshadows  :sampler-2d-array)
                           (pointshadows :sampler-cube-array))
   (let ((final-color (v! 0 0 0))
+        #+nil
         (ambient (ambient-ibl (normalize (- cam-pos frag-pos))
                               frag-norm
+                              irradiance
+                              (aref (pbr-material-roughness materials) material)
+                              (aref (pbr-material-metallic materials) material)
+                              color
+                              1f0))
+        #+nil
+        (ambient (ambient-ibl (normalize (- cam-pos frag-pos))
+                              frag-norm
+                              brdf
+                              prefilter
                               irradiance
                               (aref (pbr-material-roughness materials) material)
                               (aref (pbr-material-metallic materials) material)
@@ -81,7 +92,6 @@
                                  (aref colors i))
                  (shadow-factor dirshadows (aref dir-pos i) .003 i)))))
     (dotimes (i (scene-data-npoint scene))
-      ;;(incf i 1)
       (with-slots (colors positions linear quadratic far) pointlights
         (incf final-color
               (* (pbr-point-lum (aref positions i) frag-pos cam-pos
@@ -113,11 +123,14 @@
                                (aref linear i)
                                (aref quadratic i))
                  (shadow-factor spotshadows (aref spot-pos i) .003 i)))))
-    (v! (+ final-color ambient) 1)
-    ;;(v! final-color 1)
+    ;;(v! (+ final-color ambient) 1)
+    (v! final-color 1)
     ;;ambient
     ;;(v! 1 0 0 1)
     ))
+
+
+;;--------------------------------------------------
 
 (defpipeline-g untextured-pipe ()
   :vertex (untextured-vert g-pnt)
@@ -127,9 +140,9 @@
   (let* ((scene (current-scene)))
     (with-slots (buf scale color material) actor
       (map-g #'untextured-pipe buf
-             :brdf (brdf-sam *state*)
-             :prefilter (first (sam (prefilter scene)))
-             :irradiance (first (sam (irradiance scene)))
+             ;; :brdf (brdf-sam *state*)
+             ;; :prefilter (first (sam (prefilter scene)))
+             ;; :irradiance (first (sam (irradiance scene)))
              :scene (ubo scene)
              :cam-pos (pos camera)
              :dirshadows (dir-sam *state*)
@@ -146,3 +159,5 @@
              :pointlights (point-ubo *state*)
              :spotlights (spot-ubo *state*)
              :time time))))
+
+

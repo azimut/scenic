@@ -43,4 +43,5 @@
 (defun next-scene ()
   (let ((next (1+ (scene-index *state*)))
         (max  (length (scenes *state*))))
-    (setf (scene-index *state*) (mod next max))))
+    (setf (scene-index *state*) (mod next max))
+    (current-scene)))

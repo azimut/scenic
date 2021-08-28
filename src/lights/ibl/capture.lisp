@@ -39,7 +39,7 @@
 (defmethod free ((obj capture))
   (free (ubo obj)))
 
-(defmethod upload :after ((obj capture))
+(defmethod upload ((obj capture))
   (with-gpu-array-as-c-array (c (ubo-data (ubo obj)))
     (setf (shadow-projections-mats (aref-c c 0)) (projection-mats obj))))
 
@@ -71,26 +71,32 @@
                        (pointlights point-light-data :ubo))
   (let ((final-color (v! 0 0 0)))
     (dotimes (i (scene-data-ndir scene))
-      (with-slots (colors positions) dirlights; TODO: SHADOW and light in clipspace?
-        (incf final-color (dir-light-apply color (aref colors i) (aref positions i)
-                                           (s~ frag-pos :xyz) frag-norm))))
+      (with-slots (colors positions)
+          dirlights; TODO: SHADOW and light in clipspace?
+        (incf final-color
+              (dir-light-apply color (aref colors i) (aref positions i)
+                               (s~ frag-pos :xyz) frag-norm))))
     (dotimes (i (scene-data-npoint scene))
-      (with-slots (colors positions linear quadratic far) pointlights
-        (incf final-color (* (point-light-apply color (aref colors i) (aref positions i)
-                                                (s~ frag-pos :xyz) frag-norm
-                                                (aref linear i) (aref quadratic i))
-                             (shadow-factor pointshadows
-                                            (s~ frag-pos :xyz)
-                                            (aref positions i)
-                                            (aref far i)
-                                            .03
-                                            i)))))
+      (with-slots (colors positions linear quadratic far)
+          pointlights
+        (incf final-color
+              (* (point-light-apply color (aref colors i) (aref positions i)
+                                    (s~ frag-pos :xyz) frag-norm
+                                    (aref linear i) (aref quadratic i))
+                 (shadow-factor pointshadows
+                                (s~ frag-pos :xyz)
+                                (aref positions i)
+                                (aref far i)
+                                .03
+                                i)))))
     (dotimes (i (scene-data-nspot scene))
-      (with-slots (colors positions linear quadratic far cutoff outer-cutoff direction) spotlights
-        (incf final-color (spot-light-apply color (aref colors i) (aref positions i) (aref direction i)
-                                            (s~ frag-pos :xyz) frag-norm
-                                            (aref linear i) (aref quadratic i)
-                                            (aref cutoff i) (aref outer-cutoff i)))))
+      (with-slots (colors positions linear quadratic far cutoff outer-cutoff direction)
+          spotlights
+        (incf final-color
+              (spot-light-apply color (aref colors i) (aref positions i) (aref direction i)
+                                (s~ frag-pos :xyz) frag-norm
+                                (aref linear i) (aref quadratic i)
+                                (aref cutoff i) (aref outer-cutoff i)))))
     (v! final-color 1)))
 
 (defpipeline-g capture-pipe ()

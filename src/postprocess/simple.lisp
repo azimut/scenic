@@ -37,14 +37,17 @@
 (defpipeline-g generic-2d-pipe (:points)
   :fragment (frag-2d :vec2))
 
-(defmethod draw :around ((obj simple) camera time)
-  (with-setf* ((depth-test-function) nil
-               (depth-mask)          nil
-               (cull-face)           nil)
-    (call-next-method)))
+(defgeneric blit (postprocess camera time)
+  (:documentation "blit to screen"))
 
-(defmethod draw ((obj simple) camera time)
-  (with-slots (exposure bs) obj
+(defmethod blit ((postprocess simple) camera time)
+  (with-slots (exposure bs) postprocess
     (map-g #'generic-2d-pipe bs
            :sam (first (sam camera))
            :exposure exposure)))
+
+(defmethod blit :around (postprocess camera time)
+  (with-setf* ((depth-test-function) NIL
+               (depth-mask)          NIL
+               (cull-face)           NIL)
+    (call-next-method)))
