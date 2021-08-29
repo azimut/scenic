@@ -12,7 +12,7 @@
    :shadowp T
    :material 0
    :color (v! 1 1 1)
-   :pos (v! 0 0 0 0)
+   :pos (v! 0 0 0)
    :rot (q:identity)
    :scale 1f0
    :buf (box 1 1 1 t))
@@ -37,5 +37,12 @@
   (with-slots (pos rot) actor
     (m4:* (m4:translation pos)
           (q:to-mat4      rot))))
+
+(defmethod (setf pos) :before (new-value (obj actor))
+  (unless (v3:= (slot-value obj 'pos) new-value)
+    (let ((scene (current-scene)))
+      (mapc (lambda (l) (setf (drawp l) T)) (lights scene))
+      (when (typep scene 'scene-ibl)
+        (setf (pos scene) (pos scene))))))
 
 (defmethod update ((obj actor) dt))
