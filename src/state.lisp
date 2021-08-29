@@ -44,4 +44,6 @@
   (let ((next (1+ (scene-index *state*)))
         (max  (length (scenes *state*))))
     (setf (scene-index *state*) (mod next max))
+    (mapc (lambda (l) (setf (uploadp l) T (drawp l) T))
+          (lights (current-scene)))
     (current-scene)))
