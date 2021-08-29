@@ -23,4 +23,19 @@
     (with-slots (pos) obj
       (format stream "(~a ~a ~a)" (x pos) (y pos) (z pos)))))
 
+(defmethod specular  ((obj actor)) (specular  (nth (material obj) (materials *state*))))
+(defmethod metallic  ((obj actor)) (metallic  (nth (material obj) (materials *state*))))
+(defmethod emissive  ((obj actor)) (emissive  (nth (material obj) (materials *state*))))
+(defmethod roughness ((obj actor)) (roughness (nth (material obj) (materials *state*))))
+
+(defmethod (setf specular)  (new-value (obj actor)) (setf (specular  (nth (material obj) (materials *state*))) new-value))
+(defmethod (setf metallic)  (new-value (obj actor)) (setf (metallic  (nth (material obj) (materials *state*))) new-value))
+(defmethod (setf emissive)  (new-value (obj actor)) (setf (emissive  (nth (material obj) (materials *state*))) new-value))
+(defmethod (setf roughness) (new-value (obj actor)) (setf (roughness (nth (material obj) (materials *state*))) new-value))
+
+(defun model->world (actor)
+  (with-slots (pos rot) actor
+    (m4:* (m4:translation pos)
+          (q:to-mat4      rot))))
+
 (defmethod update ((obj actor) dt))
