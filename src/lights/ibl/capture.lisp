@@ -106,8 +106,6 @@
 
 (defmethod draw :around ((scene scene) (camera capture) time)
   (when (drawp camera)
-    (print "around scene capture")
-    (print (tex camera))
     (let ((fbo (fbo camera)))
       (with-fbo-bound (fbo)
         (call-next-method)))
@@ -115,11 +113,10 @@
 
 (defmethod draw ((scene scene) (camera capture) time)
   (dolist (a (actors scene))
-    (draw a camera time)))
+    (paint scene a camera time)))
 
 ;; NOTE: End of the Road with :around, to avoid other more specific draw calls
-(defmethod draw :around ((actor actor) (camera capture) time)
-  (print "actor")
+(defmethod paint :around (scene (actor actor) (camera capture) time)
   (with-slots (buf color) actor
     (map-g #'capture-pipe buf
            :color       color

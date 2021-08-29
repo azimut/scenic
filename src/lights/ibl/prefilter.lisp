@@ -56,7 +56,7 @@
   :fragment (prefilter-frag :vec4))
 
 (defmethod draw ((scene scene) (camera prefilter) _)
-  (print "Prefilter")
+  (log4cl:log-info)
   (with-setf* ((resolution (current-viewport)) (v! 128 128)
                (depth-test-function) #'<=
                (cull-face) :front)
@@ -67,7 +67,7 @@
                :roughness roughness
                :world (model->world camera)
                :projections ubo
-               :sam (first (sam (capture (current-scene)))))))))
+               :sam (first (sam (capture scene))))))))
 
 (defun make-prefilter (&rest args)
   (apply #'make-instance 'prefilter args))

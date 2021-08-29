@@ -65,7 +65,7 @@
   (setf (slot-value obj 'idx) idx)
   (setf (slot-value obj 'fbo) (make-fbo `(:d ,(texref (spot-tex *state*) :layer idx)))))
 
-(defmethod draw (actor (camera spot) time)
+(defmethod paint (scene actor (camera spot) time)
   (with-slots (buf scale) actor
     (map-g #'simplest-3d-pipe buf
            :model-world (model->world actor)
@@ -78,13 +78,13 @@
     (call-next-method)
     (setf (drawp light) NIL)))
 
-(defmethod draw ((obj scene) (light spot) time)
+(defmethod draw ((scene scene) (light spot) time)
   ;;(with-setf (cull-face) :front)
   (let ((fbo (fbo light)))
     (with-fbo-bound (fbo :attachment-for-size :d)
       (clear-fbo fbo :d)
-      (dolist (a (actors obj))
-        (draw a light time)))))
+      (dolist (a (actors scene))
+        (paint scene a light time)))))
 
 (defun make-spot (&rest args)
   (apply #'make-instance 'spot args))

@@ -58,7 +58,7 @@
   :fragment (irradiance-frag :vec4))
 
 (defmethod draw ((scene scene) (camera irradiance) time)
-  (print "Irradiance")
+  (log4cl:log-info)
   (with-setf* ((resolution (current-viewport)) (v! 32 32)
                (depth-test-function) #'<=
                (cull-face) :front)
@@ -67,5 +67,5 @@
       (map-g #'irradiance-pipe (buf camera)
              :projections (ubo camera)
              :world (model->world camera)
-             :sam (first (sam (capture (current-scene))))))))
+             :sam (first (sam (capture scene)))))))
 

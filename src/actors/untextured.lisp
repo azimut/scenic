@@ -129,35 +129,147 @@
     ;;(v! 1 0 0 1)
     ))
 
-
-;;--------------------------------------------------
-
 (defpipeline-g untextured-pipe ()
   :vertex (untextured-vert g-pnt)
   :fragment (untextured-frag :vec2 :vec3 :vec3 (:vec4 2) (:vec4 2)))
 
-(defmethod draw ((actor untextured) (camera renderable) time)
-  (let* ((scene (current-scene)))
-    (with-slots (buf scale color material) actor
-      (map-g #'untextured-pipe buf
-             ;; :brdf (brdf-sam *state*)
-             ;; :prefilter (first (sam (prefilter scene)))
-             ;; :irradiance (first (sam (irradiance scene)))
-             :scene (ubo scene)
-             :cam-pos (pos camera)
-             :dirshadows (dir-sam *state*)
-             :pointshadows (point-sam *state*)
-             :spotshadows (spot-sam *state*)
-             :model-world (model->world actor)
-             :world-view (world->view camera)
-             :view-clip (projection camera)
-             :scale scale
-             :color color
-             :material material
-             :materials (materials-ubo *state*)
-             :dirlights (dir-ubo *state*)
-             :pointlights (point-ubo *state*)
-             :spotlights (spot-ubo *state*)
-             :time time))))
+(defmethod paint (scene (actor untextured) (camera renderable) time)
+  (with-slots (buf scale color material) actor
+    (map-g #'untextured-pipe buf
+           ;; :brdf (brdf-sam *state*)
+           ;; :prefilter (first (sam (prefilter scene)))
+           ;; :irradiance (first (sam (irradiance scene)))
+           :scene (ubo scene)
+           :cam-pos (pos camera)
+           :dirshadows (dir-sam *state*)
+           :pointshadows (point-sam *state*)
+           :spotshadows (spot-sam *state*)
+           :model-world (model->world actor)
+           :world-view (world->view camera)
+           :view-clip (projection camera)
+           :scale scale
+           :color color
+           :material material
+           :materials (materials-ubo *state*)
+           :dirlights (dir-ubo *state*)
+           :pointlights (point-ubo *state*)
+           :spotlights (spot-ubo *state*)
+           :time time)))
+
+
+;;--------------------------------------------------
+
+(defun-g untextured-ibl-frag ((uv :vec2) (frag-norm :vec3) (frag-pos :vec3)
+                              (dir-pos   (:vec4 2))
+                              (spot-pos  (:vec4 2))
+                              &uniform
+                              (brdf         :sampler-2d)
+                              (prefilter    :sampler-cube)
+                              (irradiance   :sampler-cube)
+                              (material     :int)
+                              (materials    pbr-material        :ubo)
+                              (dirlights    dir-light-data      :ubo)
+                              (pointlights  point-light-data    :ubo)
+                              (spotlights   spot-light-data     :ubo)
+                              (scene        scene-data          :ubo)
+                              (cam-pos      :vec3)
+                              (time         :float)
+                              (color        :vec3)
+                              (dirshadows   :sampler-2d-array)
+                              (spotshadows  :sampler-2d-array)
+                              (pointshadows :sampler-cube-array))
+  (let ((final-color (v! 0 0 0))
+        ;;#+nil
+        (ambient (ambient-ibl (normalize (- cam-pos frag-pos))
+                              frag-norm
+                              irradiance
+                              (aref (pbr-material-roughness materials) material)
+                              (aref (pbr-material-metallic materials) material)
+                              color
+                              .1f0))
+        #+nil
+        (ambient (ambient-ibl (normalize (- cam-pos frag-pos))
+                              frag-norm
+                              brdf
+                              prefilter
+                              irradiance
+                              (aref (pbr-material-roughness materials) material)
+                              (aref (pbr-material-metallic materials) material)
+                              color
+                              1f0)))
+    (dotimes (i (scene-data-ndir scene))
+      (with-slots (colors positions) dirlights
+        (incf final-color
+              (* (pbr-direct-lum (aref positions i) frag-pos cam-pos frag-norm
+                                 (aref (pbr-material-roughness materials) material)
+                                 (aref (pbr-material-metallic materials) material)
+                                 color
+                                 (aref (pbr-material-specular materials) material)
+                                 (aref colors i))
+                 (shadow-factor dirshadows (aref dir-pos i) .003 i)))))
+    (dotimes (i (scene-data-npoint scene))
+      (with-slots (colors positions linear quadratic far) pointlights
+        (incf final-color
+              (* (pbr-point-lum (aref positions i) frag-pos cam-pos
+                                frag-norm
+                                (aref (pbr-material-roughness materials) material)
+                                (aref (pbr-material-metallic materials) material)
+                                color
+                                (aref (pbr-material-specular materials) material)
+                                (aref linear i) (aref quadratic i) (aref colors i))
+                 (shadow-factor pointshadows
+                                frag-pos
+                                (aref positions i)
+                                (aref far i)
+                                .03
+                                i)))))
+    (dotimes (i (scene-data-nspot scene))
+      (with-slots (colors positions linear quadratic far cutoff outer-cutoff direction) spotlights
+        (incf final-color
+              (* (pbr-spot-lum (aref positions i) frag-pos cam-pos
+                               frag-norm
+                               (aref (pbr-material-roughness materials) material)
+                               (aref (pbr-material-metallic materials) material)
+                               color
+                               (aref (pbr-material-specular materials) material)
+                               (aref colors i)
+                               (aref direction i)
+                               (aref cutoff i)
+                               (aref outer-cutoff i)
+                               (aref linear i)
+                               (aref quadratic i))
+                 (shadow-factor spotshadows (aref spot-pos i) .003 i)))))
+    (v! (+ final-color ambient) 1)
+    ;;(v! final-color 1)
+    ;;ambient
+    ;;(v! 1 0 0 1)
+    ))
+
+(defpipeline-g untextured-ibl-pipe ()
+  :vertex (untextured-vert g-pnt)
+  :fragment (untextured-ibl-frag :vec2 :vec3 :vec3 (:vec4 2) (:vec4 2)))
+
+(defmethod paint ((scene scene-ibl) (actor untextured) (camera renderable) time)
+  (with-slots (buf scale color material) actor
+    (map-g #'untextured-ibl-pipe buf
+           :brdf (brdf-sam *state*)
+           :prefilter (first (sam (prefilter scene)))
+           :irradiance (first (sam (irradiance scene)))
+           :scene (ubo scene)
+           :cam-pos (pos camera)
+           :dirshadows (dir-sam *state*)
+           :pointshadows (point-sam *state*)
+           :spotshadows (spot-sam *state*)
+           :model-world (model->world actor)
+           :world-view (world->view camera)
+           :view-clip (projection camera)
+           :scale scale
+           :color color
+           :material material
+           :materials (materials-ubo *state*)
+           :dirlights (dir-ubo *state*)
+           :pointlights (point-ubo *state*)
+           :spotlights (spot-ubo *state*)
+           :time time)))
 
 

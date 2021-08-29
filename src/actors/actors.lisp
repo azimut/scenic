@@ -137,22 +137,21 @@
              (:vec3 2) (:vec3 2) (:vec3 4)
              :vec3 :vec3))
 
-(defmethod draw ((actor actor) (camera renderable) time)
-  (let* ((scene (current-scene)))
-    (with-slots (buf scale color material) actor
-      (map-g #'actor-pipe buf
-             :cam-pos (pos camera)
-             :dirshadows (dir-sam (lights scene))
-             :pointshadows (point-sam (lights scene))
-             :spotshadows (spot-sam (lights scene))
-             :model-world (model->world actor)
-             :world-view (world->view camera)
-             :view-clip (projection camera)
-             :scale scale
-             :color color
-             :material material
-             :materials (materials-ubo *state*)
-             :dirlights (dir-ubo (lights scene))
-             :pointlights (point-ubo (lights scene))
-             :spotlights (spot-ubo (lights scene))
-             :time time))))
+(defmethod paint (scene (actor actor) (camera renderable) time)
+  (with-slots (buf scale color material) actor
+    (map-g #'actor-pipe buf
+           :cam-pos (pos camera)
+           :dirshadows (dir-sam (lights scene))
+           :pointshadows (point-sam (lights scene))
+           :spotshadows (spot-sam (lights scene))
+           :model-world (model->world actor)
+           :world-view (world->view camera)
+           :view-clip (projection camera)
+           :scale scale
+           :color color
+           :material material
+           :materials (materials-ubo *state*)
+           :dirlights (dir-ubo (lights scene))
+           :pointlights (point-ubo (lights scene))
+           :spotlights (spot-ubo (lights scene))
+           :time time)))

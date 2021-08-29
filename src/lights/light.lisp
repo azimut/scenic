@@ -19,6 +19,6 @@
     (call-next-method)
     (setf (uploadp light) NIL)))
 
-(defmethod draw :around ((actor actor) (light light) _)
+(defmethod paint :around (scene (actor actor) (light light) _)
   (when (shadowp actor)
     (call-next-method)))

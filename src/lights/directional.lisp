@@ -62,7 +62,7 @@
   :vertex   (vert g-pnt)
   :fragment (simplest-3d-frag :vec2 :vec3 :vec3))
 
-(defmethod draw (actor (camera directional) time)
+(defmethod paint (scene actor (camera directional) time)
   (with-slots (buf scale) actor
     (map-g #'simplest-3d-pipe buf
            :model-world (model->world actor)
@@ -75,13 +75,13 @@
     (call-next-method)
     (setf (drawp light) NIL)))
 
-(defmethod draw ((obj scene) (light directional) time)
+(defmethod draw ((scene scene) (light directional) time)
   ;;(with-setf (cull-face) :front)
   (let ((fbo (fbo light)))
     (with-fbo-bound (fbo :attachment-for-size :d)
       (clear-fbo fbo :d)
-      (dolist (a (actors obj))
-        (draw a light time)))))
+      (dolist (a (actors scene))
+        (paint scene a light time)))))
 
 (defun make-directional (&rest args)
   (apply #'make-instance 'directional args))

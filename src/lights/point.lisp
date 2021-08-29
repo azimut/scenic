@@ -132,15 +132,17 @@
 
 (defun point-p (obj) (typep obj 'point))
 
-(defmethod draw (actor (light point) time)
+(defmethod paint (scene actor (light point) time)
+  (print actor)
   (with-slots (buf) actor
     (map-g #'shadowmap-point-pipe buf
            :model->world (model->world actor)
            :pointlights (ubo light)
            :index (idx light))))
 
-(defmethod draw ((obj scene) (light point) time)
+(defmethod draw ((scene scene) (light point) time)
+  (print "INSIDE")
   (let ((fbo (fbo light)))
     (with-fbo-bound (fbo :attachment-for-size :d)
-      (dolist (a (actors obj))
-        (draw a light time)))))
+      (dolist (a (actors scene))
+        (paint scene a light time)))))

@@ -69,22 +69,22 @@
 (defmethod scene-action ((scene (eql 0))))
 
 (defmethod update ((camera perspective) dt)
-  (when (key-down-p key.j) (rocketman::next-row *rocket*))
-  (when (key-down-p key.k) (rocketman::prev-row *rocket*))
-  (when (key-down-p key.space) (rocket-pause-toggle))
-  (setf (fov camera) (rocket-get "camera:fov"))
-  (setf (pos camera) (rocket-get-v3 "camera:x" "camera:y" "camera:z"))
-  (let ((new (q:point-at (v! 0 1 0) (pos camera)
-                         (rocket-get-v3 "view:x" "view:y" "view:z"))))
-    (unless (q:= (rot camera) new)
-      (setf (rot camera) new)))
-  ;;
-  (let ((light (first (lights (current-scene))))
-        (new-value (rocket-get-v3 "point1:x" "point1:y" "point1:z")))
-    (unless (v3:= new-value (pos light))
-      (setf (pos light) new-value)))
-  ;; (god-move 2000 dt camera)
-  ;; (full-rot 2000 dt camera)
+  ;; (when (key-down-p key.j) (rocketman::next-row *rocket*))
+  ;; (when (key-down-p key.k) (rocketman::prev-row *rocket*))
+  ;; (when (key-down-p key.space) (rocket-pause-toggle))
+  ;; (setf (fov camera) (rocket-get "camera:fov"))
+  ;; (setf (pos camera) (rocket-get-v3 "camera:x" "camera:y" "camera:z"))
+  ;; (let ((new (q:point-at (v! 0 1 0) (pos camera)
+  ;;                        (rocket-get-v3 "view:x" "view:y" "view:z"))))
+  ;;   (unless (q:= (rot camera) new)
+  ;;     (setf (rot camera) new)))
+  ;; ;;
+  ;; (let ((light (first (lights (current-scene))))
+  ;;       (new-value (rocket-get-v3 "point1:x" "point1:y" "point1:z")))
+  ;;   (unless (v3:= new-value (pos light))
+  ;;     (setf (pos light) new-value)))
+  (god-move 2000 dt camera)
+  (full-rot 2000 dt camera)
   ;; (let ((pos (v! 2 4 4)))
   ;;   (setf (pos camera) pos)
   ;;   (setf (rot camera) (q:point-at (v! 0 1 0) pos (v! 0 0 0))))
@@ -104,9 +104,16 @@
    (scenes *state*))
   (push
    (make-scene
-    (list (make-perspective :scale .5 :pos (v! 2 2 2) :rot (q:point-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0))))
+    (list (make-perspective :scale .25 :pos (v! 2 2 2) :rot (q:point-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0))))
     (list (make-point :pos (v! -2 2 -2) :color (v! .1 .1 .3) :linear 0.35 :quadratic 0.44)
           (make-point :pos (v! 2 2 2) :color (v! .8 .2 .6) :linear 0.35 :quadratic 0.44))
+    (make-simple-postprocess))
+   (scenes *state*))
+
+  (push
+   (make-scene-ibl
+    (list (make-perspective :scale .25 :pos (v! 2 2 2) :rot (q:point-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0))))
+    (list (make-point :pos (v! -2 2 -2) :color (v! .1 .1 .3) :linear 0.35 :quadratic 0.44))
     (make-simple-postprocess))
    (scenes *state*))
   ;;
@@ -118,9 +125,12 @@
     (make-simple-postprocess))
    (scenes *state*))
   ;; Actors
-  (let ((scene (first (scenes *state*))))
+  (let ((scene (second (scenes *state*))))
     (push (make-box :w 10f0 :d 10f0) (actors scene))
     (push (make-box :h 5f0) (actors scene)))
+  (let ((scene (first (scenes *state*))))
+    (push (make-box :w 10f0 :d 10f0) (actors scene))
+    (push (make-cone) (actors scene)))
   #+nil
   (let ((scene (second (scenes *state*))))
     (push (make-box :w 10f0 :d 10f0) (actors scene))

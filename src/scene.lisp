@@ -29,6 +29,12 @@
    :camera-index 0)
   (:documentation "a single scene"))
 
+(defclass scene-ibl (scene ibl)
+  ())
+
+(defun make-scene-ibl (cameras lights post &key (color (v! 0 0 0 0)))
+  (make-instance 'scene-ibl :cameras cameras :lights lights :post post :color color))
+
 (defstruct-g (scene-data :layout :std-140)
   (ndir   :int)
   (nspot  :int)
@@ -71,6 +77,21 @@
   (mapc #'free (cameras obj))
   (mapc #'free (actors obj)))
 
+(defmethod upload ((scene scene))
+  (dolist (m (materials *state*))
+    (upload m))
+  (dolist (l (lights scene))
+    (upload l)))
+
+(defmethod upload ((scene scene-ibl))
+  (dolist (m (materials *state*))
+    (upload m))
+  (dolist (l (lights scene))
+    (upload l))
+  (upload (capture    scene))
+  (upload (prefilter  scene))
+  (upload (irradiance scene)))
+
 (defmethod update ((obj scene) dt)
   (dolist (c (cameras obj))
     (update c dt))
@@ -79,16 +100,19 @@
   (dolist (l (lights obj))
     (update l dt)))
 
+(defgeneric paint (scene actor camera time)
+  (:documentation "final stage of drawing for an individual ACTOR"))
+
+(defmethod draw ((scene scene) (camera renderable) time)
+  (dolist (a (actors scene))
+    (paint scene a camera time)))
+
 (defmethod draw :around ((obj scene) (camera renderable) time)
   (let ((fbo (fbo camera)))
     (with-fbo-bound (fbo)
       (with-setf (clear-color) (color obj)
         (clear-fbo fbo)
         (call-next-method)))))
-
-(defmethod draw ((obj scene) camera time)
-  (dolist (a (actors obj))
-    (draw a camera time)))
 
 (defun current-scene ()
   (let ((state *state*))
@@ -100,9 +124,3 @@
 
 (defun active-camera (scene)
   (nth (camera-index scene) (cameras scene)))
-
-(defmethod upload ((obj scene))
-  (dolist (m (materials *state*))
-    (upload m))
-  (dolist (l (lights obj))
-    (upload l)))

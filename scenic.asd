@@ -15,6 +15,7 @@
                #:livesupport
                #:nineveh
                #:png
+               #:rocketman
                #:rtg-math.vari
                #:serapeum
                #:temporal-functions
@@ -25,6 +26,7 @@
   :entry-point "scenic:start"
   :components
   ((:file "package")
+   (:file "rocketman")
    (:file "screenshot")
    (:file "assets")
    (:file "renderable")
