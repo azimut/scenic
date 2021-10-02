@@ -49,7 +49,8 @@ jobs:
           asdf-system: scenic
         if: steps.cache.outputs.cache-hit != 'true'
 
-      - run: sbcl --eval '(asdf:make :scenic)'
+      - run: ~/.roswell/bin/sbcl --eval '(asdf:make :scenic)'
+
       - uses: actions/upload-artifact@v2
         with:
           name: scenic-linux
