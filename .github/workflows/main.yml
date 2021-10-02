@@ -4,10 +4,16 @@ on: [push]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
 
       - uses: actions/checkout@v2
+
+      - name: Setup
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libassimp4
+        shell: bash
 
       - name: Grant All Perms to Make Cache Restoring Possible
         run: |
