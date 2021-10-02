@@ -38,12 +38,12 @@ jobs:
           echo .qlot/bin >> $GITHUB_PATH
         if: steps.cache.outputs.cache-hit == 'true'
 
-      - run: ros install azimut/rocketman
-
       - uses: 40ants/setup-lisp@v1
         with:
           asdf-system: scenic
         if: steps.cache.outputs.cache-hit != 'true'
+
+      - run: ros install azimut/rocketman
 
       - run: sbcl --eval '(asdf:make :scenic)'
       - uses: actions/upload-artifact@v2
