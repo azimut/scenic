@@ -49,7 +49,11 @@ jobs:
           asdf-system: scenic
         if: steps.cache.outputs.cache-hit != 'true'
 
-      - run: ~/.roswell/bin/sbcl --eval '(asdf:make :scenic)'
+      - name: Build executable
+        run: |
+          ros use sbcl/system;
+          PATH=~/.roswell/bin:$PATH
+          ros run -- --eval "(asdf:make :scenic)"
 
       - uses: actions/upload-artifact@v2
         with:
