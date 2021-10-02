@@ -11,6 +11,15 @@
   (slynk-mrepl::send-prompt (find (bt:current-thread) (slynk::channels)
                                   :key #'slynk::channel-thread)))
 
+(defun init-all-the-things ()
+  (init-state (list (make-material :roughness .8 :metallic .02 :specular .1)
+                    (make-material :roughness .8 :metallic .02 :specular .1)))
+  (let ((s1 (make-scene)))
+    (register (make-perspective :scale .25 :pos (v! 2 2 2) :rot (q:point-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0))) s1)
+    (register (make-point :pos (v! -2 2 -2) :color (v! .1 .1 .3) :linear 0.35 :quadratic 0.44) s1)
+    (register (make-box) s1)
+    (register s1 *state*)))
+
 (defun init ()
   (free *state*)
   (slynk-hook)
@@ -50,9 +59,10 @@
           (setf (drawp (first points)) NIL))))
 
     (draw scene camera dt)
+    (process scene)
     (as-frame
       (blit scene (post scene) camera dt)
-      ;;(draw-tex-br (first (sam camera)))
+      ;; (draw-tex-br (first (sam camera)))
       ;; (draw-tex-bl (second (sam camera)))
       ;; (draw-tex-tr (third (sam camera)))
       ;; (draw-tex-tl (fourth (sam camera)))
@@ -80,9 +90,11 @@
         :do (skitter:stop-listening listener)))
 (defun skitter-cleanup ()
   (skitter-cleanup-controls (skitter:window 0) :size))
-
 (defun window-listener (dim)
-  (setf (dim (current-camera))          (list (x dim) (* (x dim) .5625))
-        (resolution (current-viewport)) (v!   (x dim) (* (x dim) .5625))))
+  (setf (dim (current-camera)) (list (x dim) (* 0.5625 (x dim))))
+  (setf (resolution (current-viewport)) (v! (x dim) (* 0.5625 (x dim))))
+  ;;(resize (current-camera) (x dim) (round (* 0.5625 (x dim))))
+  (issue (current-scene) 'resize :width (x dim) :height (* (x dim) 0.5625))
+  )
 (defun window-listener-trampoline (&rest args)
   (window-listener (first args)))

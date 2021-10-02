@@ -33,8 +33,8 @@
     (when (eq e obj)
       (god-move 5000 dt obj))))
 
-(defun cloud:get-listener-pos () (pos (current-camera)))
-(defun cloud-get-listener-rot () (rot (current-camera)))
+;; (defun cloud:get-listener-pos () (pos (current-camera)))
+;; (defun cloud-get-listener-rot () (rot (current-camera)))
 
 (defmethod update ((camera perspective) dt)
   (god-move 2000 dt camera)
@@ -53,20 +53,11 @@
   )
 
 (defun match-camera ()
+  "makes the camera of the next scene match the current one"
   (let* ((next-idx (mod (1+ (scene-index *state*)) (length (scenes *state*))))
          (other-cam (active-camera (nth next-idx (scenes *state*)))))
     (setf (pos other-cam) (copy-seq (pos (current-camera))))
     (setf (rot other-cam) (copy-seq (rot (current-camera))))))
-
-(defvar *retention* (make-hash-table))
-;; SETF only if the value is different
-
-(defun setf-if-new (comparator old-value new-value &body body)
-  (unless (funcall comparator old-value new-value)
-    body))
-
-
-(defmethod scene-action ((scene (eql 0))))
 
 (defmethod update ((camera perspective) dt)
   ;; (when (key-down-p key.j) (rocketman::next-row *rocket*))
@@ -90,64 +81,15 @@
   ;;   (setf (rot camera) (q:point-at (v! 0 1 0) pos (v! 0 0 0))))
   )
 
-(defun init-all-the-things ()
-  (init-state
-   (list (make-material :roughness .8 :metallic .02 :specular .1)))
-  #+nil
-  (push
-   (make-scene
-    (list (make-defered :scale .5 :pos (v! 2 2 2) :rot (q:point-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0))))
-    (list (make-point :pos (v! -2 2 -2) :color (v! .1 .1 .3) :linear 0.35 :quadratic 0.44)
-          (make-point :pos (v! 2 2 2) :color (v! .8 .2 .6) :linear 0.35 :quadratic 0.44))
-    (make-defer-postprocess)
-    :color (v! .3 .3 .2 1))
-   (scenes *state*))
-  (push
-   (make-scene
-    (list (make-perspective :scale .25 :pos (v! 2 2 2) :rot (q:point-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0))))
-    (list (make-point :pos (v! -2 2 -2) :color (v! .1 .1 .3) :linear 0.35 :quadratic 0.44)
-          (make-point :pos (v! 2 2 2) :color (v! .8 .2 .6) :linear 0.35 :quadratic 0.44))
-    (make-simple-postprocess))
-   (scenes *state*))
 
-  (push
-   (make-scene-ibl
-    (list (make-perspective :scale .25 :pos (v! 2 2 2) :rot (q:point-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0))))
-    (list (make-point :pos (v! -2 2 -2) :color (v! .1 .1 .3) :linear 0.35 :quadratic 0.44))
-    (make-simple-postprocess))
-   (scenes *state*))
-  ;;
-  #+nil
-  (push
-   (make-scene
-    (list (make-perspective :scale .5 :pos (v! 2 2 2) :rot (q:point-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0))))
-    (list (make-spot  :pos (v! 4 4 4) :color (v! .8 .8 .8) :linear 0.35 :quadratic 0.44))
-    (make-simple-postprocess))
-   (scenes *state*))
-  ;; Actors
-  (let ((scene (second (scenes *state*))))
-    (push (make-box :w 10f0 :d 10f0) (actors scene))
-    (push (make-box :h 5f0) (actors scene)))
-  (let ((scene (first (scenes *state*))))
-    (push (make-box :w 10f0 :d 10f0) (actors scene))
-    (push (make-cone) (actors scene)))
-  #+nil
-  (let ((scene (second (scenes *state*))))
-    (push (make-box :w 10f0 :d 10f0) (actors scene))
-    (push (make-box :h 5f0) (actors scene)))
-  #+nil
-  (let ((scene (second (scenes *state*))))
-    (dotimes (i 2)
-      (let ((a (make-sphere)))
-        (setf (pos a) (v! (- (random 5) 2.5) 1 (- (random 5) 2.5)))
-        (setf (rot a) (q:from-axis-angle (v! 0 1 0) (radians (random 180))))
-        (push a (actors scene))))
-    (dotimes (i 2)
-      (let ((a (make-cone)))
-        (setf (pos a) (v! (- (random 5) 2.5) 1 (- (random 5) 2.5)))
-        (setf (rot a) (q:from-axis-angle (v! 0 1 0) (radians (random 180))))
-        (push a (actors scene))))
-    (push (make-box :w 10f0 :d 10f0) (actors scene))))
+(defun init-all-the-things ()
+  (init-state (list (make-material :roughness .8 :metallic .02 :specular .1)
+                    (make-material :roughness .8 :metallic .02 :specular .1)))
+  (let ((s1 (make-scene)))
+    (register (make-perspective :scale .25 :pos (v! 2 2 2) :rot (q:point-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0))) s1)
+    (register (make-point :pos (v! -2 2 -2) :color (v! .1 .1 .3) :linear 0.35 :quadratic 0.44) s1)
+    (register (make-box) s1)
+    (register s1 *state*)))
 
 (defmethod update ((obj directional) dt)
   (let* ((new-pos (v3:*s (v! 20 10 -30) 1f0))

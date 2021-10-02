@@ -139,7 +139,7 @@
          (metallic  (x color4))
          (emissive  (y color4))
          (final-color (v! 0 0 0))
-         ;;#+nil
+         #+nil
          (ambient (ambient-ibl (normalize (- cam-pos frag-pos))
                                frag-norm
                                irradiance
@@ -147,16 +147,16 @@
                                metallic
                                color
                                ao))
-         #+nil
+         ;;#+nil
          (ambient (ambient-ibl (normalize (- cam-pos frag-pos))
                                frag-norm
                                brdf
                                prefilter
                                irradiance
-                               (aref (pbr-material-roughness materials) material)
-                               (aref (pbr-material-metallic materials) material)
+                               roughness
+                               metallic
                                color
-                               1f0)))
+                               ao)))
     (dotimes (i (scene-data-ndir scene))
       (with-slots (colors positions lightspace) dirlights
         (incf final-color
@@ -201,9 +201,12 @@
                  (shadow-factor spotshadows
                                 (* (aref lightspace i) (v! frag-pos 1))
                                 .003 i)))))
-    (let* ((ldr  (tone-map-acesfilm (+ ambient final-color) exposure))
+    (let* ((ldr  (tone-map-acesfilm (+ ambient
+                                       final-color
+                                       ) exposure))
            (luma (rgb->luma-bt601 ldr)))
-      (v! ldr luma))))
+      (v! ldr luma))
+    ))
 
 (defpipeline-g defer-ibl-pipe (:points)
   :fragment (defered-ibl-frag :vec2))

@@ -10,7 +10,7 @@
    (materials-ubo :initarg :materials-ubo :reader   materials-ubo :documentation "ubo of materials"))
   (:default-initargs
    :scenes ()
-   :scene-index 0
+   :scene-index -1
    :materials (error ":materials must be specified")
    :last-time (get-internal-real-time))
   (:documentation "main state"))

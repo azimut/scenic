@@ -1,6 +1,6 @@
 (in-package #:scenic)
 
-(defclass actor ()
+(defclass actor (listener)
   ((pos      :initarg :pos      :accessor pos      :documentation "3d position")
    (rot      :initarg :rot      :accessor rot      :documentation "3d rotation")
    (buf      :initarg :buf      :accessor buf      :documentation "buffer stream")

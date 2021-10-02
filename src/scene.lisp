@@ -1,36 +1,49 @@
 (in-package #:scenic)
 
-(defclass scene ()
+(defclass scene (event-loop)
   ((cameras      :initarg :cameras
-                 :initform      (error ":cameras must be specified")
+                 :initform ()
                  :accessor      cameras
                  :documentation "list of cameras")
    (camera-index :initarg :camera-index
                  :reader  camera-index
                  :documentation "camera index of the active camera")
    (lights       :initarg :lights
-                 :initform      (error ":lights must be specified")
-                 :reader        lights
+                 :initform ()
+                 :accessor        lights
                  :documentation "LIGHTS instance")
    (actors       :initarg :actors
                  :accessor      actors
                  :documentation "list of scene actors")
    (post         :initarg :post
-                 :initform (error ":post must be specified")
-                 :reader post
+                 :accessor post
                  :documentation "post processing function")
    (ubo          :reader ubo :documentation "scene-data UBO")
    (color        :initarg :color
                  :accessor color
                  :documentation "(clear-color) color"))
   (:default-initargs
+   :post (make-simple-postprocess)
    :actors ()
    :color (v! 0 0 0 0)
    :camera-index 0)
   (:documentation "a single scene"))
 
+(defmethod print-object ((obj scene) stream)
+  (print-unreadable-object (obj stream :type T :identity T)
+    (with-slots (actors lights cameras) obj
+      (format stream "ACTORS:~a LIGHTS:~a CAMERAS:~a"
+              (length actors) (length lights) (length cameras)))))
+
 (defclass scene-ibl (scene ibl)
   ())
+
+(defmethod pos ((scene scene-ibl)) (pos (capture scene)))
+(defmethod (setf pos) (new-value (scene scene-ibl))
+  (setf (pos (capture scene)) new-value))
+(defmethod (setf pos) :after (_ (scene scene-ibl))
+  (setf (drawp (prefilter  scene)) T
+        (drawp (irradiance scene)) T))
 
 (defun make-scene-ibl (cameras lights post &key (color (v! 0 0 0 0)))
   (make-instance 'scene-ibl :cameras cameras :lights lights :post post :color color))
@@ -40,9 +53,10 @@
   (nspot  :int)
   (npoint :int))
 
-(defun make-scene (cameras lights post &key (color (v! 0 0 0 0)))
-  (make-instance 'scene :cameras cameras :lights lights :post post :color color))
+(defun make-scene ()
+  (make-instance 'scene))
 
+#+nil
 (defun init-collection (lights)
   (let ((idx 0))
     (dolist (light lights)
@@ -58,6 +72,7 @@
 (defmethod initialize-instance :after ((obj scene) &key lights)
   (let ((ndir 0) (nspot 0) (npoint 0)
         (dirs ()) (points ()) (spots ()))
+    #+nil
     (dolist (light lights)
       (etypecase light
         (directional (push light dirs)   (incf ndir))
@@ -69,9 +84,10 @@
         (setf (scene-data-ndir   (aref-c c 0)) ndir)
         (setf (scene-data-nspot  (aref-c c 0)) nspot)
         (setf (scene-data-npoint (aref-c c 0)) npoint)))
-    (init-collection dirs)
-    (init-collection spots)
-    (init-collection points)))
+    ;; (init-collection dirs)
+    ;; (init-collection spots)
+    ;; (init-collection points)
+    ))
 
 (defmethod free ((obj scene))
   (mapc #'free (cameras obj))
@@ -103,17 +119,6 @@
 (defgeneric paint (scene actor camera time)
   (:documentation "final stage of drawing for an individual ACTOR"))
 
-(defmethod draw ((scene scene) (camera renderable) time)
-  (dolist (a (actors scene))
-    (paint scene a camera time)))
-
-(defmethod draw :around ((obj scene) (camera renderable) time)
-  (let ((fbo (fbo camera)))
-    (with-fbo-bound (fbo)
-      (with-setf (clear-color) (color obj)
-        (clear-fbo fbo)
-        (call-next-method)))))
-
 (defun current-scene ()
   (let ((state *state*))
     (nth (scene-index state) (scenes state))))
@@ -124,3 +129,10 @@
 
 (defun active-camera (scene)
   (nth (camera-index scene) (cameras scene)))
+
+;;
+
+(defclass resize (event)
+  ((width :initarg :width :reader width)
+   (height :initarg :height :reader height)))
+

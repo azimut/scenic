@@ -1,6 +1,6 @@
 (in-package #:scenic)
 
-(defclass camera ()
+(defclass camera (listener)
   ((pos  :initarg :pos  :accessor pos)
    (rot  :initarg :rot  :accessor rot)
    (near :initarg :near :accessor near)
@@ -25,6 +25,11 @@
 (defclass perspective (renderable pers) ())
 (defun make-orthogonal (&rest args) (apply #'make-instance 'orthogonal args))
 (defun make-perspective (&rest args) (apply #'make-instance 'perspective args))
+
+(defmethod handle ((e resize) (obj perspective))
+  ;;(resize obj (width e) (height e))
+  (setf (resolution (current-viewport)) (v! (first (dim obj)) (second (dim obj)))))
+
 
 ;; (defun distance-to-camera (pos distance)
 ;;   (< (v3:length (v3:- pos (pos *currentcamera*)))

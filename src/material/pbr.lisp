@@ -139,7 +139,7 @@
          (f0 (mix f0 albedo metallic))
          (distance    (length (- light-pos frag-pos)))
          (attenuation (/ (+ 1 (* linear distance)
-                            (* quadratic distance distance))))
+                            (* quadratic distance))))
          (light-color (* light-color attenuation)) ;? took from learnopengl pbr code
          (cut-off       (cos cutoff))
          (outer-cut-off (cos outer-cutoff))

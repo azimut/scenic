@@ -59,7 +59,7 @@
          (distance    (length (- light-pos frag-pos)))
          (attenuation (/ 1 (+ 1
                               (* linear distance)
-                              (* quadratic distance distance))))
+                              (* quadratic distance))))
          (ambient (* light-color .1))
          (diffuse (* light-color diff)))
     (* color attenuation (+ ambient diffuse))))

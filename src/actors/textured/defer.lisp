@@ -48,7 +48,7 @@
     (values (v! color roughness)
             (v! frag-pos ao)
             (v! normal spec)
-            (v! 0 0))))
+            (v! .01 0))))
 
 (defpipeline-g textured-pipe ()
   (vert-with-tbdata-defer g-pnt tb-data)

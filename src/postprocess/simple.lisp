@@ -38,16 +38,19 @@
   :fragment (frag-2d :vec2))
 
 (defgeneric blit (scene postprocess camera time)
+  (:method (scene (postprocess list) camera time)
+    (dolist (post postprocess)
+      (blit scene post camera time)))
   (:documentation "blit to screen"))
-
-(defmethod blit (scene (postprocess simple) (camera renderable) time)
-  (with-slots (exposure bs) postprocess
-    (map-g #'generic-2d-pipe bs
-           :sam (first (sam camera))
-           :exposure exposure)))
 
 (defmethod blit :around (scene postprocess camera time)
   (with-setf* ((depth-test-function) NIL
                (depth-mask)          NIL
                (cull-face)           NIL)
     (call-next-method)))
+
+(defmethod blit (scene (postprocess simple) (camera renderable) time)
+  (with-slots (exposure bs) postprocess
+    (map-g #'generic-2d-pipe bs
+           :sam (first (sam camera))
+           :exposure exposure)))

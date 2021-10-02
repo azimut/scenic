@@ -19,3 +19,4 @@
 
 (defun make-defered (&rest args)
   (apply #'make-instance 'defered args))
+

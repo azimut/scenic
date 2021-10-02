@@ -6,6 +6,7 @@
   :serial t
   :pathname "src"
   :depends-on (#:alexandria
+               #:classimp
                #:arrow-macros
                #:cepl
                #:cepl.sdl2
@@ -14,7 +15,7 @@
                #:log4cl
                #:livesupport
                #:nineveh
-               #:png
+               ;;#:png
                #:rocketman
                #:rtg-math.vari
                #:serapeum
@@ -26,16 +27,20 @@
   :entry-point "scenic:start"
   :components
   ((:file "package")
+   (:file "event-loop")
    (:file "rocketman")
-   (:file "screenshot")
+   ;;(:file "screenshot")
    (:file "assets")
+   (:file "scene")
    (:file "renderable")
    (:file "camera/camera")
    (:file "camera/defered")
    (:file "state")
-   (:file "scene")
    (:file "control")
    (:file "actors/actor")
+   (:file "material/lambert")
+   (:file "material/pbr")
+   (:file "material/material")
    (:file "lights/light")
    (:file "lights/directional")
    (:file "lights/point")
@@ -47,15 +52,15 @@
    (:file "lights/ibl/prefilter")
    (:file "lights/ibl/ibl")
    (:file "render")
-   (:file "material/lambert")
-   (:file "material/pbr")
-   (:file "material/material")
    (:file "scenic")
    (:file "postprocess/postprocess")
    (:file "postprocess/simple")
    (:file "postprocess/defer")
-   (:file "actors/actors")
    (:file "actors/untextured/untextured")
    (:file "actors/untextured/defer")
    (:file "actors/untextured/forward")
-   (:file "actors/untextured/forward-ibl")))
+   (:file "actors/untextured/forward-ibl")
+   (:file "actors/assimp/bones-helpers")
+   (:file "actors/assimp/otherbones")
+   (:file "actors/assimp/main")
+   (:file "register")))

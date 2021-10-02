@@ -112,18 +112,16 @@
     (setf (drawp camera) NIL)))
 
 (defmethod draw ((scene scene) (camera capture) time)
-  (dolist (a (actors scene))
-    (paint scene a camera time)))
+  (dolist (actor (actors scene))
+    (with-slots (buf color) actor
+      (map-g #'capture-pipe buf
+             :color       color
+             :world       (model->world actor)
+             :scene       (ubo scene)
+             :dirlights   (dir-ubo *state*)
+             :spotlights  (spot-ubo *state*)
+             :pointlights (point-ubo *state*)
+             :pointshadows (point-sam *state*)
+             :projections (ubo camera)))))
 
-;; NOTE: End of the Road with :around, to avoid other more specific draw calls
-(defmethod paint :around (scene (actor actor) (camera capture) time)
-  (with-slots (buf color) actor
-    (map-g #'capture-pipe buf
-           :color       color
-           :world       (model->world actor)
-           :scene       (ubo (current-scene))
-           :dirlights   (dir-ubo *state*)
-           :spotlights  (spot-ubo *state*)
-           :pointlights (point-ubo *state*)
-           :pointshadows (point-sam *state*)
-           :projections (ubo camera))))
+
