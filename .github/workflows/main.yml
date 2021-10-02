@@ -50,10 +50,7 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Build executable
-        run: |
-          ros use sbcl/system;
-          PATH=~/.roswell/bin:$PATH
-          ros run -- --eval "(asdf:make :scenic)"
+        run: ros run -- --eval "(asdf:make :scenic)"
 
       - uses: actions/upload-artifact@v2
         with:
