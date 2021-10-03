@@ -8,7 +8,7 @@ zip:
 	zip -r ../scenic.zip .
 
 clean:
-	rm -v -f ../*.zip
+	rm -v -f ../scenic.zip
 	rm -v -f ./*.so*
 	rm -v -f ./scenic
 
