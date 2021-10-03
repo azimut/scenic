@@ -35,19 +35,6 @@
       (format stream "ACTORS:~a LIGHTS:~a CAMERAS:~a"
               (length actors) (length lights) (length cameras)))))
 
-(defclass scene-ibl (scene ibl)
-  ())
-
-(defmethod pos ((scene scene-ibl)) (pos (capture scene)))
-(defmethod (setf pos) (new-value (scene scene-ibl))
-  (setf (pos (capture scene)) new-value))
-(defmethod (setf pos) :after (_ (scene scene-ibl))
-  (setf (drawp (prefilter  scene)) T
-        (drawp (irradiance scene)) T))
-
-(defun make-scene-ibl (cameras lights post &key (color (v! 0 0 0 0)))
-  (make-instance 'scene-ibl :cameras cameras :lights lights :post post :color color))
-
 (defstruct-g (scene-data :layout :std-140)
   (ndir   :int)
   (nspot  :int)
@@ -99,14 +86,7 @@
   (dolist (l (lights scene))
     (upload l)))
 
-(defmethod upload ((scene scene-ibl))
-  (dolist (m (materials *state*))
-    (upload m))
-  (dolist (l (lights scene))
-    (upload l))
-  (upload (capture    scene))
-  (upload (prefilter  scene))
-  (upload (irradiance scene)))
+
 
 (defmethod update ((obj scene) dt)
   (dolist (c (cameras obj))

@@ -13,7 +13,7 @@
 
 (defun init-all-the-things ()
   (init-state (list (make-material :roughness .8 :metallic .02 :specular .1)
-                    (make-material :roughness .8 :metallic .02 :specular .1)))
+                    (make-material :roughness .4 :metallic .4  :specular .1)))
   (let ((s1 (make-scene)))
     (register (make-perspective :scale .25 :pos (v! 2 2 2) :rot (q:point-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0))) s1)
     (register (make-point :pos (v! -2 2 -2) :color (v! .1 .1 .3) :linear 0.35 :quadratic 0.44) s1)
@@ -35,17 +35,15 @@
          (now    (get-internal-real-time))
          (dt     (* (- now (last-time *state*) .001)))
          (dt     (if (> dt .16) .00001 dt)))
+
     (setf (last-time *state*) now)
 
     (upload scene)
     (update scene dt)
-    (rocket-update)
-    (decay-events)
 
-    (when (typep scene 'scene-ibl)
-      (draw scene (capture    scene) dt)
-      (draw scene (prefilter  scene) dt)
-      (draw scene (irradiance scene) dt))
+    (rocket-update)
+
+    (decay-events)
 
     (dolist (l (remove-if #'point-p (lights scene)))
       (draw scene l dt))

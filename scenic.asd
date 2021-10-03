@@ -32,6 +32,7 @@
    ;;(:file "screenshot")
    (:file "assets")
    (:file "scene")
+   (:file "scene-ibl")
    (:file "renderable")
    (:file "camera/camera")
    (:file "camera/defered")

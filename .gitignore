@@ -23,8 +23,9 @@
 
 # End of https://www.toptal.com/developers/gitignore/api/commonlisp
 
-bin
 *.zip
+bin
+!bin/Makefile
 
 # Emacs
 
