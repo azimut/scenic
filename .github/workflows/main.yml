@@ -20,7 +20,7 @@ jobs:
           asdf-system: scenic
 
       - name: Build executable
-        run: ros run -- --eval "(ql:quickload :scenic)" --eval "(asdf:make :scenic)" --eval "(quit)"
+        run: ros -s scenic -e '(asdf:make :scenic :force T)'
 
       - uses: actions/upload-artifact@v2
         with:
