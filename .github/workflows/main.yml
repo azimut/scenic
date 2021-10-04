@@ -47,10 +47,9 @@ jobs:
       - uses: 40ants/setup-lisp@v1
         with:
           asdf-system: scenic
-        if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Build executable
-        run: ros run -- --eval "(progn (ql:quickload :scenic) (asdf:make :scenic))"
+        run: ros run -- --eval "(asdf:make :scenic)"
 
       - uses: actions/upload-artifact@v2
         with:
