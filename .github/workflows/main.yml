@@ -14,8 +14,8 @@ jobs:
       - name: Setup
         run: |
           sudo apt-get update
-          sudo apt-get install -y libassimp4 libsdl2-dev sbcl
-          mkdir -v ~/Downloads/
+          sudo apt-get install -y libassimp4 libsdl2-dev sbcl wget
+          mkdir -pv ~/Downloads/
         shell: bash
 
       - name: Get Current Month
@@ -47,7 +47,7 @@ jobs:
           sh make.sh
           unset SBCL_HOME
           INSTALL_ROOT=~/sbcl ./install.sh
-        working-directory: ~/Downloads
+        working-directory: Downloads
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Install quicklisp
