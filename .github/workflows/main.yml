@@ -5,8 +5,6 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-18.04
-    env:
-      SBCL_VERSION: 2.1.9
     steps:
 
       - uses: actions/checkout@v2
@@ -41,9 +39,9 @@ jobs:
 
       - name: Install SBCL
         run: |
-          wget -O sbcl.tar.bz2 "http://downloads.sourceforge.net/project/sbcl/sbcl/$SBCL_VERSION/sbcl-$SBCL_VERSION-source.tar.bz2"
+          wget -O sbcl.tar.bz2 "http://downloads.sourceforge.net/project/sbcl/sbcl/2.1.9/sbcl-2.1.9-source.tar.bz2"
           tar xjf sbcl.tar.bz2
-          cd sbcl-$SBCL_VERSION
+          cd sbcl-2.1.9
           sh make.sh
           unset SBCL_HOME
           INSTALL_ROOT=~/sbcl ./install.sh
