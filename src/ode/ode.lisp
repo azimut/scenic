@@ -18,7 +18,7 @@
   (%ode:world-set-gravity *world* 0f0 -9.8f0 0f0)
   ;; CFM = Constraint Force Mixing
   ;; changes stiffness of a joint.
-  (%ode:world-set-cfm                       *world* 1d-5)
+  (%ode:world-set-cfm                       *world* 1f-5)
   ;; ERP = Error Reduction Parameter = [0,1]
   ;; corrects  joint error
   (%ode:world-set-erp                       *world* .1f0)
@@ -28,13 +28,14 @@
   t)
 
 (defun ode-destroy ()
-  (%ode:joint-group-destroy *contactgroup*)
-  (%ode:space-destroy *space*)
-  (%ode:world-destroy *world*)
-  (%ode:close-ode)
-  (setf *world* nil
-        *space* nil
-        *contactgroup* nil))
+  (when (and *space* *world* *contactgroup*)
+    (%ode:joint-group-destroy *contactgroup*)
+    (%ode:space-destroy *space*)
+    (%ode:world-destroy *world*)
+    (%ode:close-ode)
+    (setf *world* nil
+          *space* nil
+          *contactgroup* nil)))
 
 (progn
   (block gg
@@ -81,7 +82,7 @@
     (defun ode-update ()
       "updates the objets within the physics engine"
       (when (and *world* (funcall stepper))
-        (%ode:space-collide *space* nil (cffi:callback 'near-callback))
+        (%ode:space-collide *space* nil (cffi:callback near-callback))
         (%ode:world-quick-step *world* 0.0099f0)
         (%ode:joint-group-empty *contactgroup*)))))
 

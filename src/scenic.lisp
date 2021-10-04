@@ -22,11 +22,13 @@
 
 (defun init ()
   (free *state*)
+  (ode-destroy)
   (slynk-hook)
   (reset-material-counter)
   (skitter-cleanup)
   (init-all-the-things)
   (skitter:listen-to #'window-listener-trampoline (skitter:window 0) :size)
+  (ode-init)
   (setf (last-time *state*) (get-internal-real-time)))
 
 (def-simple-main-loop play-render (:on-start #'init)
@@ -38,6 +40,7 @@
 
     (setf (last-time *state*) now)
 
+    (ode-update)
     (upload scene)
     (update scene dt)
 

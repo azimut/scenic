@@ -15,7 +15,7 @@
    :density 1.0f0
    :body (%ode:body-create *world*)
    :mass (cffi:foreign-alloc '%ode:mass)
-   :orot (cffi:foreign-array-alloc '%ode:real 4)
+   :orot (cffi:foreign-alloc '%ode:real :count 4)
    :immovablep nil))
 
 ;; FIXME: mass is leaking?
