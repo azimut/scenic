@@ -40,17 +40,17 @@ jobs:
 
       - name: Download SBCL
         run: |
-          wget http://downloads.sourceforge.net/project/sbcl/sbcl/2.1.9/sbcl-2.1.9-source.tar.bz2
+          wget -P ~/Downloads http://downloads.sourceforge.net/project/sbcl/sbcl/2.1.9/sbcl-2.1.9-source.tar.bz2
+          cd ~/Downloads
           tar xjf sbcl-2.1.9-source.tar.bz2
-        working-directory: ./Downloads
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Install SBCL
         run: |
+          cd ~/Downloads/sbcl-2.1.9
           sh make.sh
           unset SBCL_HOME
           INSTALL_ROOT=~/sbcl ./install.sh
-        working-directory: ./Downloads/sbcl-2.1.9
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Install quicklisp
