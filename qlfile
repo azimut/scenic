@@ -1,4 +1,5 @@
 github rocketman azimut/rocketman
 github claw borodust/claw
+github claw-utils borodust/claw-utils
 github glsl-spec azimut/glsl-spec
 dist org.borodust.bodge http://bodge.borodust.org/dist/org.borodust.bodge.txt
