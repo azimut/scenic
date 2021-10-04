@@ -59,11 +59,11 @@ jobs:
           export PATH="$HOME/sbcl/bin:${PATH}"
           wget https://beta.quicklisp.org/quicklisp.lisp
           sbcl --disable-debugger \
-               -e '(load "quicklisp.lisp")' \
-               -e '(quicklisp-quickstart:install)' \
-               -e '(ql-util:without-prompting (ql:add-to-init-file))' \
-               -e '(ql:update-all-dists)' \
-               -e '(ql-dist:install-dist "http://bodge.borodust.org/dist/org.borodust.bodge.txt" :replace t :prompt nil)' \
+               --eval '(load "quicklisp.lisp")' \
+               --eval '(quicklisp-quickstart:install)' \
+               --eval '(ql-util:without-prompting (ql:add-to-init-file))' \
+               --eval '(ql:update-all-dists)' \
+               --eval '(ql-dist:install-dist "http://bodge.borodust.org/dist/org.borodust.bodge.txt" :replace t :prompt nil)' \
                --quit
         if: steps.cache.outputs.cache-hit != 'true'
 
@@ -71,12 +71,12 @@ jobs:
         run: |
           export PATH="$HOME/sbcl/bin:${PATH}"
           sbcl --disable-debugger \
-              -e '(load "quicklisp/setup.lisp")' \
-              -e '(ql:quickload :deploy)' \
-              -e '(ql:quickload :scenic)' \
-              -e '(deploy:define-library CL-OPENGL-BINDINGS::OPENGL :dont-deploy t)' \
-              -e '(asdf:make :scenic :force t)' \
-              --quit
+               --eval '(load "quicklisp/setup.lisp")' \
+               --eval '(ql:quickload :deploy)' \
+               --eval '(ql:quickload :scenic)' \
+               --eval '(deploy:define-library CL-OPENGL-BINDINGS::OPENGL :dont-deploy t)' \
+               --eval '(asdf:make :scenic :force t)' \
+               --quit
 
       - uses: actions/upload-artifact@v2
         with:
