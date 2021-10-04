@@ -46,9 +46,8 @@ jobs:
           sh make.sh
           unset SBCL_HOME
           INSTALL_ROOT=~/sbcl ./install.sh
-        working-directory: Downloads
+        working-directory: ./Downloads
         if: steps.cache.outputs.cache-hit != 'true'
-        shell: bash
 
       - name: Install quicklisp
         run: |
