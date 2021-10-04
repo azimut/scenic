@@ -8,6 +8,8 @@
   :depends-on (#:alexandria
                #:classimp
                #:arrow-macros
+               #:bodge-ode
+               #:ode-blob
                #:cepl
                #:cepl.sdl2
                #:cepl.skitter.sdl2
@@ -64,4 +66,11 @@
    (:file "actors/assimp/bones-helpers")
    (:file "actors/assimp/otherbones")
    (:file "actors/assimp/main")
+   (:file "ode/ode")
+   (:file "ode/physic")
+   (:file "ode/camera")
+   (:file "ode/physics/box")
+   (:file "ode/physics/sphere")
+   (:file "ode/physics/cone")
+   (:file "ode/physics/newcyl")
    (:file "register")))
