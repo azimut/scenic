@@ -15,6 +15,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libassimp4 libsdl2-dev sbcl
+          mkdir -v ~/Downloads/
         shell: bash
 
       - name: Get Current Month
