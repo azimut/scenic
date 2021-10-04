@@ -5,6 +5,8 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-18.04
+    env:
+      SBCL_VERSION: 2.1.9
     steps:
 
       - uses: actions/checkout@v2
@@ -12,19 +14,60 @@ jobs:
       - name: Setup
         run: |
           sudo apt-get update
-          sudo apt-get install -y libassimp4 libsdl2-dev
+          sudo apt-get install -y libassimp4 libsdl2-dev sbcl
         shell: bash
 
-      - uses: 40ants/setup-lisp@v1
+      - name: Get Current Month
+        id: current-month
+        run: |
+          echo "::set-output name=value::$(date -u "+%Y-%m")"
+      - name: Cache SBCL Setup
+        id: cache
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-sbcl
         with:
-          asdf-system: scenic
+          path: |
+            ~/Downloads/
+            ~/quicklisp/local-projects/
+            ~/.cache/common-lisp/
+            ~/sbcl
+          key: "${{ steps.current-month.outputs.value }}-${{ env.cache-name }}-${{ runner.os }}"
+      - name: Restore Path To Cached Files
+        run: |
+          echo $HOME/sbcl/bin >> $GITHUB_PATH
+        if: steps.cache.outputs.cache-hit == 'true'
 
-      - name: Build executable
-        run: ros -s scenic -e '(asdf:make :scenic :force T)'
+      - name: Install SBCL
+        run: |
+          wget -O sbcl.tar.bz2 "http://downloads.sourceforge.net/project/sbcl/sbcl/$SBCL_VERSION/sbcl-$SBCL_VERSION-source.tar.bz2"
+          tar xjf sbcl.tar.bz2
+          cd sbcl-$SBCL_VERSION
+          sh make.sh
+          unset SBCL_HOME
+          INSTALL_ROOT=~/sbcl ./install.sh
+        working-directory: ~/Downloads
+        if: steps.cache.outputs.cache-hit != 'true'
+
+      - name: Install quicklisp
+        run: |
+          export PATH="$HOME/sbcl/bin:${PATH}"
+          wget https://beta.quicklisp.org/quicklisp.lisp
+          sbcl --disable-debugger -e '(load "quicklisp.lisp")' -e '(quicklisp-quickstart:install)' -e '(ql-util:without-prompting (ql:add-to-init-file))' -e '(ql:update-all-dists)' -e '(ql-dist:install-dist "http://bodge.borodust.org/dist/org.borodust.bodge.txt" :replace t :prompt nil)' --quit
+        working-directory: ~/Downloads
+        if: steps.cache.outputs.cache-hit != 'true'
+
+      - name: Build Binary
+        run: |
+          export PATH="$HOME/sbcl/bin:${PATH}"
+          sbcl --disable-debugger --eval '(ql:quickload :deploy)' --eval '(ql:quickload :scenic)' --eval '(deploy:define-library CL-OPENGL-BINDINGS::OPENGL :dont-deploy t)' --eval '(asdf:make :scenic :force t)' --quit
 
       - uses: actions/upload-artifact@v2
         with:
           name: scenic-linux
-          path: bin/
+          path: |
+            bin/scenic
+            bin/*.so*
+            bin/Makefile
           if-no-files-found: error
 
