@@ -14,6 +14,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libassimp4 libsdl2-dev sbcl wget
           mkdir -pv ~/Downloads/
+          mkdir -pv ~/sbcl
         shell: bash
 
       - name: Get Current Month
@@ -39,8 +40,8 @@ jobs:
 
       - name: Install SBCL
         run: |
-          wget -O sbcl.tar.bz2 "http://downloads.sourceforge.net/project/sbcl/sbcl/2.1.9/sbcl-2.1.9-source.tar.bz2"
-          tar xjf sbcl.tar.bz2
+          wget http://downloads.sourceforge.net/project/sbcl/sbcl/2.1.9/sbcl-2.1.9-source.tar.bz2
+          tar xjf sbcl-2.1.9-source.tar.bz2
           cd sbcl-2.1.9
           sh make.sh
           unset SBCL_HOME
