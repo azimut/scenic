@@ -13,8 +13,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libassimp4 libsdl2-dev sbcl wget
-          mkdir -pv ~/Downloads/
+          mkdir -pv ~/Downloads
           mkdir -pv ~/sbcl
+          mkdir -pv ~/quicklisp
+          mkdir -pv ~/.cache/common-lisp
         shell: bash
 
       - name: Get Current Month
@@ -65,7 +67,6 @@ jobs:
                --eval '(ql:update-all-dists)' \
                --eval '(ql-dist:install-dist "http://bodge.borodust.org/dist/org.borodust.bodge.txt" :replace t :prompt nil)' \
                --quit
-        if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Build Binary
         run: |
