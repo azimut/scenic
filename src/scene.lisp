@@ -108,7 +108,15 @@
 (defun active-camera (scene)
   (nth (camera-index scene) (cameras scene)))
 
-(defclass resize (event)
-  ((width :initarg :width :reader width)
-   (height :initarg :height :reader height)))
+(defmethod draw ((scene scene) (camera renderable) time)
+  (dolist (a (actors scene))
+    (paint scene a camera time)))
+
+(defmethod draw :around ((obj scene) (camera renderable) time)
+  (let ((fbo (fbo camera)))
+    (with-fbo-bound (fbo)
+      (with-setf (clear-color) (color obj)
+        (clear-fbo fbo)
+        (call-next-method)))))
+
 

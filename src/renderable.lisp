@@ -29,6 +29,10 @@
 (defmethod (setf dim)   :after (_ (obj renderable)) (resize obj))
 (defmethod (setf scale) :after (_ (obj renderable)) (resize obj))
 
+(defclass resize (event)
+  ((width :initarg :width :reader width)
+   (height :initarg :height :reader height)))
+
 (defmethod handle ((event resize) (obj renderable))
   (print "EVENT")
   (print (width event)))
@@ -86,14 +90,3 @@
     (setf tex (alloc-textures texture-opts dim scale))
     (setf sam (alloc-samplers tex sample-opts))
     (setf fbo (alloc-fbos     tex texture-opts))))
-
-(defmethod draw ((scene scene) (camera renderable) time)
-  (dolist (a (actors scene))
-    (paint scene a camera time)))
-
-(defmethod draw :around ((obj scene) (camera renderable) time)
-  (let ((fbo (fbo camera)))
-    (with-fbo-bound (fbo)
-      (with-setf (clear-color) (color obj)
-        (clear-fbo fbo)
-        (call-next-method)))))
