@@ -29,7 +29,7 @@ jobs:
         with:
           path: |
             ~/Downloads/
-            ~/quicklisp/local-projects/
+            ~/quicklisp
             ~/.cache/common-lisp/
             ~/sbcl
           key: "${{ steps.current-month.outputs.value }}-${{ env.cache-name }}-${{ runner.os }}"
@@ -40,8 +40,8 @@ jobs:
 
       - name: Download SBCL
         run: |
-          wget -P ~/Downloads http://downloads.sourceforge.net/project/sbcl/sbcl/2.1.9/sbcl-2.1.9-source.tar.bz2
           cd ~/Downloads
+          wget http://downloads.sourceforge.net/project/sbcl/sbcl/2.1.9/sbcl-2.1.9-source.tar.bz2
           tar xjf sbcl-2.1.9-source.tar.bz2
         if: steps.cache.outputs.cache-hit != 'true'
 
@@ -58,13 +58,25 @@ jobs:
           cd ~/Downloads
           export PATH="$HOME/sbcl/bin:${PATH}"
           wget https://beta.quicklisp.org/quicklisp.lisp
-          sbcl --disable-debugger -e '(load "quicklisp.lisp")' -e '(quicklisp-quickstart:install)' -e '(ql-util:without-prompting (ql:add-to-init-file))' -e '(ql:update-all-dists)' -e '(ql-dist:install-dist "http://bodge.borodust.org/dist/org.borodust.bodge.txt" :replace t :prompt nil)' --quit
+          sbcl --disable-debugger \
+               -e '(load "quicklisp.lisp")' \
+               -e '(quicklisp-quickstart:install)' \
+               -e '(ql-util:without-prompting (ql:add-to-init-file))' \
+               -e '(ql:update-all-dists)' \
+               -e '(ql-dist:install-dist "http://bodge.borodust.org/dist/org.borodust.bodge.txt" :replace t :prompt nil)' \
+               --quit
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Build Binary
         run: |
           export PATH="$HOME/sbcl/bin:${PATH}"
-          sbcl --disable-debugger --eval '(ql:quickload :deploy)' --eval '(ql:quickload :scenic)' --eval '(deploy:define-library CL-OPENGL-BINDINGS::OPENGL :dont-deploy t)' --eval '(asdf:make :scenic :force t)' --quit
+          sbcl --disable-debugger \
+              -e '(load "quicklisp/setup.lisp")'
+              -e '(ql:quickload :deploy)' \
+              -e '(ql:quickload :scenic)' \
+              -e '(deploy:define-library CL-OPENGL-BINDINGS::OPENGL :dont-deploy t)' \
+              -e '(asdf:make :scenic :force t)' \
+              --quit
 
       - uses: actions/upload-artifact@v2
         with:
@@ -74,4 +86,3 @@ jobs:
             bin/*.so*
             bin/Makefile
           if-no-files-found: error
-
