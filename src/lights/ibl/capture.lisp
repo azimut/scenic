@@ -104,11 +104,9 @@
   :geometry (capture-geom (:vec3 3))
   :fragment (capture-frag :vec4 :vec3))
 
-(defmethod draw :around ((scene scene) (camera capture) time)
+(defmethod draw :around ((scene scene-ibl) (camera capture) _)
   (when (drawp camera)
-    (let ((fbo (fbo camera)))
-      (with-fbo-bound (fbo)
-        (call-next-method)))
+    (call-next-method)
     (setf (drawp camera) NIL)))
 
 (defmethod draw ((scene scene) (camera capture) time)

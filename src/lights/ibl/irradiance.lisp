@@ -62,10 +62,8 @@
   (with-setf* ((resolution (current-viewport)) (v! 32 32)
                (depth-test-function) #'<=
                (cull-face) :front)
-    (with-fbo-bound ((fbo camera))
-      (clear-fbo (fbo camera))
-      (map-g #'irradiance-pipe (buf camera)
-             :projections (ubo camera)
-             :world (model->world camera)
-             :sam (first (sam (capture scene)))))))
+    (map-g #'irradiance-pipe (buf camera)
+           :projections (ubo camera)
+           :world (model->world camera)
+           :sam (first (sam (capture scene))))))
 

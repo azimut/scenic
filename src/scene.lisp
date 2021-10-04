@@ -86,8 +86,6 @@
   (dolist (l (lights scene))
     (upload l)))
 
-
-
 (defmethod update ((obj scene) dt)
   (dolist (c (cameras obj))
     (update c dt))
@@ -109,8 +107,6 @@
 
 (defun active-camera (scene)
   (nth (camera-index scene) (cameras scene)))
-
-;;
 
 (defclass resize (event)
   ((width :initarg :width :reader width)

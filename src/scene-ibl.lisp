@@ -15,7 +15,7 @@
   (setf (drawp (prefilter  scene)) T
         (drawp (irradiance scene)) T))
 
-(defmethod draw :before ((scene scene-ibl) camera dt)
+(defmethod draw :before ((scene scene-ibl) (camera perspective) dt)
   (draw scene (capture    scene) dt)
   (draw scene (prefilter  scene) dt)
   (draw scene (irradiance scene) dt))

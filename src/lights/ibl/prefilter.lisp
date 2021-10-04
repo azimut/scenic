@@ -61,13 +61,11 @@
                (depth-test-function) #'<=
                (cull-face) :front)
     (with-slots (buf roughness fbo ubo) camera
-      (with-fbo-bound (fbo)
-        (clear-fbo fbo)
-        (map-g #'prefilter-pipe buf
-               :roughness roughness
-               :world (model->world camera)
-               :projections ubo
-               :sam (first (sam (capture scene))))))))
+      (map-g #'prefilter-pipe buf
+             :roughness roughness
+             :world (model->world camera)
+             :projections ubo
+             :sam (first (sam (capture scene)))))))
 
 (defun make-prefilter (&rest args)
   (apply #'make-instance 'prefilter args))
