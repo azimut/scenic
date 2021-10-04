@@ -55,10 +55,10 @@ jobs:
 
       - name: Install quicklisp
         run: |
+          cd ~/Downloads
           export PATH="$HOME/sbcl/bin:${PATH}"
           wget https://beta.quicklisp.org/quicklisp.lisp
           sbcl --disable-debugger -e '(load "quicklisp.lisp")' -e '(quicklisp-quickstart:install)' -e '(ql-util:without-prompting (ql:add-to-init-file))' -e '(ql:update-all-dists)' -e '(ql-dist:install-dist "http://bodge.borodust.org/dist/org.borodust.bodge.txt" :replace t :prompt nil)' --quit
-        working-directory: ~/Downloads
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Build Binary
