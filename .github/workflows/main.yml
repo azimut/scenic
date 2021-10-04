@@ -71,7 +71,7 @@ jobs:
         run: |
           export PATH="$HOME/sbcl/bin:${PATH}"
           sbcl --disable-debugger \
-              -e '(load "quicklisp/setup.lisp")'
+              -e '(load "quicklisp/setup.lisp")' \
               -e '(ql:quickload :deploy)' \
               -e '(ql:quickload :scenic)' \
               -e '(deploy:define-library CL-OPENGL-BINDINGS::OPENGL :dont-deploy t)' \
