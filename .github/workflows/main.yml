@@ -38,15 +38,19 @@ jobs:
           echo $HOME/sbcl/bin >> $GITHUB_PATH
         if: steps.cache.outputs.cache-hit == 'true'
 
-      - name: Install SBCL
+      - name: Download SBCL
         run: |
           wget http://downloads.sourceforge.net/project/sbcl/sbcl/2.1.9/sbcl-2.1.9-source.tar.bz2
           tar xjf sbcl-2.1.9-source.tar.bz2
-          cd sbcl-2.1.9
+        working-directory: ./Downloads
+        if: steps.cache.outputs.cache-hit != 'true'
+
+      - name: Install SBCL
+        run: |
           sh make.sh
           unset SBCL_HOME
           INSTALL_ROOT=~/sbcl ./install.sh
-        working-directory: ./Downloads
+        working-directory: ./Downloads/sbcl-2.1.9
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Install quicklisp
