@@ -177,14 +177,12 @@
             data         d
             geom         g))
     (unless immovablep
-      (cffi-c-ref:c-let ((m %ode:mass :from mass))
-        (%ode:geom-set-data     geom data)
-        (%ode:mass-set-trimesh  mass density geom)
-        (%ode:geom-set-position geom (- (m :c 0)) (- (m :c 1)) (- (m :c 2)))
-        (%ode:mass-translate    mass (- (m :c 0)) (- (m :c 1)) (- (m :c 2)))
-        ;;
-        (%ode:geom-set-body geom body)
-        (%ode:body-set-mass body mass)))))
+      (%ode:geom-set-data     geom data)
+      (%ode:mass-set-trimesh  mass density geom)
+      (%ode:geom-set-position geom 0f0 0f0 0f0)
+      (%ode:mass-translate    mass 0f0 0f0 0f0)
+      (%ode:geom-set-body geom body)
+      (%ode:body-set-mass body mass))))
 
 (defun getbody-linear-vel (body)
   (let ((linear-vel (%ode:body-get-linear-vel body)))
