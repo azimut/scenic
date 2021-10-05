@@ -1,4 +1,4 @@
-.PHONY: zip clean run strip
+.PHONY: tar clean run strip
 
 scenic:
 	sbcl --disable-debugger \
@@ -10,16 +10,16 @@ scenic:
              --eval '(asdf:make :scenic :force t)' \
              --quit
 	rm -v -f libSDL2* # NOTE: we probably wan to keep the .DLL on Windows
-	rm -v -f libstdc*
+	rm -v -f libstdc* # NOTE: bodge/claw bug?
 
 strip:
 	find . -name '*.so*' -exec strip {} \;
 
-zip:
-	zip -r ../scenic.zip .
+tar:
+	tar cvf ../scenic.tar ../bin --transform s/bin/scenic/
 
 clean:
-	rm -v -f ../scenic.zip
+	rm -v -f ../scenic.tar
 	rm -v -f ./*.so*
 	rm -v -f ./scenic
 

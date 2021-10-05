@@ -84,12 +84,11 @@ jobs:
           export PATH="$HOME/sbcl/bin:${PATH}"
           cd bin/
           make scenic
+          make tar
 
       - uses: actions/upload-artifact@v2
         with:
           name: scenic-linux
           path: |
-            bin/scenic
-            bin/*.so*
-            bin/Makefile
+            scenic.tar
           if-no-files-found: error
