@@ -109,6 +109,8 @@
   (nth (camera-index scene) (cameras scene)))
 
 (defmethod draw ((scene scene) (camera renderable) time)
+  (dolist (l (lights scene))
+    (paint scene l camera time))
   (dolist (a (actors scene))
     (paint scene a camera time)))
 
