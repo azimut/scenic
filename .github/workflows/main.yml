@@ -55,6 +55,16 @@ jobs:
           INSTALL_ROOT=~/sbcl ./install.sh
         if: steps.cache.outputs.cache-hit != 'true'
 
+      - name: Get LISP deps
+        run: |
+          cd ~/quicklisp/local-projects/
+          (test -d rocketman) || git clone https://github.com/azimut/rocketman
+          (test -d rocketman) && ( cd rocketman; git pull https://github.com/azimut/rocketman)
+          (test -d cepl) || git clone https://github.com/azimut/cepl
+          (test -d cepl)  && ( cd cepl ; git pull https://github.com/azimut/cepl)
+          (test -d glsl-spec)  || git clone https://github.com/azimut/glsl-spec
+          (test -d glsl-spec)  && ( cd glsl-spec ; git pull https://github.com/azimut/glsl-spec)
+
       - name: Install quicklisp
         run: |
           cd ~/Downloads
@@ -71,15 +81,8 @@ jobs:
       - name: Build Binary
         run: |
           export PATH="$HOME/sbcl/bin:${PATH}"
-          ls -la ~/
-          sbcl --disable-debugger \
-               --eval '(load "~/quicklisp/setup.lisp")' \
-               --eval '(ql:quickload :deploy)' \
-               --load scenic.asd \
-               --eval '(ql:quickload :scenic)' \
-               --eval '(deploy:define-library CL-OPENGL-BINDINGS::OPENGL :dont-deploy t)' \
-               --eval '(asdf:make :scenic :force t)' \
-               --quit
+          cd bin/
+          make scenic
 
       - uses: actions/upload-artifact@v2
         with:

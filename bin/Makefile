@@ -1,7 +1,16 @@
-@PHONY: zip clean run
+.PHONY: zip clean run strip
 
-scenic: clean
-	sbcl --eval '(asdf:make :scenic)'
+scenic:
+	sbcl --disable-debugger \
+             --eval '(load "~/quicklisp/setup.lisp")' \
+             --eval '(ql:quickload :deploy)' \
+             --load ../scenic.asd \
+             --eval '(ql:quickload :scenic)' \
+             --eval '(deploy:define-library CL-OPENGL-BINDINGS::OPENGL :dont-deploy t)' \
+             --eval '(asdf:make :scenic :force t)' \
+             --quit
+
+strip:
 	find . -name '*.so*' -exec strip {} \;
 
 zip:
