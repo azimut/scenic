@@ -27,7 +27,7 @@ jobs:
         id: cache
         uses: actions/cache@v2
         env:
-          cache-name: cache-sbcl
+          cache-name: cache-sbcl-compressed
         with:
           path: |
             ~/Downloads/
@@ -50,7 +50,7 @@ jobs:
       - name: Install SBCL
         run: |
           cd ~/Downloads/sbcl-2.1.9
-          sh make.sh
+          sh make.sh --with-sb-core-compression
           unset SBCL_HOME
           INSTALL_ROOT=~/sbcl ./install.sh
         if: steps.cache.outputs.cache-hit != 'true'
@@ -67,15 +67,16 @@ jobs:
                --eval '(ql:update-all-dists)' \
                --eval '(ql-dist:install-dist "http://bodge.borodust.org/dist/org.borodust.bodge.txt" :replace t :prompt nil)' \
                --quit
+        if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Get LISP deps
         run: |
           cd ~/quicklisp/local-projects/
-          (test -d rocketman) || git clone https://github.com/azimut/rocketman
+          (test -d rocketman) || git clone --depth=1 https://github.com/azimut/rocketman
           (test -d rocketman) && ( cd rocketman; git pull https://github.com/azimut/rocketman)
-          (test -d cepl) || git clone https://github.com/azimut/cepl
+          (test -d cepl) || git clone --depth=1 https://github.com/azimut/cepl
           (test -d cepl)  && ( cd cepl ; git pull https://github.com/azimut/cepl)
-          (test -d glsl-spec)  || git clone https://github.com/azimut/glsl-spec
+          (test -d glsl-spec)  || git clone --depth=1 https://github.com/azimut/glsl-spec
           (test -d glsl-spec)  && ( cd glsl-spec ; git pull https://github.com/azimut/glsl-spec)
 
       - name: Build Binary

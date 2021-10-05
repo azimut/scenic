@@ -9,6 +9,8 @@ scenic:
              --eval '(deploy:define-library CL-OPENGL-BINDINGS::OPENGL :dont-deploy t)' \
              --eval '(asdf:make :scenic :force t)' \
              --quit
+	rm -v -f libSDL2* # NOTE: we probably wan to keep the .DLL on Windows
+	rm -v -f libstdc*
 
 strip:
 	find . -name '*.so*' -exec strip {} \;
