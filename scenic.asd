@@ -29,6 +29,7 @@
   :entry-point "scenic:start"
   :components
   ((:file "package")
+   (:file "uploadable")
    (:file "event-loop")
    (:file "rocketman")
    ;;(:file "screenshot")
