@@ -67,6 +67,7 @@
    (:file "actors/assimp/otherbones")
    (:file "actors/assimp/main")
    (:file "ode/ode")
+   (:file "ode/raycast")
    (:file "ode/physic")
    (:file "ode/camera")
    (:file "ode/physics/box")
