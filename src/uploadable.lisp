@@ -1,7 +1,7 @@
 (in-package #:scenic)
 
 (defclass uploadable ()
-  ((uploadp :reader uploadp :initform T))
+  ((uploadp :accessor uploadp :initform T))
   (:documentation "to avoid uploading unless there is a reason"))
 
 (defmethod upload :around ((obj uploadable))
