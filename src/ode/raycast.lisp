@@ -1,13 +1,16 @@
 (in-package #:scenic)
 
 (defclass raycast (uploadable)
-  ((from :accessor from :initarg :from)
-   (to   :accessor to   :initarg :to)
-   (ray  :reader   ray)
-   (hit  :reader   hit)
-   (gar  :reader   gar)
-   (buf  :reader   buf))
-  (:documentation "ode raycast"))
+  ((color :accessor color :initarg :color)
+   (from  :accessor from  :initarg :from)
+   (to    :accessor to    :initarg :to)
+   (ray   :reader   ray)
+   (hit   :reader   hit)
+   (gar   :reader   gar)
+   (buf   :reader   buf))
+  (:default-initargs
+   :color (v! 0 1 0))
+  (:documentation "ode raycast, you wouldn't use this directly"))
 
 (defun make-raycast (&rest args)
   (apply #'make-instance 'raycast args))
@@ -72,8 +75,8 @@
   (line-frag))
 
 (defmethod paint (scene (obj raycast) camera time)
-  (with-slots (buf) obj
+  (declare (ignore scene time))
+  (with-slots (buf color to) obj
     (map-g #'line-pipe buf
-           :model-clip (m4:* (world->clip camera)
-                             (m4:translation (to obj)))
-           :color (v! 0 1 0))))
+           :model-clip (m4:* (world->clip camera) (m4:translation to))
+           :color color)))
