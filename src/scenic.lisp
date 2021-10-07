@@ -28,8 +28,8 @@
   (skitter-cleanup)
   (skitter:listen-to #'window-listener-trampoline (skitter:window 0) :size)
   (ode-init)
-  (setf (last-time *state*) (get-internal-real-time))
-  (init-all-the-things))
+  (init-all-the-things)
+  (setf (last-time *state*) (get-internal-real-time)))
 
 (def-simple-main-loop play-render (:on-start #'init)
   (let* ((scene  (current-scene))
