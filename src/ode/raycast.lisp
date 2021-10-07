@@ -5,7 +5,8 @@
    (to   :accessor to   :initarg :to)
    (ray  :reader   ray)
    (hit  :reader   hit)
-   (gar  :reader   gar))
+   (gar  :reader   gar)
+   (buf  :reader   buf))
   (:documentation "ode raycast"))
 
 (defun make-raycast (&rest args)
@@ -20,9 +21,11 @@
 (defmethod initialize-instance :before ((obj raycast) &key from to)
   (assert (not (v3:= from to))))
 (defmethod initialize-instance :after ((obj raycast) &key)
-  (setf (slot-value obj 'hit) (cffi:foreign-alloc '%ode:real :count 4))
-  (setf (slot-value obj 'ray) (%ode:create-ray *space* 0f0))
-  (setf (slot-value obj 'gar) (make-gpu-array nil :element-type :vec3 :dimensions 2))
+  (with-slots (hit ray gar buf) obj
+    (setf hit (cffi:foreign-alloc '%ode:real :count 4))
+    (setf ray (%ode:create-ray *space* 0f0))
+    (setf gar (make-gpu-array nil :element-type :vec3 :dimensions 2))
+    (setf buf (make-buffer-stream gar :primitive :lines)))
   (upload obj))
 
 (defmethod upload ((obj raycast))
@@ -69,7 +72,8 @@
   (line-frag))
 
 (defmethod paint (scene (obj raycast) camera time)
-  (with-slots (buf color) obj
+  (with-slots (buf) obj
     (map-g #'line-pipe buf
-           :model-clip (model->clip obj camera)
-           :color color)))
+           :model-clip (m4:* (world->clip camera)
+                             (m4:translation (to obj)))
+           :color (v! 0 1 0))))
