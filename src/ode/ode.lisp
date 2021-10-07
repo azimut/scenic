@@ -45,8 +45,10 @@
       (declare (ignore data))
       (let ((b1 (%ode:geom-get-body o1))
             (b2 (%ode:geom-get-body o2)))
-        (when (and b1 b2 (plusp (%ode:are-connected-excluding b1 b2 4;;%ode:+joint-type-contact+
-                                                              )))
+        (when (and (not (cffi:null-pointer-p b1))
+                   (not (cffi:null-pointer-p b2))
+                   (plusp (%ode:are-connected-excluding b1 b2 4 ;;%ode:+joint-type-contact+
+                                                        )))
           (return-from gg))
         (cffi-c-ref:c-with ((contact %ode:contact :alloc t :count 5))
           (dotimes (i 5)
