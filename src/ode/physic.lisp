@@ -58,7 +58,7 @@
 (defmethod update :around ((actor physic) dt)
   "updates visual representation from ODE value"
   (when *world*
-    (with-slots (pos rot body orot geom immovablep) actor
+    (with-slots (pos rot orot geom immovablep) actor
       (unless immovablep
         (setf pos (ode-geom-get-position geom))
         (setf rot (ode-geom-get-quaternion2 orot geom)))))

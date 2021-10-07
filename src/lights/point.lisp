@@ -149,5 +149,5 @@
   (let* ((index    (min nth (length *point-light-params*)))
          (new-pair (nth index (reverse *point-light-params*))))
     (setf (linear obj) (y new-pair))
-    (setf (quadratic obj) (z new-pair))
-    new-pair))
+    (setf (quadratic obj) (z new-pair)))
+  obj)
