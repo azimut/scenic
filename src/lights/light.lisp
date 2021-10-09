@@ -46,3 +46,9 @@
              :model-clip (model->clip light camera)
              :scale scale
              :color color))))
+
+(let ((tmp T))
+  (defun debug-scene ()
+    (mapcan (lambda (light) (setf (debugp light) tmp))
+            (lights (current-scene)))
+    (setf tmp (not tmp))))
