@@ -34,7 +34,7 @@ jobs:
             ~/quicklisp
             ~/.cache/common-lisp/
             ~/sbcl
-          key: "${{ steps.current-month.outputs.value }}-${{ env.cache-name }}-${{ runner.os }}"
+          key: "${{ steps.current-month.outputs.value }}-${{ env.cache-name }}-${{ runner.os }}-libassimp5"
       - name: Restore Path To Cached Files
         run: |
           echo $HOME/sbcl/bin >> $GITHUB_PATH
