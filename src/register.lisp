@@ -8,6 +8,9 @@
 (defmethod register ((actor actor) scene)
   (push actor (actors scene)))
 
+(defmethod register ((actor particles) scene)
+  (push actor (actors scene)))
+
 (defmethod register ((post postprocess) scene)
   (push post (post scene)))
 

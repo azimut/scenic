@@ -1,15 +1,20 @@
 (in-package #:scenic)
 
-(defclass actor (listener)
+(defclass drawable ()
+  ((drawp   :accessor drawp   :initarg :drawp   :documentation "should be drawn?")
+   (shadowp :accessor shadowp :initarg :shadowp :documentation "casts shadow?"))
+  (:default-initargs
+   :drawp T
+   :shadowp T))
+
+(defclass actor (listener drawable)
   ((pos      :initarg :pos      :accessor pos      :documentation "3d position")
    (rot      :initarg :rot      :accessor rot      :documentation "3d rotation")
    (buf      :initarg :buf      :accessor buf      :documentation "buffer stream")
    (color    :initarg :color    :accessor color    :documentation "base color")
    (scale    :initarg :scale    :accessor scale    :documentation "vextex fudge scale")
-   (material :initarg :material :accessor material :documentation "material index")
-   (shadowp  :initarg :shadowp  :accessor shadowp  :documentation "if it casts shadows or not"))
+   (material :initarg :material :accessor material :documentation "material index"))
   (:default-initargs
-   :shadowp T
    :material 0
    :color (v! 1 1 1)
    :pos (v! 0 0 0)
