@@ -25,12 +25,8 @@
             life
             dir)))
 
-;; TODO: is kind of broken in the sense that changes of scale trow a monkey
-;; wrench to the position which makes it a unreliable resource for a scene
-(defun-g billboard-geom ((life (:float 1)) (rot (:vec3 1))
-                         &uniform
-                         (camera-pos :vec3)
-                         (view-clip  :mat4))
+;; https://gamedev.stackexchange.com/questions/113147/rotate-billboard-towards-camera
+(defun-g billboard-geom ((life (:float 1)) (rot (:vec3 1)) &uniform (view-clip  :mat4))
   (declare (output-primitive :kind :triangle-strip
                              :max-vertices 4))
   (let ((life (aref life 0))
@@ -99,7 +95,6 @@
                :sam sam
                :world-view (world->view camera)
                :view-clip  (projection  camera)
-               :camera-pos (pos camera)
                :samd (second (sam camera))
                :res (v! (dim camera))))))
   (swap-particles obj))
