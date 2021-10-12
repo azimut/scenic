@@ -31,6 +31,7 @@
   ((:file "package")
    (:file "uploadable")
    (:file "event-loop")
+   (:file "skitter")
    (:file "rocketman")
    ;;(:file "screenshot")
    (:file "assets")

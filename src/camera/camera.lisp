@@ -26,10 +26,17 @@
 (defun make-orthogonal (&rest args) (apply #'make-instance 'orthogonal args))
 (defun make-perspective (&rest args) (apply #'make-instance 'perspective args))
 
-(defmethod handle ((e resize) (obj perspective))
-  ;;(resize obj (width e) (height e))
-  (setf (resolution (current-viewport)) (v! (first (dim obj)) (second (dim obj)))))
+(defclass resize (event)
+  ((height :initarg :height :reader height)
+   (width  :initarg :width  :reader width)))
 
+(defmethod handle :around ((e resize) (obj perspective))
+  (when (equal obj (current-camera))
+    (call-next-method)))
+
+(defmethod handle ((e resize) (obj perspective))
+  (setf (slot-value obj 'dim) (list (width e) (height e)))
+  (resize obj))
 
 ;; (defun distance-to-camera (pos distance)
 ;;   (< (v3:length (v3:- pos (pos *currentcamera*)))
