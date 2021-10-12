@@ -40,8 +40,8 @@
   (nspot  :int)
   (npoint :int))
 
-(defun make-scene ()
-  (make-instance 'scene))
+(defun make-scene (&rest args)
+  (apply #'make-instance 'scene args))
 
 #+nil
 (defun init-collection (lights)
