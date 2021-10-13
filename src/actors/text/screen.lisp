@@ -48,5 +48,5 @@
              :tex-image (cepl.fond::fond-font-sampler fond-font)
              :extent (v! pos (dim camera))
              :scale scale
-             :color color)))))
+             :color color))))
 
