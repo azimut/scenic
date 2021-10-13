@@ -129,7 +129,7 @@ returns a matrix"
 
 (defgeneric get-nodes-transforms (scene node-type &key frame time)
   (:documentation "returns a hash of mat4's with each node transform
-for value and node name for the key")
+    for value and node name for the key")
   (:method ((scene ai:scene) (node-type (eql :static)) &key frame time)
     (let ((nodes-transforms (make-hash-table :test #'equal)))
       (labels ((walk-node (node parent-transform)
@@ -185,42 +185,43 @@ for value and node name for the key")
       nodes-transforms)))
 
 (defun get-bones-tranforms (scene &key (frame 0 frame-p) (time 0 time-p))
-  "ANIMATIONLESS
-   returns an array with the m4 matrices of each bone offset"
   (declare (ai:scene scene))
-  (let* ((root-offset      (m4:inverse
-                            (m4:transpose
-                             (ai:transform (ai:root-node scene)))))
+  (let* ((root-offset (-> scene
+                        (ai:root-node)
+                        (ai:transform)
+                        (m4:transpose)
+                        (m4:inverse)
+                        ))
          (unique-bones     (list-bones-unique scene))
          (bones-transforms (make-array (length unique-bones)))
-         ;; Note: I might have bones but NO animation
+         ;; NOTE: It might have bones but NO animation
          (node-type        (if (emptyp (ai:animations scene))
                                :static
                                :animated))
          (valid            (assert (or (eq :static node-type)
                                        (or frame-p time-p))))
-         ;;(nodes-transforms (get-nodes-transforms scene :static))
          (nodes-transforms (if frame-p
                                (get-nodes-transforms scene node-type
                                                      :frame frame)
                                (get-nodes-transforms scene node-type
                                                      :time time))))
-    (loop
-      :for bone :in unique-bones
-      :for bone-id :from 0 :do
-         (with-slots ((name   ai:name)
-                      (offset ai:offset-matrix))
-             bone
-           (let ((node-transform (gethash name nodes-transforms)))
-             (setf (aref bones-transforms bone-id)
-                   ;; I got a mesh that has 0 on the bones offsets...
-                   ;; The mesh also didn't have animations so might be
-                   ;; that was the reason...
-                   ;;node-transform
-                   (if (m4:0p offset)
-                       (m4:* root-offset
-                             node-transform)
-                       (m4:* root-offset
-                             node-transform
-                             (m4:transpose offset)))))))
+    (declare (ignore valid))
+    (declare (type hash-table nodes-transforms))
+    (loop :for bone :in unique-bones
+          :for bone-id :from 0
+          :do (with-slots ((name   ai:name)
+                           (offset ai:offset-matrix))
+                  bone
+                (let ((node-transform (gethash name nodes-transforms)))
+                  (setf (aref bones-transforms bone-id)
+                        ;; I got a mesh that has 0 on the bones offsets...
+                        ;; The mesh also didn't have animations so might be
+                        ;; that was the reason...
+                        ;;node-transform
+                        (if (m4:0p offset)
+                            (m4:* root-offset
+                                  node-transform)
+                            (m4:* root-offset
+                                  node-transform
+                                  (m4:transpose offset)))))))
     bones-transforms))

@@ -51,9 +51,6 @@
             (* tbn cam-pos)
             (* tbn (s~ world-pos :xyz)))))
 
-
-
-
 ;; Defer
 
 (defun-g vert-with-tbdata-defer ((vert g-pnt) (tb tb-data) &uniform
@@ -83,6 +80,43 @@
             (* tbn (s~ world-pos :xyz)))))
 
 
+;; https://github.com/cbaggers/cepl/issues/288
+(defun-g vert-with-tbdata-defer-bones ((vert g-pnt) (tb tb-data) (bones assimp-bones)
+                                       &uniform
+                                       (model-world :mat4)
+                                       (world-view  :mat4)
+                                       (view-clip   :mat4)
+                                       (scale       :float)
+                                       (offsets     (:mat4 41)) ;; FIXME
+                                       (cam-pos     :vec3))
+  (let* ((pos       (pos vert))
+         (world-pos (* (m4:scale (v3! scale)) ;; FIXME
+                       model-world
+                       (+ (* (aref (assimp-bones-weights bones) 0)
+                             (aref offsets (int (aref (assimp-bones-ids bones) 0))))
+                          (* (aref (assimp-bones-weights bones) 1)
+                             (aref offsets (int (aref (assimp-bones-ids bones) 1))))
+                          (* (aref (assimp-bones-weights bones) 2)
+                             (aref offsets (int (aref (assimp-bones-ids bones) 2))))
+                          (* (aref (assimp-bones-weights bones) 3)
+                             (aref offsets (int (aref (assimp-bones-ids bones) 3)))))
+                       (v! pos 1)))
+         (view-pos  (* world-view world-pos))
+         (clip-pos  (* view-clip  view-pos))
+         (uv        (tex vert))
+         (normal-m3 (transpose (inverse (m4:to-mat3 model-world))))
+         (norm      (norm vert))
+         (norm      (* (m4:to-mat3 model-world)
+                       norm))
+         (t0  (normalize (* normal-m3 (tb-data-tangent tb))))
+         (n0  (normalize (* normal-m3 (norm vert))))
+         (t0  (normalize (- t0 (* (dot t0 n0) n0))))
+         (b0  (cross n0 t0))
+         (tbn (mat3 t0 b0 n0)))
+    (values clip-pos uv norm (s~ world-pos :xyz)
+            tbn
+            (* tbn cam-pos)
+            (* tbn (s~ world-pos :xyz)))))
 
 ;;--------------------------------------------------
 ;; https://learnopengl.com/Advanced-Lighting/Normal-Mapping
