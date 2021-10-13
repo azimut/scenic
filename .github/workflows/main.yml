@@ -78,6 +78,9 @@ jobs:
           (test -d cepl)  && ( cd cepl ; git pull https://github.com/azimut/cepl)
           (test -d glsl-spec)  || git clone --depth=1 https://github.com/azimut/glsl-spec
           (test -d glsl-spec)  && ( cd glsl-spec ; git pull https://github.com/azimut/glsl-spec)
+          (test -d cepl.fond)  || git clone --depth=1 https://github.com/cbaggers/cepl.fond
+          (test -d cepl.fond)  && ( cd cepl.fond ; git pull https://github.com/cbaggers/cepl.fond)
+
 
       - name: Build Binary
         run: |
