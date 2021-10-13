@@ -66,6 +66,7 @@
    (:file "actors/untextured/defer")
    (:file "actors/untextured/forward")
    (:file "actors/untextured/forward-ibl")
+   (:file "actors/textured/defer")
    (:file "actors/assimp/bones-helpers")
    (:file "actors/assimp/otherbones")
    (:file "actors/assimp/main")
