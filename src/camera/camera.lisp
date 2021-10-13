@@ -35,8 +35,7 @@
     (call-next-method)))
 
 (defmethod handle ((e resize) (obj perspective))
-  (setf (slot-value obj 'dim) (list (width e) (height e)))
-  (resize obj))
+  (setf (dim obj) (list (width e) (height e))))
 
 ;; (defun distance-to-camera (pos distance)
 ;;   (< (v3:length (v3:- pos (pos *currentcamera*)))

@@ -4,6 +4,7 @@
   ((fbo          :reader   fbo)
    (tex          :reader   tex)
    (sam          :reader   sam)
+   (res          :reader   res)
    (dim          :accessor dim           :initarg :dim)
    (downscale    :accessor downscale     :initarg :downscale)
    (texture-opts :initarg  :texture-opts)
@@ -27,8 +28,9 @@
 (defmethod (setf dim) :before (val (obj renderable))
   (check-type val list)
   (assert (length= 2 val)))
-(defmethod (setf dim)   :after (_ (obj renderable))
-  (resize obj))
+(defmethod (setf dim) :after (new-value (obj renderable))
+  (resize obj)
+  (setf (slot-value obj 'res) (v! (first new-value) (second new-value))))
 
 (defgeneric resize (obj))
 (defmethod resize :around ((obj renderable))
@@ -79,7 +81,8 @@
         :collect (apply #'sample tex opt)))
 
 (defmethod initialize-instance :after ((obj renderable) &key texture-opts sample-opts dim downscale)
-  (with-slots (fbo tex sam) obj
+  (with-slots (fbo tex sam res) obj
+    (setf res (v! dim))
     (setf tex (alloc-textures texture-opts dim downscale))
     (setf sam (alloc-samplers tex sample-opts))
     (setf fbo (alloc-fbo      tex texture-opts))))

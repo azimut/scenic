@@ -38,12 +38,12 @@
   (let ((scene (current-scene)))
     (dolist (light (lights scene))
       (setf (uploadp light) T
-            (drawp   light) T))))
+            (drawp   light) T)))
+  (let ((dim (dimensions (current-viewport))))
+    (issue obj 'resize :width (nth 0 dim) :height (nth 1 dim))))
 
 (defun next-scene ()
   (let ((next (1+ (scene-index *state*)))
         (max  (length (scenes *state*))))
     (setf (scene-index *state*) (mod next max))
-    (mapc (lambda (l) (setf (uploadp l) T (drawp l) T))
-          (lights (current-scene)))
     (current-scene)))
