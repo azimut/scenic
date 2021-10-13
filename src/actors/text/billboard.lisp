@@ -1,5 +1,6 @@
 (in-package #:scenic)
 
+;; TODO: separate generic billboarding
 (defclass billboard (actor font renderable)
   ((dtf   :reader   dtf   :initarg :dtf)
    (fudge :accessor fudge :initarg :fudge))
