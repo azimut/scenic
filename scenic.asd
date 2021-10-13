@@ -17,6 +17,7 @@
                #:log4cl
                #:livesupport
                #:nineveh
+               #:cepl.fond
                ;;#:png
                #:rocketman
                #:rtg-math.vari
@@ -71,6 +72,9 @@
    (:file "actors/particles/base")
    (:file "actors/particles/particles")
    (:file "actors/particles/billboards")
+   (:file "actors/text/font")
+   (:file "actors/text/billboard")
+   (:file "actors/text/screen")
    (:file "ode/ode")
    (:file "ode/raycast")
    (:file "ode/physic")

@@ -23,7 +23,7 @@
                  :accessor color
                  :documentation "(clear-color) color"))
   (:default-initargs
-   :post (make-simple-postprocess)
+   :post (list (make-simple-postprocess))
    :actors ()
    :color (v! 0 0 0 0)
    :camera-index 0)

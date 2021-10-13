@@ -65,3 +65,23 @@
 (defmethod closer-mop:validate-superclass ((class counted-class) (superclass standard-class)) t)
 (defmethod make-instance :after ((class counted-class) &key)
   (incf (slot-value class 'counter)))
+
+
+(defvar *quad-stream-v3-data*
+  (list (v! -1.0   1.0 0)
+        (v! -1.0  -1.0 0)
+        (v!  1.0  -1.0 0)
+        (v! -1.0   1.0 0)
+        (v!  1.0  -1.0 0)
+        (v!  1.0   1.0 0)))
+
+(let ((stream nil))
+  (defun get-quad-stream-v3 ()
+    (declare (optimize (speed 3) (safety 1) (debug 1)))
+    (unless stream
+      (setf stream (make-buffer-stream
+                    (make-gpu-array *quad-stream-v3-data*
+                                    :element-type :vec3
+                                    :dimensions 6)
+                    :retain-arrays t)))
+    stream))
