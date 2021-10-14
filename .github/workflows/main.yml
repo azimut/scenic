@@ -4,7 +4,7 @@ on: [push]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
 
       - uses: actions/checkout@v2
@@ -12,7 +12,7 @@ jobs:
       - name: Setup
         run: |
           sudo apt-get update
-          sudo apt-get install -y libassimp5 libsdl2-dev sbcl wget
+          sudo apt-get install -y libassimp4 libsdl2-dev sbcl wget
           mkdir -pv ~/Downloads
           mkdir -pv ~/sbcl
           mkdir -pv ~/quicklisp
@@ -34,7 +34,7 @@ jobs:
             ~/quicklisp
             ~/.cache/common-lisp/
             ~/sbcl
-          key: "${{ steps.current-month.outputs.value }}-${{ env.cache-name }}-${{ runner.os }}-libassimp5"
+          key: "${{ steps.current-month.outputs.value }}-${{ env.cache-name }}-${{ runner.os }}"
       - name: Restore Path To Cached Files
         run: |
           echo $HOME/sbcl/bin >> $GITHUB_PATH
