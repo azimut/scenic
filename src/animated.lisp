@@ -1,17 +1,19 @@
 (in-package #:scenic)
 
 (defclass animated ()
-  ((animations :reader   animations)
+  ((animations :reader   animations :initarg :animations)
    (current    :accessor current    :initarg :current)
-   (clock      :accessor clock      :initarg :clock)
+   (clock      :accessor clock      :initform 1f0) ;; DOUBLE?
    start
    end
    (inc        :reader inc)
-   loop-p
-   index)
+   (loop-p     :reader loop-p)
+   (index      :initarg :index))
   (:default-initargs
-   :current (error "select a CURRENT animation")
-   :clock 0f0)) ;; DOUBLE?
+   :index 0
+   :current :idle
+   :animations '((:idle)))
+  (:documentation "inherith to have a CLOCK tick by INC and select CURRENT between different ANIMATIONS"))
 
 (defmethod initialize-instance :after ((obj animated) &key current)
   (setf (current obj) current))
@@ -26,24 +28,18 @@
     (setf (slot-value obj 'end)    end)
     (setf (slot-value obj 'inc)    inc)))
 
-(if loop-p
-    (setf clock start)
-    (setf current default))
+(defun return-to-default (obj)
+  (setf (current obj) (first (first (animations obj)))))
+
+(defmethod (setf clock) :around (new-value (obj animated))
+  (with-slots (start end loop-p) obj
+    (cond ((and (not loop-p) (> new-value end)) ;; FIXME: what a mess!!
+           (return-to-default obj))
+          ((and loop-p (> new-value end))
+           (call-next-method start obj))
+          (t (call-next-method)))))
 
 (defmethod update :after ((obj animated) dt)
-  (incf (clock obj) (inc obj)))
+  (when-let ((inc (inc obj)))
+    (incf (clock obj) inc)))
 
-;; :inc 0.12
-;; :ticks-per-second 20.0d0
-;; :clock
-(serapeum:assocdr
- :walking '((:walking
-             :animation 0
-             :loop-p T
-             :start 10f0
-             :end   20f0)
-            (:running
-             :animation 0
-             :loop-p T
-             :start 0f0
-             :end   NIL)))

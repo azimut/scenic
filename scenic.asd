@@ -70,6 +70,7 @@
    (:file "actors/assimp/bones-helpers")
    (:file "actors/assimp/otherbones")
    (:file "actors/assimp/main")
+   (:file "animated")
    (:file "actors/particles/base")
    (:file "actors/particles/particles")
    (:file "actors/particles/billboards")
