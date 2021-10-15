@@ -1,5 +1,25 @@
 (in-package :incandescent)
 
+(defclass die (untextured physic-box)
+  ())
+
+(defun make-die (&rest rest &key (scene (current-scene)) (x 1f0) (y 1f0) (z 1f0) &allow-other-keys)
+  (remf rest :x)
+  (remf rest :y)
+  (remf rest :z)
+  (remf rest :scene)
+  (let ((buf (box x y z)))
+    (apply #'make-instance 'die :buf buf :scene scene rest)))
+
+(defun init-all-the-things ()
+  (init-state (list (make-material :roughness .8 :metallic .02 :specular .1)))
+  (let ((s1 (make-scene)))
+    (register (make-perspective :scale .25 :pos (v! 2 3 2) :rot (q:point-at (v! 0 1 0) (v! 2 3 2) (v! 0 0 0))) s1)
+    (register (point-size (make-point :pos (v! -2 3 -2) :color (v! .1 .1 .3)) 3) s1)
+    (register (point-size (make-point :pos (v! 2 3 2) :color (v! .3 .1 .2)) 3) s1)
+    (register (make-die :pos (v! 0 2 0)) s1)
+    (register (make-box 10f0  1f0 10f0 :pos (v! 0 -0.5 0)) s1)
+    (register s1 *state*)))
 
 
 #+nil

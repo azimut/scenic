@@ -1,5 +1,71 @@
 (in-package #:scenic)
 
+(defclass monster (assimp-thing-with-bones textured)
+  ())
+
+(defun make-monster ()
+  (mapcar
+   (lambda (obj)
+     (destructuring-bind (&key buf albedo normals specular bones scene duration &allow-other-keys) obj
+       (make-instance 'monster
+                      :buf buf
+                      :albedo albedo
+                      :normal normals
+                      :specular specular
+                      :bones bones
+                      :duration duration
+                      :rot (q:from-axis-angle (v! 1 0 0) (radians 90))
+                      :scale .2
+                      :scene scene)))
+   (assimp-load-meshes "static/monster/forestmonster.b3d")))
+
+(defun make-monster ()
+  (mapcar
+   (lambda (obj)
+     (destructuring-bind (&key buf albedo normals specular bones scene duration &allow-other-keys) obj
+       (make-instance 'monster
+                      :buf buf
+                      :albedo albedo
+                      :normal normals
+                      :specular specular
+                      :bones bones
+                      :duration duration
+                      :rot (q:from-axis-angle (v! 1 0 0) (radians 90))
+                      :scale .4
+                      :scene scene)))
+   (assimp-load-meshes "static/guard/boblampclean.md5mesh")))
+
+
+(defpipeline-g textured-bone-pipe ()
+  (vert-with-tbdata-defer-bones g-pnt tb-data assimp-bones)
+  (textured-frag :vec2 :vec3 :vec3 :mat3 :vec3 :vec3))
+
+(defmethod paint (scene (actor monster) (camera defered) time)
+  (with-slots (buf scale albedo normal aomap color bones) actor
+    (map-g #'textured-bone-pipe buf
+           :color color
+           :aomap aomap
+           :albedo albedo
+           :offsets bones
+           :normal-map normal
+           :model-world (model->world actor)
+           :world-view (world->view camera)
+           :view-clip (projection camera)
+           :scale scale)))
+
+(let* ((init 24.8f0)
+       (time init))
+  (defmethod update ((actor monster) _)
+    #+nil
+    (with-slots (scene bones duration) actor
+      ;;(push-g (get-bones-tranforms scene :time time) bones)
+      (if (> time duration)
+          (setf time init)
+          (incf time .02)))))
+
+(when (key-p X)
+  (set animation :walking))
+
 (let ((e (second (actors (current-scene)))))
   (defmethod update ((obj actor) dt)
     ;;(full-rot 1000 dt obj)
@@ -27,7 +93,7 @@
         ;;(setf (color obj) (v! 1 1 1))
         ))))
 
-(let ((e (second (lights (current-scene)))))
+(let ((e (first (lights (current-scene)))))
   (defmethod update ((obj point) dt)
     #+nil
     (when (eq e obj)
@@ -37,16 +103,16 @@
 ;; (defun cloud-get-listener-rot () (rot (current-camera)))
 
 (defmethod update ((camera perspective) dt)
-  (god-move 2000 dt camera)
-  (full-rot 2000 dt camera)
+  (god-move .1 dt camera)
+  (full-rot .1 dt camera)
   ;; (let ((pos (v! 2 4 4)))
   ;;   (setf (pos camera) pos)
   ;;   (setf (rot camera) (q:point-at (v! 0 1 0) pos (v! 0 0 0))))
   )
 
 (defmethod update ((camera defered) dt)
-  (god-move 2000 dt camera)
-  (full-rot 2000 dt camera)
+  (god-move .1 dt camera)
+  (full-rot .1 dt camera)
   ;; (let ((pos (v! 2 4 4)))
   ;;   (setf (pos camera) pos)
   ;;   (setf (rot camera) (q:point-at (v! 0 1 0) pos (v! 0 0 0))))
