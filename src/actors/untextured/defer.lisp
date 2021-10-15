@@ -1,5 +1,20 @@
 (in-package #:scenic)
 
+(defun-g untextured-defered-vert ((vert g-pnt) &uniform
+                                  (model-world :mat4)
+                                  (world-view  :mat4)
+                                  (view-clip   :mat4)
+                                  (scale       :float))
+  (let* ((pos        (* scale (pos vert)))
+         (world-pos  (* model-world (v! pos 1)))
+         (view-pos   (* world-view  world-pos))
+         (clip-pos   (* view-clip   view-pos))
+         (tex        (tex vert))
+         (norm       (norm vert))
+         (world-norm (* (m4:to-mat3 model-world) norm)))
+    (values clip-pos tex world-norm (s~ world-pos :xyz))))
+
+
 (defun-g untextured-defered-frag ((uv :vec2) (frag-norm :vec3) (frag-pos :vec3)
                                   &uniform
                                   (color     :vec3)
@@ -13,7 +28,7 @@
               (v! (aref metallic material) (aref emissive material))))))
 
 (defpipeline-g untextured-defered-pipe ()
-  :vertex (vert g-pnt)
+  :vertex (untextured-defered-vert g-pnt)
   :fragment (untextured-defered-frag :vec2 :vec3 :vec3))
 
 (defmethod paint ((scene scene) (actor untextured) (camera defered) time)

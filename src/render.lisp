@@ -1,10 +1,5 @@
 (in-package #:scenic)
 
-(defstruct-g assimp-bones
-  (ids     :vec4)
-  (weights :vec4))
-
-
 ;; ?
 ;; From "pushing pixels" don't remember why it's needed
 (defun-g treat-uvs ((uv :vec2))

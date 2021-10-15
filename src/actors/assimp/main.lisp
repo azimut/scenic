@@ -39,20 +39,11 @@
                              :ai-process-flip-u-vs
                              :ai-process-calc-tangent-space))
 
-(defclass assimp-thing (actor)
-  ((albedo   :initarg :albedo)
-   (normals  :initarg :normals)
-   (specular :initarg :specular)
-   (scene    :initarg :scene)))
-
-(defclass assimp-thing-with-bones (actor)
-  ((albedo   :initarg :albedo)
-   (normals  :initarg :normals)
-   (specular :initarg :specular)
-   (scene    :initarg :scene)
-   (bones    :initarg :bones
-             :documentation "c-array of mat4s, of transforms for each bone in the whole scene")
-   (duration :initform 0f0 :initarg :duration)))
+(defmethod initialize-instance :after ((obj assimp-thing-with-bones) &key scene)
+  (with-slots (scene-offset bones-unique bones-transforms) obj
+    (setf scene-offset     (ai:transform (ai:root-node scene)))
+    (setf bones-unique     (list-bones-unique scene))
+    (setf bones-transforms (make-array (length bones-unique)))))
 
 (defmethod update ((actor assimp-thing) dt))
 (defmethod update ((actor assimp-thing-with-bones) dt))

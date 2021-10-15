@@ -71,10 +71,9 @@
      (m4:* projection (m4:look-at (v! 0 -1  0) light-pos (v3:+ light-pos (v!  0  0  1))))
      (m4:* projection (m4:look-at (v! 0 -1  0) light-pos (v3:+ light-pos (v!  0  0 -1)))))))
 
-;; NOTE: needs patched cbaggers/glsl-spec to make gl-layer a "place"
 ;; TODO: use SCALE
-(defun-g shadowmap-point-vert ((vert g-pnt) &uniform (model->world :mat4))
-  (* model->world (v! (pos vert) 1)))
+(defun-g shadowmap-point-vert ((vert g-pnt) &uniform (model->world :mat4) (scale :float))
+  (* model->world (v! (* scale (pos vert)) 1)))
 
 (defun-g shadowmap-point-geom (&uniform (pointlights point-light-data :ubo)
                                         (index :int))
@@ -93,11 +92,9 @@
     (end-primitive))
   (values))
 
-(defun-g shadowmap-point-frag ((frag-pos :vec4) &uniform
-                               (pointlights point-light-data :ubo)
-                               (index :int))
-  (let* ((light-pos       (aref (positions pointlights) index))
-         (far-plane       (aref (point-light-data-far pointlights) index))
+(defun-g shadowmap-point-frag ((frag-pos :vec4) &uniform (pointlights point-light-data :ubo) (index :int))
+  (let* ((light-pos      (aref (positions pointlights) index))
+         (far-plane      (aref (point-light-data-far pointlights) index))
          (light-distance (length (- (s~ frag-pos :xyz)
                                     light-pos)))
          (light-distance (/ light-distance
@@ -109,6 +106,43 @@
   :vertex   (shadowmap-point-vert g-pnt)
   :geometry (shadowmap-point-geom)
   :fragment (shadowmap-point-frag :vec4))
+
+(defmethod paint (scene actor (light point) time)
+  (with-slots (buf scale) actor
+    (map-g #'shadowmap-point-pipe buf
+           :scale scale
+           :model->world (model->world actor)
+           :pointlights (ubo light)
+           :index (idx light))))
+
+(defun-g shadowmap-point-bones-vert
+    ((vert g-pnt) (tb tb-data) (bones assimp-bones)
+     &uniform (model->world :mat4) (offsets (:mat4 41)) (scale :float))
+  (* (m4:scale (v3! scale)) ;; FIXME
+     model->world
+     (+ (* (aref (assimp-bones-weights bones) 0)
+           (aref offsets (int (aref (assimp-bones-ids bones) 0))))
+        (* (aref (assimp-bones-weights bones) 1)
+           (aref offsets (int (aref (assimp-bones-ids bones) 1))))
+        (* (aref (assimp-bones-weights bones) 2)
+           (aref offsets (int (aref (assimp-bones-ids bones) 2))))
+        (* (aref (assimp-bones-weights bones) 3)
+           (aref offsets (int (aref (assimp-bones-ids bones) 3)))))
+     (v! (pos vert) 1)))
+
+(defpipeline-g shadowmap-point-bones-pipe ()
+  :vertex   (shadowmap-point-bones-vert g-pnt tb-data assimp-bones)
+  :geometry (shadowmap-point-geom)
+  :fragment (shadowmap-point-frag :vec4))
+
+(defmethod paint (scene (actor assimp-thing-with-bones) (light point) time)
+  (with-slots (buf scale bones) actor
+    (map-g #'shadowmap-point-bones-pipe buf
+           :scale scale
+           :offsets bones
+           :model->world (model->world actor)
+           :pointlights (ubo light)
+           :index (idx light))))
 
 ;; Naive approach, works fast
 (defun-g shadow-factor ((light-sampler :sampler-cube-array)
@@ -127,18 +161,6 @@
     ;;(/ closest-depth far-plane)
     ))
 
-(defun make-point (&rest args)
-  (apply #'make-instance 'point args))
-
-(defun point-p (obj) (typep obj 'point))
-
-(defmethod paint (scene actor (light point) time)
-  (with-slots (buf) actor
-    (map-g #'shadowmap-point-pipe buf
-           :model->world (model->world actor)
-           :pointlights (ubo light)
-           :index (idx light))))
-
 (defmethod draw ((scene scene) (light point) time)
   (let ((fbo (fbo light)))
     (with-fbo-bound (fbo :attachment-for-size :d)
@@ -151,3 +173,8 @@
     (setf (linear obj) (y new-pair))
     (setf (quadratic obj) (z new-pair)))
   obj)
+
+(defun make-point (&rest args)
+  (apply #'make-instance 'point args))
+
+(defun point-p (obj) (typep obj 'point))

@@ -23,6 +23,25 @@
    :buf (box 1 1 1 t))
   (:documentation "base object, with tangents"))
 
+(defclass assimp-thing (actor)
+  ((albedo   :initarg :albedo)
+   (normals  :initarg :normals)
+   (specular :initarg :specular)
+   (scene    :initarg :scene)))
+
+(defclass assimp-thing-with-bones (actor)
+  ((albedo   :initarg :albedo)
+   (normals  :initarg :normals)
+   (specular :initarg :specular)
+   (scene    :initarg :scene)
+   (bones    :initarg :bones
+             :documentation "c-array of mat4s, of transforms for each bone in the whole scene")
+   (bones-unique :reader bones-unique)
+   (bones-transforms :reader bones-transforms)
+   (scene-offset :reader scene-offset)
+   (duration :initform 0f0 :initarg :duration)))
+
+
 (defmethod print-object ((obj actor) stream)
   (print-unreadable-object (obj stream :type T :identity T)
     (with-slots (pos) obj

@@ -35,6 +35,10 @@
 
 (in-package #:scenic)
 
+(defstruct-g assimp-bones
+  (ids     :vec4)
+  (weights :vec4))
+
 (defvar *point-light-params*
   (list (v! 3250 0.0014 0.000007)
         (v!  600 0.007  0.0002)
