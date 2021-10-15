@@ -1,6 +1,6 @@
 (in-package #:scenic)
 
-(defclass monster (assimp-thing-with-bones textured)
+(defclass monster (assimp-thing-with-bones textured animated)
   ())
 
 (defun make-monster ()
@@ -8,6 +8,9 @@
    (lambda (obj)
      (destructuring-bind (&key buf albedo normals specular bones scene duration &allow-other-keys) obj
        (make-instance 'monster
+                      :current :walking
+                      :animations '((:idle)
+                                    (:walking :start 24.8 :end 28.5 :inc 0.02 :loop-p T :index 0))
                       :buf buf
                       :albedo albedo
                       :normal normals
@@ -35,7 +38,6 @@
                       :scene scene)))
    (assimp-load-meshes "static/guard/boblampclean.md5mesh")))
 
-
 (defpipeline-g textured-bone-pipe ()
   (vert-with-tbdata-defer-bones g-pnt tb-data assimp-bones)
   (textured-frag :vec2 :vec3 :vec3 :mat3 :vec3 :vec3))
@@ -53,18 +55,12 @@
            :view-clip (projection camera)
            :scale scale)))
 
-(let* ((init 24.8f0)
-       (time init))
-  (defmethod update ((actor monster) _)
-    #+nil
-    (with-slots (scene bones duration) actor
-      ;;(push-g (get-bones-tranforms scene :time time) bones)
-      (if (> time duration)
-          (setf time init)
-          (incf time .02)))))
+(defmethod update ((actor monster) _)
+  #+nil
+  (with-slots (scene bones clock index) actor
+    (when index
+      (push-g (get-bones-time-tranforms scene index clock) bones))))
 
-(when (key-p X)
-  (set animation :walking))
 
 (let ((e (second (actors (current-scene)))))
   (defmethod update ((obj actor) dt)
@@ -102,7 +98,7 @@
 ;; (defun cloud:get-listener-pos () (pos (current-camera)))
 ;; (defun cloud-get-listener-rot () (rot (current-camera)))
 
-(defmethod update ((camera perspective) dt)
+(defmethod update ((camera perspsective) dt)
   (god-move .1 dt camera)
   (full-rot .1 dt camera)
   ;; (let ((pos (v! 2 4 4)))
