@@ -21,16 +21,6 @@
     (register (make-point :pos (v! -2 2 -2) :color (v! .1 .1 .3) :linear 0.35 :quadratic 0.44) s1)
     (register s1 *state*)))
 
-(defun init-all-the-things ()
-  (init-state
-   (list (make-material :roughness .8 :metallic .02 :specular .1)
-         (make-material :roughness .4 :metallic .4  :specular .1)))
-  (let ((s1 (make-scene :color (v! .2 .2 .2 1))))
-    (register (make-perspective :downscale .25 :pos (v! 2 2 2) :rot (q:point-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0))) s1)
-    (register (make-point :pos (v! 2 1 2) :color (v! .3 .4 .1)) s1)
-    (register (make-point :pos (v! -2 2 -2) :color (v! .1 .1 .3) :linear 0.35 :quadratic 0.44) s1)
-    (register s1 *state*)))
-
 (defclass tick (event)
   ((tt :initarg :tt :reader tt)
    (dt :initarg :dt :reader dt)
