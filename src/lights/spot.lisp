@@ -67,7 +67,14 @@
 
 (defmethod paint (scene actor (camera spot) time)
   (with-slots (buf scale) actor
-    (map-g #'simplest-3d-pipe buf
+    (map-g #'shadow-pipe buf
+           :model->clip (model->clip actor camera)
+           :scale scale)))
+
+(defmethod paint (scene (actor assimp-thing-with-bones) (camera spot) time)
+  (with-slots (buf scale bones) actor
+    (map-g #'simplest-3d-bones-pipe buf
+           :offsets bones
            :model-world (model->world actor)
            :world-view (world->view camera)
            :view-clip (projection camera)

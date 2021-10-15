@@ -24,8 +24,7 @@
 (defmethod register ((light light) scene)
   (with-slots (idx fbo) light
     (flet ((same-light (x) (typep x (class-name-of light))))
-      (setf idx (length (remove-if-not #'same-light (lights scene)))))
-    (setf fbo (make-fbo `(:d ,(texref (point-tex *state*) :layer idx :cube-face nil)))))
+      (init-light light (length (remove-if-not #'same-light (lights scene))))))
   (push light (lights scene)))
 
 (defmethod register :around ((light directional) scene)

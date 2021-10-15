@@ -41,13 +41,41 @@
 (defmethod initialize-instance :after ((obj directional) &key)
   (setf (slot-value obj 'ubo) (dir-ubo *state*)))
 
-(defun-g vert ((vert g-pnt) &uniform
-               (model-world :mat4)
-               (world-view  :mat4)
-               (view-clip   :mat4)
-               (scale       :float))
-  (let* ((pos        (* scale (pos vert)))
-         (world-pos  (* model-world (v! pos 1)))
+(defun-g shadow-vert ((vert g-pnt) &uniform (model->clip :mat4) (scale :float))
+  (let ((pos (* scale (pos vert))))
+    (* model->clip (v! pos 1))))
+
+(defun-g shadow-frag ()
+  (values))
+
+(defpipeline-g shadow-pipe ()
+  :vertex   (shadow-vert g-pnt)
+  :fragment (shadow-frag))
+
+(defmethod paint (scene actor (camera directional) time)
+  (with-slots (buf scale) actor
+    (map-g #'shadow-pipe buf
+           :model->clip (model->clip actor camera)
+           :scale scale)))
+
+(defun-g vert-bones ((vert g-pnt) (tb tb-data) (bones assimp-bones) &uniform
+                     (offsets     (:mat4 41)) ;; FIXME
+                     (model-world :mat4)
+                     (world-view  :mat4)
+                     (view-clip   :mat4)
+                     (scale       :float))
+  (let* ((pos       (pos vert))
+         (world-pos (* (m4:scale (v3! scale)) ;; FIXME
+                       model-world
+                       (+ (* (aref (assimp-bones-weights bones) 0)
+                             (aref offsets (int (aref (assimp-bones-ids bones) 0))))
+                          (* (aref (assimp-bones-weights bones) 1)
+                             (aref offsets (int (aref (assimp-bones-ids bones) 1))))
+                          (* (aref (assimp-bones-weights bones) 2)
+                             (aref offsets (int (aref (assimp-bones-ids bones) 2))))
+                          (* (aref (assimp-bones-weights bones) 3)
+                             (aref offsets (int (aref (assimp-bones-ids bones) 3)))))
+                       (v! pos 1)))
          (view-pos   (* world-view  world-pos))
          (clip-pos   (* view-clip   view-pos))
          (tex        (tex vert))
@@ -58,13 +86,14 @@
 (defun-g simplest-3d-frag ((uv :vec2) (frag-norm :vec3) (frag-pos :vec3))
   (values))
 
-(defpipeline-g simplest-3d-pipe ()
-  :vertex   (vert g-pnt)
+(defpipeline-g simplest-3d-bones-pipe ()
+  :vertex   (vert-bones g-pnt tb-data assimp-bones)
   :fragment (simplest-3d-frag :vec2 :vec3 :vec3))
 
-(defmethod paint (scene actor (camera directional) time)
-  (with-slots (buf scale) actor
-    (map-g #'simplest-3d-pipe buf
+(defmethod paint (scene (actor assimp-thing-with-bones) (camera directional) time)
+  (with-slots (buf scale bones) actor
+    (map-g #'simplest-3d-bones-pipe buf
+           :offsets bones
            :model-world (model->world actor)
            :world-view (world->view camera)
            :view-clip (projection camera)

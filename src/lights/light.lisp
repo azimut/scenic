@@ -13,7 +13,7 @@
    :uploadp T
    :scale 1f0
    :debugp NIL
-   :buf (box)
+   :buf (sphere)
    :color (v! 1 1 1))
   (:documentation "base class for all lights"))
 
