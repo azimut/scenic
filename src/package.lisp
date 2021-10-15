@@ -7,6 +7,7 @@
         #:rtg-math
         #:vari
         #:with-setf)
+  (:shadow #:space)
   (:export #:start)
   (:import-from #:temporal-functions
                 #:make-stepper
@@ -85,3 +86,21 @@
                                     :dimensions 6)
                     :retain-arrays t)))
     stream))
+
+;; Took from shinmera/trial/render-loop.lisp
+#+sbcl
+(define-symbol-macro current-time-start
+    (load-time-value (logand (sb-ext:get-time-of-day) (1- (expt 2 32)))))
+
+(declaim (inline current-time))
+(defun current-time ()
+  (declare (optimize speed (safety 0)))
+  #+sbcl (multiple-value-bind (s ms) (sb-ext:get-time-of-day)
+           (let* ((s (logand s (1- (expt 2 62))))
+                  (ms (logand ms (1- (expt 2 62)))))
+             (declare (type (unsigned-byte 62) s ms))
+             (+ (- s current-time-start)
+                (* ms
+                   (coerce 1/1000000 'double-float)))))
+  #-sbcl (* (get-internal-real-time)
+            (coerce (/ internal-time-units-per-second) 'double-float)))
