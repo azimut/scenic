@@ -127,10 +127,10 @@ returns a matrix"
        ;;(m4:scale (ai:value (aref sca-keys 0)))
        ))))
 
-(defgeneric get-nodes-transforms (scene node-type &key frame time)
+(defgeneric get-nodes-transforms (scene node-type &key frame time nth-animation)
   (:documentation "returns a hash of mat4's with each node transform
     for value and node name for the key")
-  (:method ((scene ai:scene) (node-type (eql :static)) &key frame time)
+  (:method ((scene ai:scene) (node-type (eql :static)) &key frame time nth-animation)
     (let ((nodes-transforms (make-hash-table :test #'equal)))
       (labels ((walk-node (node parent-transform)
                  (declare (type ai:node node)
@@ -147,8 +147,8 @@ returns a matrix"
                           children)))))
         (walk-node (ai:root-node scene) (m4:identity)))
       nodes-transforms))
-  (:method ((scene ai:scene) (node-type (eql :animated)) &key frame time)
-    (let* ((animation        (aref (ai:animations scene) *default-animation*))
+  (:method ((scene ai:scene) (node-type (eql :animated)) &key frame time (nth-animation 0))
+    (let* ((animation        (aref (ai:animations scene) nth-animation))
            (duration         (ai:duration animation))
            ;; NOTE: animation-index is a hash lookup table for BONE>NODE-ANIMATION
            (animation-index  (ai:index animation))
@@ -206,6 +206,41 @@ returns a matrix"
                                (get-nodes-transforms scene node-type
                                                      :time time))))
     (declare (ignore valid))
+    (declare (type hash-table nodes-transforms))
+    (loop :for bone :in unique-bones
+          :for bone-id :from 0
+          :do (with-slots ((name   ai:name)
+                           (offset ai:offset-matrix))
+                  bone
+                (let ((node-transform (gethash name nodes-transforms)))
+                  (setf (aref bones-transforms bone-id)
+                        ;; I got a mesh that has 0 on the bones offsets...
+                        ;; The mesh also didn't have animations so might be
+                        ;; that was the reason...
+                        ;;node-transform
+                        (if (m4:0p offset)
+                            (m4:* root-offset
+                                  node-transform)
+                            (m4:* root-offset
+                                  node-transform
+                                  (m4:transpose offset)))))))
+    bones-transforms))
+
+(fare-memoization:define-memo-function get-bones-time-tranforms
+    (scene nth-animation time)
+  (declare (ai:scene scene))
+  (let* ((root-offset (-> scene
+                        (ai:root-node)
+                        (ai:transform)
+                        (m4:transpose)
+                        (m4:inverse)))
+         (unique-bones     (list-bones-unique scene))
+         (bones-transforms (make-array (length unique-bones)))
+         ;; NOTE: It might have bones but NO animation
+         (node-type        (if (emptyp (ai:animations scene))
+                               :static
+                               :animated))
+         (nodes-transforms (get-nodes-transforms scene node-type :time time :nth-animation nth-animation)))
     (declare (type hash-table nodes-transforms))
     (loop :for bone :in unique-bones
           :for bone-id :from 0

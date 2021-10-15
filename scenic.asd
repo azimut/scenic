@@ -18,6 +18,7 @@
                #:livesupport
                #:nineveh
                #:cepl.fond
+               #:fare-memoization
                ;;#:png
                #:rocketman
                #:rtg-math.vari
