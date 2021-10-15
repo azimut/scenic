@@ -38,9 +38,9 @@
   (let ((scene (current-scene)))
     (dolist (light (lights scene))
       (setf (uploadp light) T
-            (drawp   light) T)))
-  (let ((dim (dimensions (current-viewport))))
-    (issue obj 'resize :width (nth 0 dim) :height (nth 1 dim))))
+            (drawp   light) T))
+    (let ((dim (dimensions (current-viewport))))
+      (issue scene 'resize :width (nth 0 dim) :height (nth 1 dim)))))
 
 (defun next-scene ()
   (let ((next (1+ (scene-index *state*)))
