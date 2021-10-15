@@ -9,24 +9,25 @@
    (geom       :initarg :geom :reader geom :documentation "geometry pointer") ;; RM?
    (orot       :initarg :orot              :documentation "ODE rotation pointer")
    (density    :initarg :density)
-   (immovablep :initarg :immovablep
+   (space      :initarg :space)
+   (immovablep :initarg :immovablep :reader immovablep
                :documentation "ode immovable object (aka without body or mass) but that still interacts with other objects"))
   (:default-initargs
-   :density 1.0f0
    :body (%ode:body-create *world*)
    :mass (cffi:foreign-alloc '%ode:mass)
    :orot (cffi:foreign-alloc '%ode:real :count 4)
-   :immovablep nil))
+   :density 1.0f0
+   :space (space (current-scene))
+   :immovablep NIL))
 
 ;; FIXME: mass is leaking?
-(defmethod free :around ((object physic))
+(defmethod free :after ((object physic))
   (with-slots (body geom orot) object
     (%ode:body-destroy body)
     (%ode:geom-destroy geom)
     (cffi:foreign-free orot)
     (alexandria:removef *body-to-actor* body
-                        :key #'car :test #'sb-sys:sap=))
-  (call-next-method))
+                        :key #'car :test #'sb-sys:sap=)))
 
 (defmethod initialize-instance :after ((obj physic) &key)
   (push (list (slot-value obj 'body) obj) *body-to-actor*))
@@ -55,11 +56,10 @@
   (declare (type rtg-math.types:vec3 v))
   (%ode:geom-set-position (slot-value physic 'geom) (x v) (y v) (z v)))
 
-(defmethod update :around ((actor physic) dt)
-  "updates visual representation from ODE value"
-  (when *world*
-    (with-slots (pos rot orot geom immovablep) actor
-      (unless immovablep
-        (setf pos (ode-geom-get-position geom))
-        (setf rot (ode-geom-get-quaternion2 orot geom)))))
-  (call-next-method))
+(defmethod handle :around ((e tick) (obj physic))
+  (when (and *world* (not (immovablep obj)))
+    (call-next-method)))
+(defmethod handle :after ((e tick) (obj physic))
+  (with-slots (pos rot orot geom) obj
+    (setf pos (ode-geom-get-position geom))
+    (setf rot (ode-geom-get-quaternion2 orot geom))))

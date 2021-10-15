@@ -1,7 +1,8 @@
 (in-package #:scenic)
 
-(defclass raycast (uploadable)
-  ((color :accessor color :initarg :color)
+(defclass raycast (uploadable drawable)
+  ((space :reader   space :initarg :space)
+   (color :accessor color :initarg :color)
    (from  :accessor from  :initarg :from)
    (to    :accessor to    :initarg :to)
    (ray   :reader   ray)
@@ -9,6 +10,9 @@
    (gar   :reader   gar)
    (buf   :reader   buf))
   (:default-initargs
+   :space (space (current-scene))
+   :drawp T
+   :shadowp NIL
    :color (v! 0 1 0))
   (:documentation "ode raycast, you wouldn't use this directly"))
 
@@ -23,10 +27,10 @@
 
 (defmethod initialize-instance :before ((obj raycast) &key from to)
   (assert (not (v3:= from to))))
-(defmethod initialize-instance :after ((obj raycast) &key)
+(defmethod initialize-instance :after ((obj raycast) &key space)
   (with-slots (hit ray gar buf) obj
     (setf hit (cffi:foreign-alloc '%ode:real :count 4))
-    (setf ray (%ode:create-ray *space* 0f0))
+    (setf ray (%ode:create-ray space 0f0))
     (setf gar (make-gpu-array nil :element-type :vec3 :dimensions 2))
     (setf buf (make-buffer-stream gar :primitive :lines)))
   (upload obj))
@@ -60,10 +64,10 @@
           (setf (hit-position 2) (cffi:mem-ref (contacts i :geom :pos) :float 2))
           (setf (hit-position 3) (contacts i :geom :depth)))))))
 
-(defmethod hit-p (raycast)
+(defun hit-p (raycast)
   (cffi-c-ref:c-let ((hit-position %ode:real :count 4 :from (hit raycast)))
     (setf (hit-position 3) most-positive-single-float)
-    (%ode:space-collide2 (ray raycast) *space* (hit-position &) (cffi:callback ray-callback))
+    (%ode:space-collide2 (ray raycast) (space raycast) (hit-position &) (cffi:callback ray-callback))
     (v! (hit-position 0) (hit-position 1) (hit-position 2) (hit-position 3))))
 
 (defun-g line-vert ((vert :vec3) &uniform (model-clip :mat4))
@@ -74,8 +78,10 @@
   (line-vert :vec3)
   (line-frag))
 
+(defmethod paint :around (scene (obj raycast) camera time)
+  (when (drawp obj)
+    (call-next-method)))
 (defmethod paint (scene (obj raycast) camera time)
-  (declare (ignore scene time))
   (with-slots (buf color to) obj
     (map-g #'line-pipe buf
            :model-clip (m4:* (world->clip camera) (m4:translation to))
