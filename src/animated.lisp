@@ -8,9 +8,8 @@
    end
    (inc        :reader inc)
    (loop-p     :reader loop-p)
-   (index      :initarg :index))
+   index)
   (:default-initargs
-   :index 0
    :current :idle
    :animations '((:idle)))
   (:documentation "inherith to have a CLOCK tick by INC and select CURRENT between different ANIMATIONS"))
