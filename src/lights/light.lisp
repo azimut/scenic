@@ -25,10 +25,6 @@
     (call-next-method)
     (setf (uploadp light) NIL)))
 
-(defmethod paint :around (scene (actor drawable) (light light) _)
-  (when (shadowp actor)
-    (call-next-method)))
-
 (defun-g light-vert ((vert g-pnt) &uniform (model-clip :mat4) (scale :float))
   (let* ((pos (* scale (pos vert)))
          (clip-pos (* model-clip (v! pos 1))))
@@ -38,6 +34,10 @@
 (defpipeline-g light-pipe ()
   (light-vert g-pnt)
   (light-frag))
+
+(defmethod paint :around (scene (actor drawable) (light light) _)
+  (when (shadowp actor)
+    (call-next-method)))
 
 (defmethod paint (scene (light light) (camera renderable) _)
   (with-slots (buf color scale debugp) light

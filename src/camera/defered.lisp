@@ -20,3 +20,8 @@
 (defun make-defered (&rest args)
   (apply #'make-instance 'defered args))
 
+(defmethod handle :around ((e resize) (obj defered))
+  (when (equal obj (current-camera))
+    (call-next-method)))
+(defmethod handle ((e resize) (obj defered))
+  (setf (dim obj) (list (width e) (height e))))

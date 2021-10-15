@@ -75,10 +75,6 @@
   (bones-ids     :vec4 :accessor ids)
   (bones-weights :vec4 :accessor weights))
 
-(defstruct-g assimp-bones
-  (ids     :vec4)
-  (weights :vec4))
-
 ;;--------------------------------------------------
 ;; Pretty printers
 ;;--------------------------------------------------

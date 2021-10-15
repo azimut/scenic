@@ -56,9 +56,10 @@
                                 color
                                 specular
                                 (aref linear i) (aref quadratic i) (aref colors i))
+
                  (shadow-factor pointshadows
                                 frag-pos
-                                (aref positions i)
+                                (aref positions i) ;;?
                                 (aref far i)
                                 .03
                                 i)))))
