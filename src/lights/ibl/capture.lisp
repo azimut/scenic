@@ -77,7 +77,7 @@
               (dir-light-apply color (aref colors i) (aref positions i)
                                (s~ frag-pos :xyz) frag-norm))))
     (dotimes (i (scene-data-npoint scene))
-      (with-slots (colors positions linear quadratic far)
+      (with-slots (colors positions linear quadratic far fudge)
           pointlights
         (incf final-color
               (* (point-light-apply color (aref colors i) (aref positions i)
@@ -87,7 +87,7 @@
                                 (s~ frag-pos :xyz)
                                 (aref positions i)
                                 (aref far i)
-                                .03
+                                (aref fudge i)
                                 i)))))
     (dotimes (i (scene-data-nspot scene))
       (with-slots (colors positions linear quadratic far cutoff outer-cutoff direction)

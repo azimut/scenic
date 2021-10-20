@@ -26,7 +26,8 @@
   (linear       (:float 2))
   (quadratic    (:float 2))
   (cutoff       (:float 2))
-  (outer-cutoff (:float 2)))
+  (outer-cutoff (:float 2))
+  (fudge        (:float 2)))
 
 (defmethod (setf pos)          :after (_ (obj spot)) (setf (uploadp obj) T (drawp obj) T))
 (defmethod (setf cutoff)       :after (_ (obj spot)) (setf (uploadp obj) T (drawp obj) T))
@@ -45,7 +46,7 @@
       (format stream "(~a ~a ~a) NEAR:~a FAR:~a" (x pos) (y pos) (z pos) near far))))
 
 (defmethod upload ((obj spot))
-  (with-slots (pos rot color ubo idx linear quadratic cutoff outer-cutoff) obj
+  (with-slots (pos rot color ubo idx linear quadratic cutoff outer-cutoff fudge) obj
     (with-gpu-array-as-c-array (c (ubo-data ubo))
       (let ((e (aref-c c 0)))
         (setf (aref-c (lightspace e) idx) (world->clip obj))
@@ -55,6 +56,7 @@
         (setf (aref-c (spot-light-data-linear       e) idx) linear)
         (setf (aref-c (spot-light-data-cutoff       e) idx) cutoff)
         (setf (aref-c (spot-light-data-outer-cutoff e) idx) outer-cutoff)
+        (setf (aref-c (spot-light-data-fudge        e) idx) fudge)
         (setf (aref-c (spot-light-data-direction    e) idx) (q:to-direction rot))))))
 
 (defmethod initialize-instance :after ((obj spot) &key)
@@ -92,6 +94,13 @@
       (clear-fbo fbo :d)
       (dolist (a (actors scene))
         (paint scene a light time)))))
+
+(defmethod point-size ((obj spot) nth)
+  (let* ((index    (min nth (length *point-light-params*)))
+         (new-pair (nth index (reverse *point-light-params*))))
+    (setf (linear obj) (y new-pair))
+    (setf (quadratic obj) (z new-pair)))
+  obj)
 
 (defun make-spot (&rest args)
   (apply #'make-instance 'spot args))

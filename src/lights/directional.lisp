@@ -13,7 +13,8 @@
 (defstruct-g (dir-light-data :layout :std-140)
   (positions  (:vec3 2) :accessor positions)
   (lightspace (:mat4 2) :accessor lightspace)
-  (colors     (:vec3 2) :accessor colors))
+  (colors     (:vec3 2) :accessor colors)
+  (fudge      (:float 2)))
 
 (defmethod (setf fs)   :after (_ (obj directional)) (setf (uploadp obj) T (drawp obj) T))
 (defmethod (setf far)  :after (_ (obj directional)) (setf (uploadp obj) T (drawp obj) T))
@@ -26,9 +27,10 @@
       (format stream "(~a ~a ~a) NEAR:~a FAR:~a" (x pos) (y pos) (z pos) near far))))
 
 (defmethod upload ((obj directional))
-  (with-slots (pos color ubo idx) obj
+  (with-slots (pos color ubo idx fudge) obj
     (with-gpu-array-as-c-array (c (ubo-data ubo))
       (let ((e (aref-c c 0)))
+        (setf (aref-c (dir-light-data-fudge e) idx) fudge)
         (setf (aref-c (lightspace e) idx) (world->clip obj))
         (setf (aref-c (positions  e) idx) pos)
         (setf (aref-c (colors     e) idx) color)))))

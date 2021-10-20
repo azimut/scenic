@@ -5,12 +5,14 @@
    (idx     :reader idx :documentation "light index on texture, for the type")
    (ubo     :reader ubo :documentation "reference to scene ubo with light data")
    (buf     :reader buf :initarg :buf)
+   (fudge   :accessor fudge :initarg :fudge)
    (scale   :accessor scale :initarg :scale)
    (debugp  :accessor debugp :initarg :debugp)
    (color   :initarg :color   :accessor color   :documentation "light color")
    (uploadp :initarg :uploadp :accessor uploadp :documentation "if TRUE, upload the information to the GPU"))
   (:default-initargs
    :uploadp T
+   :fudge 0.03
    :scale 1f0
    :debugp NIL
    :buf (sphere)
@@ -19,6 +21,7 @@
 
 (defmethod (setf pos)   :after (_ (obj light)) (setf (uploadp obj) T))
 (defmethod (setf color) :after (_ (obj light)) (setf (uploadp obj) T))
+(defmethod (setf fudge) :after (_ (obj light)) (setf (uploadp obj) T))
 
 (defmethod upload :around ((light light))
   (when (uploadp light)

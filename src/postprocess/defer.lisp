@@ -37,7 +37,7 @@
          (emissive  (y color4))
          (final-color (v! 0 0 0)))
     (dotimes (i (scene-data-ndir scene))
-      (with-slots (colors positions lightspace) dirlights
+      (with-slots (colors positions lightspace fudge) dirlights
         (incf final-color
               (* (pbr-direct-lum (aref positions i) frag-pos cam-pos frag-norm
                                  roughness
@@ -45,9 +45,9 @@
                                  color
                                  specular
                                  (aref colors i))
-                 (shadow-factor dirshadows (* (aref lightspace i) (v! frag-pos 1)) .003 i)))))
+                 (shadow-factor dirshadows (* (aref lightspace i) (v! frag-pos 1)) (aref fudge i) i)))))
     (dotimes (i (scene-data-npoint scene))
-      (with-slots (colors positions linear quadratic far) pointlights
+      (with-slots (colors positions linear quadratic far fudge) pointlights
         (incf final-color
               (* (pbr-point-lum (aref positions i) frag-pos cam-pos
                                 frag-norm
@@ -60,10 +60,10 @@
                                 frag-pos
                                 (aref positions i) ;;?
                                 (aref far i)
-                                .03
+                                (aref fudge i)
                                 i)))))
     (dotimes (i (scene-data-nspot scene))
-      (with-slots (colors positions linear quadratic far cutoff outer-cutoff direction lightspace) spotlights
+      (with-slots (colors positions linear quadratic far cutoff outer-cutoff direction lightspace fudge) spotlights
         (incf final-color
               (* (pbr-spot-lum (aref positions i) frag-pos cam-pos
                                frag-norm
@@ -77,9 +77,10 @@
                                (aref outer-cutoff i)
                                (aref linear i)
                                (aref quadratic i))
-                 (shadow-factor spotshadows
-                                (* (aref lightspace i) (v! frag-pos 1))
-                                .003 i)))))
+                 (vec3 (shadow-factor spotshadows
+                                      (* (aref lightspace i) (v! frag-pos 1))
+                                      (aref fudge i)
+                                      i))))))
     (let* ((ldr  (tone-map-acesfilm final-color exposure))
            (luma (rgb->luma-bt601 ldr)))
       (v! ldr luma))))
@@ -158,7 +159,7 @@
                                color
                                ao)))
     (dotimes (i (scene-data-ndir scene))
-      (with-slots (colors positions lightspace) dirlights
+      (with-slots (colors positions lightspace fudge) dirlights
         (incf final-color
               (* (pbr-direct-lum (aref positions i) frag-pos cam-pos frag-norm
                                  roughness
@@ -166,9 +167,9 @@
                                  color
                                  specular
                                  (aref colors i))
-                 (shadow-factor dirshadows (* (aref lightspace i) (v! frag-pos 1)) .003 i)))))
+                 (shadow-factor dirshadows (* (aref lightspace i) (v! frag-pos 1)) (aref fudge i) i)))))
     (dotimes (i (scene-data-npoint scene))
-      (with-slots (colors positions linear quadratic far) pointlights
+      (with-slots (colors positions linear quadratic far fudge) pointlights
         (incf final-color
               (* (pbr-point-lum (aref positions i) frag-pos cam-pos
                                 frag-norm
@@ -181,10 +182,10 @@
                                 frag-pos
                                 (aref positions i)
                                 (aref far i)
-                                .03
+                                (aref fudge i)
                                 i)))))
     (dotimes (i (scene-data-nspot scene))
-      (with-slots (colors positions linear quadratic far cutoff outer-cutoff direction lightspace) spotlights
+      (with-slots (colors positions linear quadratic far cutoff outer-cutoff direction lightspace fudge) spotlights
         (incf final-color
               (* (pbr-spot-lum (aref positions i) frag-pos cam-pos
                                frag-norm
@@ -200,10 +201,9 @@
                                (aref quadratic i))
                  (shadow-factor spotshadows
                                 (* (aref lightspace i) (v! frag-pos 1))
-                                .003 i)))))
-    (let* ((ldr  (tone-map-acesfilm (+ ambient
-                                       final-color
-                                       ) exposure))
+                                (aref fudge i)
+                                i)))))
+    (let* ((ldr  (tone-map-acesfilm (+ ambient final-color) exposure))
            (luma (rgb->luma-bt601 ldr)))
       (v! ldr luma))
     ))

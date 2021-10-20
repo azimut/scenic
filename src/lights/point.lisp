@@ -25,7 +25,8 @@
   (colors      (:vec3 4) :accessor colors)
   (linear      (:float 4))
   (quadratic   (:float 4))
-  (far         (:float 4)))
+  (far         (:float 4))
+  (fudge       (:float 4)))
 
 (defmethod init-light ((obj point) idx)
   (log4cl:log-info "IDX: ~d" idx)
@@ -42,7 +43,7 @@
               (x pos) (y pos) (z pos) linear quadratic near far))))
 
 (defmethod upload ((obj point))
-  (with-slots (pos color ubo idx linear quadratic far) obj
+  (with-slots (pos color ubo idx linear quadratic far fudge) obj
     (with-gpu-array-as-c-array (c (ubo-data ubo))
       (let ((e (aref-c c 0)))
         (setf (aref-c (positions  e) idx) pos)
@@ -50,6 +51,7 @@
         (setf (aref-c (point-light-data-quadratic e) idx) quadratic)
         (setf (aref-c (point-light-data-linear    e) idx) linear)
         (setf (aref-c (point-light-data-far       e) idx) far)
+        (setf (aref-c (point-light-data-fudge     e) idx) fudge)
         (setf (shadow-projections-mats (aref-c (shadowspace e) idx))
               (projection-mats obj))))))
 
