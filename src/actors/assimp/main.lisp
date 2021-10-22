@@ -176,11 +176,11 @@
                      :for tc :across uvs
                      :for i  :from 0
                      :for a  := (aref-c c-arr i)
-                     :do (setf (assimp-mesh-pos a) v
-                               (assimp-mesh-normal a) n
-                               (assimp-mesh-tangent a) ta
-                               (assimp-mesh-bitangent a) bt
-                               (assimp-mesh-uv a) (v! (x tc) (y tc))))
+                     :do (setf (assimp-mesh-uv        a) (v! (x tc) (y tc))
+                               (assimp-mesh-pos       a) v
+                               (assimp-mesh-normal    a) n
+                               (assimp-mesh-tangent   a) ta
+                               (assimp-mesh-bitangent a) bt))
                v-arr)))
           (t
            (let ((v-arr (make-gpu-array NIL :dimensions n-vertex :element-type 'g-pnt)))
@@ -251,17 +251,22 @@
            (uvs        (elt texture-coords 0))
            (material   (aref (slot-value scene 'ai:materials) mat-index))
            (tex-file   (get-texture-path material :ai-texture-type-diffuse))
-           (norm-file  (get-texture-path material :ai-texture-type-height))
+           (norm-file  (or (get-texture-path material :ai-texture-type-height)
+                           (get-texture-path material :ai-texture-type-normals)))
            (spec-file  (get-texture-path material :ai-texture-type-specular))
+           (rough-file (get-texture-path material :ai-texture-type-shininess))
            (file-path  (uiop:pathname-directory-pathname file))
            (albedo     (if tex-file
                            (get-tex (merge-pathnames tex-file file-path))
                            (get-tex *default-albedo*)))
            (normal-map (if norm-file
-                           (get-tex (merge-pathnames norm-file file-path) :rgb8)
+                           (get-tex (merge-pathnames norm-file file-path) nil t :rgb8)
                            (get-tex *default-normal* nil t :rgb8)))
            (specular   (if spec-file
                            (get-tex (merge-pathnames spec-file file-path))
+                           (get-tex *default-specular* nil t :r8)))
+           (roughmap   (if rough-file
+                           (get-tex (merge-pathnames rough-file file-path))
                            (get-tex *default-specular* nil t :r8))))
       (assert (length= bitangents
                        tangents
@@ -271,6 +276,7 @@
       (list :buf (make-buffer-stream-cached file mesh-index
                                             vertices faces
                                             normals tangents bitangents uvs)
+            :roughmap roughmap
             :albedo albedo
             :normals normal-map
             :specular specular))))
@@ -292,14 +298,15 @@
            (uvs        (elt texture-coords 0))
            (material   (aref (slot-value scene 'ai:materials) mat-index))
            (tex-file   (get-texture-path material :ai-texture-type-diffuse))
-           (norm-file  (get-texture-path material :ai-texture-type-height))
+           (norm-file  (or (get-texture-path material :ai-texture-type-height)
+                           (get-texture-path material :ai-texture-type-normals)))
            (spec-file  (get-texture-path material :ai-texture-type-specular))
            (file-path  (uiop:pathname-directory-pathname file))
            (albedo     (if tex-file
                            (get-tex (merge-pathnames tex-file file-path))
                            (get-tex *default-albedo*)))
            (normal-map (if norm-file
-                           (get-tex (merge-pathnames norm-file file-path) :rgb8)
+                           (get-tex (merge-pathnames norm-file file-path) nil t :rgb8)
                            (get-tex *default-normal* nil t :rgb8)))
            (specular   (if spec-file
                            (get-tex (merge-pathnames spec-file file-path))
@@ -376,28 +383,29 @@
           :collect
           ;; NOTE: We delay the type check because there could be meshes
           ;; with and without bones on the same scene.
-             (let ((type (assimp-get-type mesh)))
-               (destructuring-bind (&key buf albedo normals specular)
-                   (assimp-mesh-to-stream mesh scene path type)
-                 (remove-nil-plist
-                  (list
-                   :type type
-                   :scene scene
-                   :buf buf
-                   :albedo albedo
-                   :normals normals
-                   :specular specular
-                   :bones (when (eq type :bones)
-                            (make-c-array ;; TODO: leaking
-                             (coerce
-                              ;; NOTE: init using the first transform in the animation, for those that only have 1
-                              ;; frame of "animation"
-                              (get-bones-tranforms scene :frame 0)
-                              'list) :element-type :mat4))
-                   :duration (when (eq type :bones)
-                               (if (not (emptyp (ai:animations scene)))
-                                   (coerce
-                                    (ai:duration
-                                     (aref (ai:animations scene) 0))
-                                    'single-float)
-                                   0f0)))))))))
+          (let ((type (assimp-get-type mesh)))
+            (destructuring-bind (&key buf albedo normals specular roughmap)
+                (assimp-mesh-to-stream mesh scene path type)
+              (remove-nil-plist
+               (list
+                :type type
+                :scene scene
+                :buf buf
+                :albedo albedo
+                :roughmap roughmap
+                :normals normals
+                :specular specular
+                :bones (when (eq type :bones)
+                         (make-c-array ;; TODO: leaking
+                          (coerce
+                           ;; NOTE: init using the first transform in the animation, for those that only have 1
+                           ;; frame of "animation"
+                           (get-bones-tranforms scene :frame 0)
+                           'list) :element-type :mat4))
+                :duration (when (eq type :bones)
+                            (if (not (emptyp (ai:animations scene)))
+                                (coerce
+                                 (ai:duration
+                                  (aref (ai:animations scene) 0))
+                                 'single-float)
+                                0f0)))))))))
