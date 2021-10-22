@@ -24,6 +24,7 @@
     (setf (slot-value obj 'loop-p) loop-p)
     (setf (slot-value obj 'index)  index)
     (setf (slot-value obj 'start)  start)
+    (setf (slot-value obj 'clock)  start)
     (setf (slot-value obj 'end)    end)
     (setf (slot-value obj 'inc)    inc)))
 

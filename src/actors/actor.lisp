@@ -41,7 +41,6 @@
    (scene-offset :reader scene-offset)
    (duration :initform 0f0 :initarg :duration)))
 
-
 (defmethod print-object ((obj actor) stream)
   (print-unreadable-object (obj stream :type T :identity T)
     (with-slots (pos) obj
