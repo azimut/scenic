@@ -79,6 +79,7 @@
    (:file "actors/text/billboard")
    (:file "actors/text/screen")
    (:file "ode/ode")
+   (:file "ode/derived")
    (:file "ode/scene")
    (:file "ode/raycast")
    (:file "ode/physic")

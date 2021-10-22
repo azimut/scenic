@@ -132,60 +132,6 @@
                           (mrot 7)
                           (mrot 8)))))
 
-(defun buffer-stream-to-ode (buf)
-  "creates a new trimesh geometry on ODE from a cepl buffer stream"
-  (destructuring-bind ((gv) gi) (buffer-stream-gpu-arrays buf)
-    (let ((gvl  (car (gpu-array-dimensions gv)))
-          (gil  (car (gpu-array-dimensions gi)))
-          (data (%ode:geom-tri-mesh-data-create)))
-      (cffi-c-ref:c-let ((vertices :float :alloc t :count (* 3 gvl))
-                         (indices  :unsigned-int :alloc t :count gil)
-                         (mesh-data %ode::tri-mesh-data-id :from data))
-        ;;
-        (with-gpu-array-as-c-array (ci gi)
-          (loop :for i :below gil
-                :do (setf (indices i) (aref-c ci i))))
-        ;;
-        (with-gpu-array-as-c-array (cv gv)
-          (loop :for i :below gvl
-                :for ovx :by 3
-                :for ovy := (+ ovx 1)
-                :for ovz := (+ ovx 2)
-                :do (setf (vertices ovx) (x (pos (aref-c cv i))))
-                    (setf (vertices ovy) (y (pos (aref-c cv i))))
-                    (setf (vertices ovz) (z (pos (aref-c cv i))))))
-        ;;
-        (%ode:geom-tri-mesh-data-build-single (mesh-data &)
-                                              (vertices &)
-                                              (* 3 (cffi:foreign-type-size :float))
-                                              gvl
-                                              (indices &)
-                                              gil
-                                              (* 3 (cffi:foreign-type-size :unsigned-int)))
-        (values (vertices &)
-                (indices &)
-                (mesh-data &)
-                (%ode:create-tri-mesh *space* (mesh-data &) 0 0 0))))))
-
-(defun physic-to-ode (physic)
-  (with-slots (buf
-               body geom mass
-               ode-vertices ode-indices data
-               pos density immovablep)
-      physic
-    (multiple-value-bind (v i d g) (buffer-stream-to-ode buf)
-      (setf ode-vertices v
-            ode-indices  i
-            data         d
-            geom         g))
-    (unless immovablep
-      (%ode:geom-set-data     geom data)
-      (%ode:mass-set-trimesh  mass density geom)
-      (%ode:geom-set-position geom 0f0 0f0 0f0)
-      (%ode:mass-translate    mass 0f0 0f0 0f0)
-      (%ode:geom-set-body geom body)
-      (%ode:body-set-mass body mass))))
-
 (defun getbody-linear-vel (body)
   (let ((linear-vel (%ode:body-get-linear-vel body)))
     (v! (cffi:mem-ref linear-vel :double 0)
