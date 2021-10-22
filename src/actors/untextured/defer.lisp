@@ -14,7 +14,6 @@
          (world-norm (* (m4:to-mat3 model-world) norm)))
     (values clip-pos tex world-norm (s~ world-pos :xyz))))
 
-
 (defun-g untextured-defered-frag ((uv :vec2) (frag-norm :vec3) (frag-pos :vec3)
                                   &uniform
                                   (color     :vec3)
@@ -31,7 +30,7 @@
   :vertex (untextured-defered-vert g-pnt)
   :fragment (untextured-defered-frag :vec2 :vec3 :vec3))
 
-(defmethod paint ((scene scene) (actor untextured) (camera defered) time)
+(defmethod paint (scene (actor untextured) (camera defered) time)
   (with-slots (buf scale color material) actor
     (map-g #'untextured-defered-pipe buf
            :model-world (model->world actor)
@@ -42,15 +41,5 @@
            :material material
            :materials (materials-ubo *state*))))
 
-(defmethod paint ((scene scene-ibl) (actor untextured) (camera defered) time)
-  (with-slots (buf scale color material) actor
-    (map-g #'untextured-defered-pipe buf
-           :model-world (model->world actor)
-           :world-view (world->view camera)
-           :view-clip (projection camera)
-           :scale scale
-           :color color
-           :material material
-           :materials (materials-ubo *state*))))
 
 
