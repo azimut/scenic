@@ -8,13 +8,15 @@
    :buf (error "needs a BUF to convert it"))
   (:documentation "derives an object with a BUF slot into an ODE object"))
 
-(defmethod initialize-instance :after ((obj derived) &key buf body mass density immovablep space)
+(defmethod initialize-instance :after ((obj derived) &key buf body mass density immovablep space pos rot)
   (with-slots (ode-vertices ode-indices data geom) obj
     (multiple-value-bind (v i d g) (buffer-stream-to-ode buf space)
       (setf ode-vertices v
             ode-indices  i
             data         d
             geom         g))
+    (ode-update-pos obj pos)
+    (ode-update-rot obj rot)
     (unless immovablep
       (%ode:geom-set-data     geom data)
       (%ode:mass-set-trimesh  mass density geom)
@@ -24,39 +26,39 @@
       (%ode:body-set-mass     body mass))))
 
 (defun buffer-stream-to-ode (buf space)
-  "creates a new trimesh geometry on ODE from a cepl buffer stream"
   (destructuring-bind ((gv) gi) (buffer-stream-gpu-arrays buf)
     (let ((gvl  (car (gpu-array-dimensions gv)))
           (gil  (car (gpu-array-dimensions gi)))
           (data (%ode:geom-tri-mesh-data-create)))
-      (cffi-c-ref:c-let ((vertices :float :alloc t :count (* 3 gvl))
-                         (indices  :unsigned-int :alloc t :count gil)
-                         (mesh-data %ode::tri-mesh-data-id :from data))
-        ;;
+
+      (cffi-c-ref:c-let ((vertices :float        :alloc t :count (* 3 gvl))
+                         (indices  :unsigned-int :alloc t :count gil))
+
         (with-gpu-array-as-c-array (ci gi)
           (loop :for i :below gil
                 :do (setf (indices i) (aref-c ci i))))
-        ;;
+
         (with-gpu-array-as-c-array (cv gv)
           (loop :for i :below gvl
                 :for ovx :by 3
                 :for ovy := (+ ovx 1)
                 :for ovz := (+ ovx 2)
-                :do (setf (vertices ovx) (x (pos (aref-c cv i))))
+                :do (setf (vertices ovx) (z (pos (aref-c cv i))))
                     (setf (vertices ovy) (y (pos (aref-c cv i))))
-                    (setf (vertices ovz) (z (pos (aref-c cv i))))))
-        ;;
-        (%ode:geom-tri-mesh-data-build-single (mesh-data &)
-                                              (vertices &)
-                                              (* 3 (cffi:foreign-type-size :float))
-                                              gvl
-                                              (indices &)
-                                              gil
-                                              (* 3 (cffi:foreign-type-size :unsigned-int)))
+                    (setf (vertices ovz) (x (pos (aref-c cv i))))))
+
+        (%ode:geom-tri-mesh-data-build-single
+         data
+         (vertices &)     (* 3 (cffi:foreign-type-size :float)) gvl
+         (indices  &) gil (* 3 (cffi:foreign-type-size :unsigned-int)))
+
         (values (vertices &)
                 (indices &)
-                (mesh-data &)
-                (%ode:create-tri-mesh space (mesh-data &) 0 0 0))))))
+                data
+                (%ode:create-tri-mesh space data
+                                      (cffi:null-pointer)
+                                      (cffi:null-pointer)
+                                      (cffi:null-pointer)))))))
 
 (defmethod free :after ((object derived))
   (with-slots (data ode-vertices ode-indices) object
