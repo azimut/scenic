@@ -52,17 +52,17 @@
 
 (block gg
   (cffi:defcallback near-callback :void ((data :pointer)
-                                         (o1 %ode:geom-id)
-                                         (o2 %ode:geom-id))
+                                         (g1 %ode:geom-id)
+                                         (g2 %ode:geom-id))
     (declare (ignore data))
-    (let ((b1 (%ode:geom-get-body o1))
-          (b2 (%ode:geom-get-body o2)))
+    (let ((b1 (%ode:geom-get-body g1))
+          (b2 (%ode:geom-get-body g2)))
       (when (and (not (cffi:null-pointer-p b1))
                  (not (cffi:null-pointer-p b2))
                  (plusp (%ode:are-connected-excluding b1 b2 4 ;;%ode:+joint-type-contact+
                                                       )))
         (return-from gg))
-      (cffi-c-ref:c-with ((contact %ode:contact :alloc t :count 5))
+      (cffi-c-ref:c-with ((contact %ode:contact :clear t :count 5))
         (dotimes (i 5)
           (setf (contact i :surface :mode) (logior %ode:+contact-bounce+
                                                    %ode:+contact-slip1+
@@ -82,16 +82,15 @@
                 (contact i :surface :bounce-vel) .1f0
                 ;; constraint force mixing parameter
                 (contact i :surface :soft-cfm) .01f0))
-        (let ((numc (%ode:collide o1 o2 10
+        (let ((numc (%ode:collide g1 g2 5
                                   (contact :geom &)
                                   (cffi:foreign-type-size '%ode:contact))))
           (when (plusp numc)
             (when (and b1 b2))
             (dotimes (i numc)
-              (%ode:joint-attach (%ode:joint-create-contact *world*
-                                                            *contactgroup*
-                                                            (contact i))
-                                 b1 b2)))))))
+              (%ode:joint-attach
+               (%ode:joint-create-contact *world* *contactgroup* (contact i))
+               b1 b2)))))))
 
   (defmethod update :after ((obj ode-space) dt)
     (with-slots (space stepper) obj
