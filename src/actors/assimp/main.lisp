@@ -377,6 +377,7 @@
          (scene  (assimp-safe-import-into-lisp path))
          (meshes (ai:meshes scene)))
     (loop :for mesh :across meshes
+          :for node :across (ai:children (ai:root-node scene))
           ;; NOTE: Drop meshes with not UVs, afaik they are placeholders
           ;;       and can ruin the load or rendering
           ;;:when (not (emptyp (ai:texture-coords mesh)))
@@ -388,6 +389,7 @@
                 (assimp-mesh-to-stream mesh scene path type)
               (remove-nil-plist
                (list
+                :name (ai:name node)
                 :type type
                 :scene scene
                 :buf buf

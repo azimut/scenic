@@ -24,13 +24,15 @@
   (:documentation "base object, with tangents"))
 
 (defclass assimp-thing (actor)
-  ((albedo   :initarg :albedo)
+  ((name     :initarg :name :reader name)
+   (albedo   :initarg :albedo)
    (normals  :initarg :normals)
    (specular :initarg :specular)
    (scene    :initarg :scene)))
 
 (defclass assimp-thing-with-bones (actor)
-  ((albedo   :initarg :albedo)
+  ((name     :initarg :name :reader name)
+   (albedo   :initarg :albedo)
    (normals  :initarg :normals)
    (specular :initarg :specular)
    (scene    :initarg :scene)
@@ -45,6 +47,20 @@
   (print-unreadable-object (obj stream :type T :identity T)
     (with-slots (pos) obj
       (format stream "(~a ~a ~a)" (x pos) (y pos) (z pos)))))
+
+(defmethod print-object ((obj assimp-thing) stream)
+  (print-unreadable-object (obj stream :type T :identity T)
+    (with-slots (pos name) obj
+      (format stream " (~a ~a ~a) ~s"
+              (x pos) (y pos) (z pos)
+              name))))
+
+(defmethod print-object ((obj assimp-thing-with-bones) stream)
+  (print-unreadable-object (obj stream :type T :identity T)
+    (with-slots (pos name) obj
+      (format stream " (~a ~a ~a) ~s"
+              (x pos) (y pos) (z pos)
+              name))))
 
 (defmethod specular  ((obj actor)) (specular  (nth (material obj) (materials *state*))))
 (defmethod metallic  ((obj actor)) (metallic  (nth (material obj) (materials *state*))))
