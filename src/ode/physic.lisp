@@ -29,6 +29,11 @@
     (alexandria:removef *body-to-actor* body
                         :key #'car :test #'sb-sys:sap=)))
 
+(defmethod initialize-instance :around ((obj physic) &key pos rot)
+  (call-next-method)
+  (ode-update-pos obj pos)
+  (ode-update-rot obj rot))
+
 (defmethod initialize-instance :after ((obj physic) &key)
   (push (list (slot-value obj 'body) obj) *body-to-actor*))
 

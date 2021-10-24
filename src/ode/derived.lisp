@@ -8,15 +8,13 @@
    :buf (error "needs a BUF to convert it"))
   (:documentation "derives an object with a BUF slot into an ODE object"))
 
-(defmethod initialize-instance :after ((obj derived) &key buf body mass density immovablep space pos rot)
+(defmethod initialize-instance :after ((obj derived) &key buf body mass density immovablep space)
   (with-slots (ode-vertices ode-indices data geom) obj
     (multiple-value-bind (v i d g) (buffer-stream-to-ode buf space)
       (setf ode-vertices v
             ode-indices  i
             data         d
             geom         g))
-    (ode-update-pos obj pos)
-    (ode-update-rot obj rot)
     (unless immovablep
       (%ode:geom-set-data     geom data)
       (%ode:mass-set-trimesh  mass density geom)
@@ -43,9 +41,9 @@
                 :for ovx :by 3
                 :for ovy := (+ ovx 1)
                 :for ovz := (+ ovx 2)
-                :do (setf (vertices ovx) (z (pos (aref-c cv i))))
+                :do (setf (vertices ovx) (x (pos (aref-c cv i))))
                     (setf (vertices ovy) (y (pos (aref-c cv i))))
-                    (setf (vertices ovz) (x (pos (aref-c cv i))))))
+                    (setf (vertices ovz) (z (pos (aref-c cv i))))))
 
         (%ode:geom-tri-mesh-data-build-single
          data

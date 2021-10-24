@@ -8,9 +8,4 @@
    :height 1.0f0))
 
 (defmethod initialize-instance :before ((obj physic-newcyl) &key radius height)
-  (with-slots (buf) obj
-    (setf buf (cylinder radius height))))
-
-(defmethod initialize-instance :after ((obj physic-newcyl) &key pos rot)
-  (ode-update-pos obj pos)
-  (ode-update-rot obj rot))
+  (setf (slot-value obj 'buf) (cylinder radius height)))

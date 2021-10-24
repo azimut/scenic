@@ -1,19 +1,20 @@
 (in-package #:scenic)
 
 (defclass physic-box (physic)
-  ((x :initform 1f0 :initarg :x)
-   (y :initform 1f0 :initarg :y)
-   (z :initform 1f0 :initarg :z)))
+  ((x :initarg :x)
+   (y :initarg :y)
+   (z :initarg :z))
+  (:default-initargs
+   :x 1f0 :y 1f0 :z 1f0))
 
-(defmethod initialize-instance :after ((obj physic-box) &key space)
-  (with-slots (mass body geom density immovablep x y z pos rot) obj
+(defmethod initialize-instance :after ((obj physic-box) &key space x y z body mass density immovablep buf)
+  (unless buf
+    (setf (slot-value obj 'buf) (box x y z)))
+  (with-slots (geom) obj
     (setf geom (%ode:create-box space x y z))
     (unless immovablep
-      (cffi-c-ref:c-let ((m %ode:mass :from mass))
-        (%ode:mass-set-box (m &) density x y z)
-        (%ode:body-set-mass body (m &))
-        (%ode:geom-set-body geom body)))
-    (ode-update-pos obj pos)
-    (ode-update-rot obj rot)))
+      (%ode:mass-set-box  mass density x y z)
+      (%ode:body-set-mass body mass)
+      (%ode:geom-set-body geom body))))
 
 
