@@ -35,9 +35,16 @@
 ;; - aiProcess_SortByPType
 ;; - aiProcess_FindDegenerates
 ;; - aiProcess_FindInvalidData
-(defvar *processing-flags* '(:ai-process-triangulate
-                             :ai-process-flip-u-vs
-                             :ai-process-calc-tangent-space))
+(defparameter *processing-flags* '(:ai-process-triangulate
+                                   :ai-process-flip-u-vs
+                                   ;;:ai-process-preset-target-realtime-max-quality
+                                   ;;:ai-process-calc-tangent-space
+                                   ))
+
+#+nil
+(defparameter *processing-flags* '(:ai-process-triangulate
+                                   :ai-process-preset-target-realtime-max-quality
+                                   :ai-process-calc-tangent-space))
 
 (defmethod initialize-instance :after ((obj assimp-thing-with-bones) &key scene)
   (with-slots (scene-offset bones-unique bones-transforms) obj
@@ -50,7 +57,7 @@
 
 ;; NOTE: see how assimp-mesh structure is similar to a "g-pnt + tb-data" one
 (defstruct-g assimp-mesh
-  (pos       :vec3)
+  (pos       :vec3 :accessor pos)
   (normal    :vec3)
   (uv        :vec2)
   (tangent   :vec3)
@@ -153,7 +160,7 @@
                      :for i  :from 0
                      :for a  := (aref-c c-arr i)
                      :do
-                        (setf (assimp-mesh-pos a) v
+                        (setf (pos a) v
                               (assimp-mesh-normal a) n
                               (assimp-mesh-tangent a) ta
                               (assimp-mesh-bitangent a) bt
@@ -177,7 +184,7 @@
                      :for i  :from 0
                      :for a  := (aref-c c-arr i)
                      :do (setf (assimp-mesh-uv        a) (v! (x tc) (y tc))
-                               (assimp-mesh-pos       a) v
+                               (pos                   a) v
                                (assimp-mesh-normal    a) n
                                (assimp-mesh-tangent   a) ta
                                (assimp-mesh-bitangent a) bt))
@@ -190,7 +197,7 @@
                      :for tc :across uvs
                      :for i  :from 0
                      :for a  := (aref-c c-arr i)
-                     :do (setf (assimp-mesh-pos a) v
+                     :do (setf (pos a) v
                                (assimp-mesh-normal a) n
                                (assimp-mesh-uv a) (v! (x tc) (y tc))))
                v-arr))))))
