@@ -22,8 +22,9 @@ jobs:
       - uses: lukka/run-vcpkg@v7
         with:
           vcpkgGitCommitId: caea17de9196f8bd343efb496b1820e7438d1f83
-          runVcpkgFormatString: '[`install`, `--triplet`, `$[env.VCPKG_DEFAULT_TRIPLET]`, `mesa`, `assimp`, `sdl2`, `zlib`]'
-          runVcpkgInstall: true
+          # runVcpkgFormatString: '[`install`, `--triplet`, `$[env.VCPKG_DEFAULT_TRIPLET]`, `mesa`, `assimp`, `sdl2`, `zlib`]'
+          # runVcpkgInstall: true
+          vcpkgArguments: 'mesa assimp sdl2 zlib'
       - run: find vcpkg
       #- run: ls -R vcpkg || true
       #- run: ls -R build || true
