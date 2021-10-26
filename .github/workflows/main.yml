@@ -1,9 +1,10 @@
-name: Build scenic
+name: Linux Build
 
 on: [push]
 
 jobs:
   build:
+    if: ${{ false }} # disable for now
     runs-on: ubuntu-18.04
     steps:
 
