@@ -19,7 +19,7 @@ jobs:
       #     mkdir -pv ~/.cache/common-lisp
       #     mkdir -pv ~/AppData/Local/cache/common-lisp
 
-      - uses: lukka/run-vcpkg@7
+      - uses: lukka/run-vcpkg@v7
         with:
           vcpkgGitCommitId: caea17de9196f8bd343efb496b1820e7438d1f83
           runVcpkgFormatString: '[`install`, `--triplet`, `$[env.VCPKG_DEFAULT_TRIPLET]`, `mesa`, `assimp`, `sdl2`, `zlib`]'
