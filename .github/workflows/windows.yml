@@ -5,6 +5,8 @@ on: [push]
 jobs:
   build:
     runs-on: windows-latest
+    env:
+      VCPKG_DEFAULT_TRIPLET: x64-windows
     steps:
       - uses: actions/checkout@v2
       # - name: Setup
@@ -17,13 +19,12 @@ jobs:
       #     mkdir -pv ~/.cache/common-lisp
       #     mkdir -pv ~/AppData/Local/cache/common-lisp
 
-      - uses: lukka/run-vcpkg@v4.1
+      - uses: lukka/run-vcpkg@7
         with:
-          vcpkgGitCommitId: 6185aa76504a5025f36754324abf307cc776f3da
-          vcpkgTriplet: x64-windows
-          vcpkgArguments: 'mesa assimp sdl2 zlib'
+          vcpkgGitCommitId: caea17de9196f8bd343efb496b1820e7438d1f83
+          runVcpkgFormatString: '[`install`, `--triplet`, `$[env.VCPKG_DEFAULT_TRIPLET]`, `mesa`, `assimp`, `sdl2`, `zlib`]'
           runVcpkgInstall: true
-      - run: find
+      - run: find vcpkg
       #- run: ls -R vcpkg || true
       #- run: ls -R build || true
       # - name: Download SDL 2.0.3
