@@ -1,0 +1,10 @@
+{
+  "name": "example",
+  "version-string": "0.0.1",
+  "dependencies": [
+      "mesa",
+      "assimp",
+      "sdl2",
+      "zlib"
+  ]
+}
