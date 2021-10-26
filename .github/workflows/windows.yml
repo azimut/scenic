@@ -18,7 +18,7 @@ jobs:
       #     mkdir -pv ~/quicklisp
       #     mkdir -pv ~/.cache/common-lisp
       #     mkdir -pv ~/AppData/Local/cache/common-lisp
-
+      - run: choco install llvm
       - uses: lukka/run-vcpkg@v10
         with:
           vcpkgGitCommitId: 5568f110b509a9fd90711978a7cb76bae75bb092
