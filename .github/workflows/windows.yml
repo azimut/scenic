@@ -4,10 +4,11 @@ on: [push]
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2016
     env:
       VCPKG_DEFAULT_TRIPLET: x64-windows
-      VCPKG_CONCURRENCY: 1 # llvm!
+      VCPKG_CONCURRENCY: 1
+      VCPKG_MAX_CONCURRENCY: 1
     steps:
       - uses: actions/checkout@v2
       # - name: Setup
