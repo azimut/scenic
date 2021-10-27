@@ -29,9 +29,9 @@ jobs:
           #vcpkgArguments: 'mesa assimp sdl2 zlib'
       - run: df -h
         if: ${{ failure() }}
-      - name: Setup tmate session
+      - name: Setup upterm session
         if: ${{ failure() }}
-        uses: mxschmitt/action-tmate@v3
+        uses: lhotari/action-upterm@v1
       # - run: find vcpkg
       # #- run: ls -R vcpkg || true
       # #- run: ls -R build || true
