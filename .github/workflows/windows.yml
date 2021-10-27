@@ -22,6 +22,7 @@ jobs:
       #     mkdir -pv ~/quicklisp
       #     mkdir -pv ~/.cache/common-lisp
       #     mkdir -pv ~/AppData/Local/cache/common-lisp
+      - run: choco install git
       - uses: lukka/run-vcpkg@v10
         with:
           vcpkgGitCommitId: 75b6191dffe3043d99eed1a60ce0c612125ff39c
