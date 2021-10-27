@@ -23,6 +23,7 @@ jobs:
       - run: df -h
       - uses: lukka/run-vcpkg@v10
         with:
+          vcpkgGitCommitId: 75b6191dffe3043d99eed1a60ce0c612125ff39c
           runVcpkgInstall: true
           #vcpkgArguments: 'mesa assimp sdl2 zlib'
       - run: df -h
