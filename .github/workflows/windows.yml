@@ -21,6 +21,8 @@ jobs:
       #     mkdir -pv ~/.cache/common-lisp
       #     mkdir -pv ~/AppData/Local/cache/common-lisp
       - run: df -h
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
       - uses: lukka/run-vcpkg@v10
         with:
           vcpkgGitCommitId: 5568f110b509a9fd90711978a7cb76bae75bb092
@@ -29,9 +31,6 @@ jobs:
           #vcpkgArguments: 'mesa assimp sdl2 zlib'
       - run: df -h
         if: ${{ failure() }}
-      - name: Setup upterm session
-        if: ${{ failure() }}
-        uses: lhotari/action-upterm@v1
       # - run: find vcpkg
       # #- run: ls -R vcpkg || true
       # #- run: ls -R build || true
