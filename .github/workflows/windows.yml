@@ -20,14 +20,14 @@ jobs:
       #     mkdir -pv ~/quicklisp
       #     mkdir -pv ~/.cache/common-lisp
       #     mkdir -pv ~/AppData/Local/cache/common-lisp
-      - runs: df -h
+      - run: df -h
       - uses: lukka/run-vcpkg@v10
         with:
           vcpkgGitCommitId: 5568f110b509a9fd90711978a7cb76bae75bb092
           # runVcpkgFormatString: '[`install`, `--triplet`, `$[env.VCPKG_DEFAULT_TRIPLET]`, `mesa`, `assimp`, `sdl2`, `zlib`]'
           runVcpkgInstall: true
           #vcpkgArguments: 'mesa assimp sdl2 zlib'
-      - runs: df -h
+      - run: df -h
         if: ${{ failure() }}
       - name: Setup tmate session
         if: ${{ failure() }}
