@@ -25,7 +25,7 @@ jobs:
       - run: choco install git
       - uses: lukka/run-vcpkg@v10
         with:
-          vcpkgGitUrl: https://github.com/PhoebeHui/vcpkg-tool.git#dev/Phoebe/fix_16216
+          vcpkgGitUrl: https://github.com/PhoebeHui/vcpkg-tool.git@dev/Phoebe/fix_16216
           vcpkgGitCommitId: cd1a4ca245b62d08f5ed69f0695c2b3423be7988
           #vcpkgGitCommitId: 75b6191dffe3043d99eed1a60ce0c612125ff39c
           runVcpkgInstall: true
