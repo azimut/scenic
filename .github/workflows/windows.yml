@@ -114,6 +114,6 @@ jobs:
         with:
           name: scenic-windows
           path: |
-            scenic
+            bin
           if-no-files-found: error
 
