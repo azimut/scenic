@@ -4,7 +4,7 @@ on: [push]
 
 jobs:
   build:
-    runs-on: windows-2016
+    runs-on: windows-2019
     env:
       VCPKG_CONCURRENCY: 1
       VCPKG_MAX_CONCURRENCY: 1
