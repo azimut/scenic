@@ -8,10 +8,10 @@ jobs:
     env:
       VCPKG_DEFAULT_TRIPLET: x64-windows
       VCPKG_CONCURRENCY: 1
-      VCPKG_FORCE_SYSTEM_BINARIES: 1
+#      VCPKG_FORCE_SYSTEM_BINARIES: 1
       VCPKG_MAX_CONCURRENCY: 1
       VCPKG_FEATURE_FLAGS: fastbuild
-      VCPKG_KEEP_ENV_VARS: PATH
+#      VCPKG_KEEP_ENV_VARS: PATH
     steps:
       - uses: actions/checkout@v2
       # - name: Setup
@@ -23,12 +23,17 @@ jobs:
       #     mkdir -pv ~/quicklisp
       #     mkdir -pv ~/.cache/common-lisp
       #     mkdir -pv ~/AppData/Local/cache/common-lisp
-      - run: choco install git
-      - uses: lukka/run-vcpkg@v10
+      - uses: lukka/run-vcpkg@v2
+        id: runvcpkg
         with:
-          #vcpkgGitCommitId: 75b6191dffe3043d99eed1a60ce0c612125ff39c
-          runVcpkgInstall: true
-          #vcpkgArguments: 'mesa assimp sdl2 zlib'
+          vcpkgGitCommitId: 2f7a104d4d6f1f3790db929f85a4086aa6973d7f
+          vcpkgTriplet: x64-windows
+          vcpkgArguments: 'assimp'
+      # - uses: lukka/run-vcpkg@v10
+      #   with:
+      #     #vcpkgGitCommitId: 75b6191dffe3043d99eed1a60ce0c612125ff39c
+      #     runVcpkgInstall: true
+      #     #vcpkgArguments: 'mesa assimp sdl2 zlib'
       # - run: find vcpkg
       # #- run: ls -R vcpkg || true
       # #- run: ls -R build || true
