@@ -26,7 +26,7 @@ jobs:
       - uses: lukka/run-vcpkg@v7
         id: runvcpkg
         with:
-          vcpkgGitCommitId: 2f7a104d4d6f1f3790db929f85a4086aa6973d7f
+          vcpkgGitCommitId: 0bf3923f9fab4001c00f0f429682a0853b5749e0
           vcpkgTriplet: x64-windows
           vcpkgArguments: 'zlib assimp sdl2 mesa'
       # - uses: lukka/run-vcpkg@v10
