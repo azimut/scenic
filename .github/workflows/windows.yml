@@ -29,38 +29,27 @@ jobs:
           vcpkgArguments: 'zlib assimp sdl2'
       - run: cp -v vcpkg/installed/x64-windows/bin/*.dll C:/windows/system32/
 
-      # - name: Get Current Month
-      #   id: current-month
-      #   run: |
-      #     echo "::set-output name=value::$(date -u "+%Y-%m")"
-      # - name: Cache SBCL Setup
-      #   id: cache
-      #   uses: actions/cache@v2
-      #   env:
-      #     cache-name: cache-sbcl-compressed
-      #   with:
-      #     path: |
-      #       ~/Downloads/
-      #       ~/quicklisp
-      #       ~/.cache/common-lisp/
-      #       ~/sbcl
-      #       ~/AppData/Local/cache/common-lisp
-      #     key: "${{ steps.current-month.outputs.value }}-${{ env.cache-name }}-${{ runner.os }}"
-      # - name: Restore Path To Cached Files
-      #   run: |
-      #     echo $HOME/sbcl/bin >> $GITHUB_PATH
-      #   if: steps.cache.outputs.cache-hit == 'true'
-
-      # NOTE: not using vcpkg due LLVM build issues
-      # - name: Install MESA 21.3.0-rc2
-      #   run: |
-      #     cd $HOME/Downloads
-      #     mkdir mesa3d
-      #     cd mesa3d
-      #     wget https://github.com/pal1000/mesa-dist-win/releases/download/21.3.0-rc2/mesa3d-21.3.0-rc2-release-mingw.7z
-      #     7z x mesa3d-21.3.0-rc2-release-mingw.7z
-      #   #if: steps.cache.outputs.cache-hit != 'true'
-      # - run: cp -v $HOME/Downloads/mesa3d/x64/*.dll C:/windows/system32/
+      - name: Get Current Month
+        id: current-month
+        run: |
+          echo "::set-output name=value::$(date -u "+%Y-%m")"
+      - name: Cache SBCL Setup
+        id: cache
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-sbcl
+        with:
+          path: |
+            ~/Downloads/
+            ~/quicklisp
+            ~/.cache/common-lisp/
+            ~/sbcl
+            ~/AppData/Local/cache/common-lisp
+          key: "${{ steps.current-month.outputs.value }}-${{ env.cache-name }}-${{ runner.os }}"
+      - name: Restore Path To Cached Files
+        run: |
+          echo $HOME/sbcl/bin >> $GITHUB_PATH
+        if: steps.cache.outputs.cache-hit == 'true'
 
       - name: Install Bootstraping SBCL 1.4.14
         run: |
@@ -69,7 +58,7 @@ jobs:
           lessmsi x sbcl-1.4.14-x86-64-windows-binary.msi
           ls -R sbcl-1.4.14-x86-64-windows-binary
           mv "sbcl-1.4.14-x86-64-windows-binary/SourceDir/PFiles/Steel Bank Common Lisp/1.4.14" sbcl_bin
-        #if: steps.cache.outputs.cache-hit != 'true'
+        if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Install SBCL 2.1.9
         run: |
@@ -83,7 +72,7 @@ jobs:
           unset SBCL_HOME
           INSTALL_ROOT=~/sbcl ./install.sh
         shell: bash
-        #if: steps.cache.outputs.cache-hit != 'true'
+        if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Install quicklisp
         run: |
@@ -99,19 +88,20 @@ jobs:
                --eval '(ql-dist:install-dist "http://bodge.borodust.org/dist/org.borodust.bodge.txt" :replace t :prompt nil)' \
                --quit
         shell: bash
-        #if: steps.cache.outputs.cache-hit != 'true'
+        if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Get LISP deps
         run: |
           cd ~/quicklisp/local-projects/
           (test -d rocketman) || git clone --depth=1 https://github.com/azimut/rocketman
           (test -d rocketman) && ( cd rocketman; git pull https://github.com/azimut/rocketman)
-          (test -d cepl) || git clone --depth=1 https://github.com/azimut/cepl
-          (test -d cepl)  && ( cd cepl ; git pull https://github.com/azimut/cepl)
-          (test -d glsl-spec)  || git clone --depth=1 https://github.com/azimut/glsl-spec
-          (test -d glsl-spec)  && ( cd glsl-spec ; git pull https://github.com/azimut/glsl-spec)
-          (test -d cepl.fond)  || git clone --depth=1 https://github.com/cbaggers/cepl.fond
-          (test -d cepl.fond)  && ( cd cepl.fond ; git pull https://github.com/cbaggers/cepl.fond)
+          (test -d cepl)      || git clone --depth=1 https://github.com/azimut/cepl
+          (test -d cepl)      && ( cd cepl ; git pull https://github.com/azimut/cepl)
+          (test -d glsl-spec) || git clone --depth=1 https://github.com/azimut/glsl-spec
+          (test -d glsl-spec) && ( cd glsl-spec ; git pull https://github.com/azimut/glsl-spec)
+          (test -d cepl.fond) || git clone --depth=1 https://github.com/cbaggers/cepl.fond
+          (test -d cepl.fond) && ( cd cepl.fond ; git pull https://github.com/cbaggers/cepl.fond)
+        shell: bash
 
       - name: Build Binary
         run: |
