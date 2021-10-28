@@ -23,7 +23,7 @@ jobs:
       #     mkdir -pv ~/quicklisp
       #     mkdir -pv ~/.cache/common-lisp
       #     mkdir -pv ~/AppData/Local/cache/common-lisp
-      - uses: lukka/run-vcpkg@v2
+      - uses: lukka/run-vcpkg@v7
         id: runvcpkg
         with:
           vcpkgGitCommitId: 2f7a104d4d6f1f3790db929f85a4086aa6973d7f
