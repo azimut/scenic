@@ -25,6 +25,7 @@ jobs:
       - uses: lukka/run-vcpkg@v10
         id: runvcpkg
         with:
+          runVcpkgFormatString: '[`install`, `--recurse`, `--x-install-root`, `$[env.VCPKG_INSTALLED_DIR]`, `--triplet`, `$[env.VCPKG_DEFAULT_TRIPLET]`]'
           vcpkgGitCommitId: 843e0ba0d8f9c9c572e45564263eedfc7745e74f
           runVcpkgInstall: true
 
