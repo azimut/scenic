@@ -66,8 +66,8 @@ jobs:
         run: |
           cd ~/Downloads
           wget http://prdownloads.sourceforge.net/sbcl/sbcl-1.4.14-x86-64-windows-binary.msi
-          lessmsi x sbcl-1.4.14-x86-64-windows-binary.msi $PWD/sbcl_ex
-          ls -R sbcl_ex
+          lessmsi x sbcl-1.4.14-x86-64-windows-binary.msi
+          ls -R sbcl-1.4.14-x86-64-windows-binary
           mv "sbcl_ex/SourceDir/PFiles/Steel Bank Common Lisp/1.4.14" sbcl_bin
           export SBCL_HOME="$PWD/sbcl_bin";
           export PATH="$PWD/sbcl_bin:${PATH}";
