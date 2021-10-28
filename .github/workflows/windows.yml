@@ -20,7 +20,7 @@ jobs:
           mkdir -p $HOME/AppData/Local/cache/common-lisp
         shell: bash
 
-      - run: choco install lessmsi make 7zip
+      - run: choco install lessmsi make 7zip wget
       - uses: lukka/run-vcpkg@v7
         id: runvcpkg
         with:
@@ -29,27 +29,27 @@ jobs:
           vcpkgArguments: 'zlib assimp sdl2'
       - run: cp vcpkg/installed/x64-windows/bin/*.dll C:/windows/system32/
 
-      - name: Get Current Month
-        id: current-month
-        run: |
-          echo "::set-output name=value::$(date -u "+%Y-%m")"
-      - name: Cache SBCL Setup
-        id: cache
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-sbcl-compressed
-        with:
-          path: |
-            ~/Downloads/
-            ~/quicklisp
-            ~/.cache/common-lisp/
-            ~/sbcl
-            ~/AppData/Local/cache/common-lisp
-          key: "${{ steps.current-month.outputs.value }}-${{ env.cache-name }}-${{ runner.os }}"
-      - name: Restore Path To Cached Files
-        run: |
-          echo $HOME/sbcl/bin >> $GITHUB_PATH
-        if: steps.cache.outputs.cache-hit == 'true'
+      # - name: Get Current Month
+      #   id: current-month
+      #   run: |
+      #     echo "::set-output name=value::$(date -u "+%Y-%m")"
+      # - name: Cache SBCL Setup
+      #   id: cache
+      #   uses: actions/cache@v2
+      #   env:
+      #     cache-name: cache-sbcl-compressed
+      #   with:
+      #     path: |
+      #       ~/Downloads/
+      #       ~/quicklisp
+      #       ~/.cache/common-lisp/
+      #       ~/sbcl
+      #       ~/AppData/Local/cache/common-lisp
+      #     key: "${{ steps.current-month.outputs.value }}-${{ env.cache-name }}-${{ runner.os }}"
+      # - name: Restore Path To Cached Files
+      #   run: |
+      #     echo $HOME/sbcl/bin >> $GITHUB_PATH
+      #   if: steps.cache.outputs.cache-hit == 'true'
 
       # NOTE: not using vcpkg due LLVM build issues
       - name: Install MESA 21.3.0-rc2
@@ -58,7 +58,7 @@ jobs:
           mkdir mesa3d
           wget https://github.com/pal1000/mesa-dist-win/releases/download/21.3.0-rc2/mesa3d-21.3.0-rc2-release-mingw.7z
           7z x mesa3d-21.3.0-rc2-release-mingw.7z
-        if: steps.cache.outputs.cache-hit != 'true'
+        #if: steps.cache.outputs.cache-hit != 'true'
       - run: cp -v $HOME/mesa3d/x64/opengl32.dll C:/windows/system32/
 
       - name: Install Bootstraping SBCL 1.4.14
@@ -69,7 +69,7 @@ jobs:
           mv "sbcl_ex/SourceDir/PFiles/Steel Bank Common Lisp/1.4.14" sbcl_bin
           export SBCL_HOME="`pwd`/sbcl_bin";
           export PATH="`pwd`/sbcl_bin:${PATH}";
-        if: steps.cache.outputs.cache-hit != 'true'
+        #if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Install SBCL 2.1.9
         run: |
@@ -82,7 +82,7 @@ jobs:
           INSTALL_ROOT=~/sbcl ./install.sh
           export SBCL_HOME="$HOME/sbcl/lib/sbcl"
           export PATH="$HOME/sbcl/bin:${PATH}"
-        if: steps.cache.outputs.cache-hit != 'true'
+        #if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Install quicklisp
         run: |
@@ -96,7 +96,7 @@ jobs:
                --eval '(ql:update-all-dists)' \
                --eval '(ql-dist:install-dist "http://bodge.borodust.org/dist/org.borodust.bodge.txt" :replace t :prompt nil)' \
                --quit
-        if: steps.cache.outputs.cache-hit != 'true'
+        #if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Get LISP deps
         run: |
