@@ -34,7 +34,7 @@ jobs:
       #     #vcpkgGitCommitId: 75b6191dffe3043d99eed1a60ce0c612125ff39c
       #     runVcpkgInstall: true
       #     #vcpkgArguments: 'mesa assimp sdl2 zlib'
-      - run: find
+      - run: ls -R vcpkg
       # #- run: ls -R vcpkg || true
       # #- run: ls -R build || true
       # - name: Download Bootstraping SBCL 1.4.14
