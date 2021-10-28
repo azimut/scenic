@@ -68,28 +68,27 @@ jobs:
           wget http://prdownloads.sourceforge.net/sbcl/sbcl-1.4.14-x86-64-windows-binary.msi
           lessmsi x sbcl-1.4.14-x86-64-windows-binary.msi
           ls -R sbcl-1.4.14-x86-64-windows-binary
-          mv "sbcl_ex/SourceDir/PFiles/Steel Bank Common Lisp/1.4.14" sbcl_bin
-          export SBCL_HOME="$PWD/sbcl_bin";
-          export PATH="$PWD/sbcl_bin:${PATH}";
+          mv "sbcl-1.4.14-x86-64-windows-binary/SourceDir/PFiles/Steel Bank Common Lisp/1.4.14" sbcl_bin
         #if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Install SBCL 2.1.9
         run: |
           cd ~/Downloads
+          export SBCL_HOME="$PWD/sbcl_bin";
+          export PATH="$PWD/sbcl_bin:${PATH}";
           wget http://downloads.sourceforge.net/project/sbcl/sbcl/2.1.9/sbcl-2.1.9-source.tar.bz2
           tar xjf sbcl-2.1.9-source.tar.bz2
           cd sbcl-2.1.9
           sh make.sh --with-sb-core-compression
           unset SBCL_HOME
           INSTALL_ROOT=~/sbcl ./install.sh
-          export SBCL_HOME="$HOME/sbcl/lib/sbcl"
-          export PATH="$HOME/sbcl/bin:${PATH}"
         #if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Install quicklisp
         run: |
-          cd ~/Downloads
+          export SBCL_HOME="$HOME/sbcl/lib/sbcl"
           export PATH="$HOME/sbcl/bin:${PATH}"
+          cd ~/Downloads
           wget https://beta.quicklisp.org/quicklisp.lisp
           sbcl --disable-debugger \
                --eval '(load "quicklisp.lisp")' \
