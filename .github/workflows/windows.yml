@@ -12,13 +12,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: choco install lessmsi make 7zip
-      - name: mkdir
-        run: |
-          mkdir -pv ~/Downloads
-          mkdir -pv ~/sbcl
-          mkdir -pv ~/quicklisp
-          mkdir -pv ~/.cache/common-lisp
-          mkdir -pv ~/AppData/Local/cache/common-lisp
+      # - name: mkdir
+      #   run: |
+      #     mkdir -pv ~/Downloads
+      #     mkdir -pv ~/sbcl
+      #     mkdir -pv ~/quicklisp
+      #     mkdir -pv ~/.cache/common-lisp
+      #     mkdir -pv ~/AppData/Local/cache/common-lisp
 
       - uses: lukka/run-vcpkg@v7
         id: runvcpkg
@@ -27,6 +27,12 @@ jobs:
           vcpkgTriplet: x64-windows
           vcpkgArguments: 'zlib assimp sdl2'
       - run: ls -R vcpkg
+
+      # NOTE: not using vcpkg due LLVM build issues
+      # - name: Install MESA 21.3.0-rc2
+      #   run: |
+      #     wget https://github.com/pal1000/mesa-dist-win/releases/download/21.3.0-rc2/mesa3d-21.3.0-rc2-release-mingw.7z
+      #     7z x mesa3d-21.3.0-rc2-release-mingw.7z
 
       # - name: Get Current Month
       #   id: current-month
