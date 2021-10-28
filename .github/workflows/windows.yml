@@ -28,13 +28,16 @@ jobs:
         with:
           vcpkgGitCommitId: 2f7a104d4d6f1f3790db929f85a4086aa6973d7f
           vcpkgTriplet: x64-windows
-          vcpkgArguments: 'assimp zlib'
+          vcpkgArguments: 'zlib'
       # - uses: lukka/run-vcpkg@v10
       #   with:
       #     #vcpkgGitCommitId: 75b6191dffe3043d99eed1a60ce0c612125ff39c
       #     runVcpkgInstall: true
       #     #vcpkgArguments: 'mesa assimp sdl2 zlib'
-      - run: find vcpkg -name '*.dll'
+      - run: |
+          pwd
+          find | grep dll
+          find
       # #- run: ls -R vcpkg || true
       # #- run: ls -R build || true
       # - name: Download Bootstraping SBCL 1.4.14
