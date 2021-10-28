@@ -40,7 +40,7 @@ jobs:
         id: cache
         uses: actions/cache@v2
         env:
-          cache-name: cache-sbcl
+          cache-name: cache-sbcl-assimp-fourth
         with:
           path: |
             ~/Downloads/
