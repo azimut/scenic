@@ -8,7 +8,8 @@
         "assimp"
     ],
     "overrides": [
-        { "name": "assimp", "version-string": "4.0.1-3" }
+        { "name": "assimp", "version-string": "4.0.1-3" },
+        { "name": "sdl2"  , "version-string": "2.0.8-3" }
   ]
 }
 
