@@ -4,14 +4,13 @@ on: [push]
 
 jobs:
   build:
-    runs-on: windows-2019
+    runs-on: windows-2016
     env:
       VCPKG_CONCURRENCY: 1
       VCPKG_MAX_CONCURRENCY: 1
       VCPKG_FEATURE_FLAGS: fastbuild
     steps:
       - uses: actions/checkout@v2
-      - run: choco install lessmsi make 7zip
       - name: mkdir
         run: |
           mkdir -p $HOME/Downloads
@@ -21,6 +20,7 @@ jobs:
           mkdir -p $HOME/AppData/Local/cache/common-lisp
         shell: bash
 
+      - run: choco install lessmsi make 7zip
       - uses: lukka/run-vcpkg@v7
         id: runvcpkg
         with:
@@ -28,6 +28,7 @@ jobs:
           vcpkgTriplet: x64-windows
           vcpkgArguments: 'zlib assimp sdl2'
       - run: cp vcpkg/installed/x64-windows/bin/*.dll C:/windows/system32/
+
       - name: Get Current Month
         id: current-month
         run: |
