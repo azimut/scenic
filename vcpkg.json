@@ -6,7 +6,7 @@
         "sdl2",
         "assimp"
     ],
-    "overrides" [
+    "overrides": [
         { "name": "assimp", "version-string": "4.1.0-3" }
   ]
 }
