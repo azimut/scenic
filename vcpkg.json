@@ -1,6 +1,7 @@
 {
     "name": "example",
     "version-string": "0.0.1",
+    "builtin-baseline": "843e0ba0d8f9c9c572e45564263eedfc7745e74f",
     "dependencies": [
         "zlib",
         "sdl2",
