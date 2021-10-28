@@ -82,6 +82,7 @@ jobs:
           sh make.sh --with-sb-core-compression
           unset SBCL_HOME
           INSTALL_ROOT=~/sbcl ./install.sh
+        shell: bash
         #if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Install quicklisp
@@ -97,6 +98,7 @@ jobs:
                --eval '(ql:update-all-dists)' \
                --eval '(ql-dist:install-dist "http://bodge.borodust.org/dist/org.borodust.bodge.txt" :replace t :prompt nil)' \
                --quit
+        shell: bash
         #if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Get LISP deps
@@ -116,6 +118,7 @@ jobs:
           export PATH="$HOME/sbcl/bin:${PATH}"
           cd bin/
           make scenic
+        shell: bash
 
       - uses: actions/upload-artifact@v2
         with:
