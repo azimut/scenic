@@ -56,10 +56,11 @@ jobs:
         run: |
           cd $HOME/Downloads
           mkdir mesa3d
+          cd mesa3d
           wget https://github.com/pal1000/mesa-dist-win/releases/download/21.3.0-rc2/mesa3d-21.3.0-rc2-release-mingw.7z
           7z x mesa3d-21.3.0-rc2-release-mingw.7z
         #if: steps.cache.outputs.cache-hit != 'true'
-      - run: cp -v $HOME/Downloads/mesa3d/x64/opengl32.dll C:/windows/system32/
+      - run: cp -v $HOME/Downloads/mesa3d/x64/*.dll C:/windows/system32/
 
       - name: Install Bootstraping SBCL 1.4.14
         run: |
