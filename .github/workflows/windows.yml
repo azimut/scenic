@@ -67,7 +67,8 @@ jobs:
           cd ~/Downloads
           wget -O sbcl.msi http://prdownloads.sourceforge.net/sbcl/sbcl-1.4.14-x86-64-windows-binary.msi
           lessmsi x sbcl.msi $(cygpath -w "`pwd`/sbcl_ex/")
-          mv "sbcl_ex/SourceDir/PFiles/Steel Bank Common Lisp/1.4.14" sbcl_bin
+          ls -R sbcl_ex
+          mv "sbcl_ex/PFiles/Steel Bank Common Lisp/1.4.14" sbcl_bin
           export SBCL_HOME="`pwd`/sbcl_bin";
           export PATH="`pwd`/sbcl_bin:${PATH}";
         #if: steps.cache.outputs.cache-hit != 'true'
