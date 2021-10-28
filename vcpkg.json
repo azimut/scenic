@@ -5,8 +5,8 @@
       "zlib",
       "sdl2",
       {
-          name: "assimp",
-          version: "4.1.0-3"
+          "name": "assimp",
+          "version": "4.1.0-3"
       }
   ]
 }
