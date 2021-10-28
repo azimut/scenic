@@ -28,6 +28,7 @@ jobs:
           vcpkgGitCommitId: 843e0ba0d8f9c9c572e45564263eedfc7745e74f
           runVcpkgInstall: true
 
+      - run: ls -R vcpkg
       - run: cp -v vcpkg/installed/x64-windows/bin/*.dll C:/windows/system32/
 
       - name: Get Current Month
