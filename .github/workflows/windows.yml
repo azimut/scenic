@@ -30,7 +30,7 @@ jobs:
           runVcpkgInstall: true
 
       - run: ls -R vcpkg
-      - run: cp -v vcpkg/installed/x64-windows/bin/*.dll C:/windows/system32/
+      - run: cp -v vcpkg/packages/*/bin/*.dll C:/windows/system32/
 
       - name: Get Current Month
         id: current-month
