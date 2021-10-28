@@ -14,11 +14,12 @@ jobs:
       - run: choco install lessmsi make 7zip
       - name: mkdir
         run: |
-          mkdir $HOME/Downloads || true
-          mkdir $HOME/sbcl || true
-          mkdir $HOME/quicklisp || true
-          mkdir $HOME/.cache/common-lisp || true
-          mkdir $HOME/AppData/Local/cache/common-lisp || true
+          mkdir -p $HOME/Downloads
+          mkdir -p $HOME/sbcl
+          mkdir -p $HOME/quicklisp
+          mkdir -p $HOME/.cache/common-lisp
+          mkdir -p $HOME/AppData/Local/cache/common-lisp
+        shell: bash
 
       - uses: lukka/run-vcpkg@v7
         id: runvcpkg
