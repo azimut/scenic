@@ -28,8 +28,6 @@ jobs:
           runVcpkgFormatString: '[`install`, `--recurse`, `--x-install-root`, `$[env.VCPKG_INSTALLED_DIR]`, `--triplet`, `$[env.VCPKG_DEFAULT_TRIPLET]`]'
           vcpkgGitCommitId: 843e0ba0d8f9c9c572e45564263eedfc7745e74f
           runVcpkgInstall: true
-
-      - run: ls -R vcpkg
       - run: cp -v vcpkg/packages/*/bin/*.dll C:/windows/system32/
 
       - name: Get Current Month
@@ -59,7 +57,6 @@ jobs:
           cd ~/Downloads
           wget http://prdownloads.sourceforge.net/sbcl/sbcl-1.4.14-x86-64-windows-binary.msi
           lessmsi x sbcl-1.4.14-x86-64-windows-binary.msi
-          ls -R sbcl-1.4.14-x86-64-windows-binary
           mv "sbcl-1.4.14-x86-64-windows-binary/SourceDir/PFiles/Steel Bank Common Lisp/1.4.14" sbcl_bin
         if: steps.cache.outputs.cache-hit != 'true'
 
