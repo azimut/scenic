@@ -1,7 +1,14 @@
 {
-  "name": "example",
-  "version-string": "0.0.1",
-  "dependencies": [
-      "mesa"
+    "name": "example",
+    "version-string": "0.0.1",
+    "builtin-baseline": "843e0ba0d8f9c9c572e45564263eedfc7745e74f",
+    "dependencies": [
+        "zlib",
+        "sdl2",
+        "assimp"
+    ],
+    "overrides": [
+        { "name": "assimp", "version-string": "4.0.1-3" },
+        { "name": "sdl2"  , "version-string": "2.0.7-4" }
   ]
 }

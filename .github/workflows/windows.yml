@@ -6,93 +6,114 @@ jobs:
   build:
     runs-on: windows-2016
     env:
-      VCPKG_DEFAULT_TRIPLET: x64-windows
       VCPKG_CONCURRENCY: 1
+      VCPKG_DEFAULT_TRIPLET: x64-windows
       VCPKG_MAX_CONCURRENCY: 1
+      VCPKG_FEATURE_FLAGS: fastbuild,versions
     steps:
       - uses: actions/checkout@v2
-      # - name: Setup
-      #   # 7zip cmake
-      #   run: |
-      #     choco install lessmsi make
-      #     mkdir -pv ~/Downloads
-      #     mkdir -pv ~/sbcl
-      #     mkdir -pv ~/quicklisp
-      #     mkdir -pv ~/.cache/common-lisp
-      #     mkdir -pv ~/AppData/Local/cache/common-lisp
-      - run: df -h
+      - name: mkdir
+        run: |
+          mkdir -p $HOME/Downloads
+          mkdir -p $HOME/sbcl
+          mkdir -p $HOME/quicklisp
+          mkdir -p $HOME/.cache/common-lisp
+          mkdir -p $HOME/AppData/Local/cache/common-lisp
+        shell: bash
+
+      - run: choco install lessmsi make 7zip wget
       - uses: lukka/run-vcpkg@v10
+        id: runvcpkg
         with:
-          vcpkgGitCommitId: 75b6191dffe3043d99eed1a60ce0c612125ff39c
+          runVcpkgFormatString: '[`install`, `--recurse`, `--x-install-root`, `$[env.VCPKG_INSTALLED_DIR]`, `--triplet`, `$[env.VCPKG_DEFAULT_TRIPLET]`]'
+          vcpkgGitCommitId: 843e0ba0d8f9c9c572e45564263eedfc7745e74f
           runVcpkgInstall: true
-          #vcpkgArguments: 'mesa assimp sdl2 zlib'
-      - run: df -h
-        if: ${{ failure() }}
-      - name: Setup tmate session
-        if: ${{ failure() }}
-        uses: mxschmitt/action-tmate@v3
-      # - run: find vcpkg
-      # #- run: ls -R vcpkg || true
-      # #- run: ls -R build || true
-      # - name: Download Bootstraping SBCL 1.4.14
-      #   run: |
-      #     cd ~/Downloads
-      #     wget -O sbcl.msi http://prdownloads.sourceforge.net/sbcl/sbcl-1.4.14-x86-64-windows-binary.msi
-      #     lessmsi x sbcl.msi $(cygpath -w "`pwd`/sbcl_ex/")
-      #     mv "sbcl_ex/SourceDir/PFiles/Steel Bank Common Lisp/1.4.14" sbcl_bin
-      #     export SBCL_HOME="`pwd`/sbcl_bin";
-      #     export PATH="`pwd`/sbcl_bin:${PATH}";
-      #   #if: steps.cache.outputs.cache-hit != 'true'
+      - run: cp -v vcpkg/packages/*/bin/*.dll C:/windows/system32/
 
-      # - name: Install SBCL 2.1.9
-      #   run: |
-      #     cd ~/Downloads
-      #     wget http://downloads.sourceforge.net/project/sbcl/sbcl/2.1.9/sbcl-2.1.9-source.tar.bz2
-      #     tar xjf sbcl-2.1.9-source.tar.bz2
-      #     cd sbcl-2.1.9
-      #     sh make.sh --with-sb-core-compression
-      #     unset SBCL_HOME
-      #     INSTALL_ROOT=~/sbcl ./install.sh
-      #     export SBCL_HOME="$HOME/sbcl/lib/sbcl"
-      #     export PATH="$HOME/sbcl/bin:${PATH}"
-      #   #if: steps.cache.outputs.cache-hit != 'true'
+      - name: Get Current Month
+        id: current-month
+        run: |
+          echo "::set-output name=value::$(date -u "+%Y-%m")"
+      - name: Cache SBCL Setup
+        id: cache
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-sbcl-assimp-fourth
+        with:
+          path: |
+            ~/Downloads/
+            ~/quicklisp
+            ~/.cache/common-lisp/
+            ~/sbcl
+            ~/AppData/Local/cache/common-lisp
+          key: "${{ steps.current-month.outputs.value }}-${{ env.cache-name }}-${{ runner.os }}"
+      - name: Restore Path To Cached Files
+        run: |
+          echo $HOME/sbcl/bin >> $GITHUB_PATH
+        if: steps.cache.outputs.cache-hit == 'true'
 
-      # - name: Install quicklisp
-      #   run: |
-      #     cd ~/Downloads
-      #     export PATH="$HOME/sbcl/bin:${PATH}"
-      #     wget https://beta.quicklisp.org/quicklisp.lisp
-      #     sbcl --disable-debugger \
-      #          --eval '(load "quicklisp.lisp")' \
-      #          --eval '(quicklisp-quickstart:install)' \
-      #          --eval '(ql-util:without-prompting (ql:add-to-init-file))' \
-      #          --eval '(ql:update-all-dists)' \
-      #          --eval '(ql-dist:install-dist "http://bodge.borodust.org/dist/org.borodust.bodge.txt" :replace t :prompt nil)' \
-      #          --quit
-      #   #if: steps.cache.outputs.cache-hit != 'true'
+      - name: Install Bootstraping SBCL 1.4.14
+        run: |
+          cd ~/Downloads
+          wget http://prdownloads.sourceforge.net/sbcl/sbcl-1.4.14-x86-64-windows-binary.msi
+          lessmsi x sbcl-1.4.14-x86-64-windows-binary.msi
+          mv "sbcl-1.4.14-x86-64-windows-binary/SourceDir/PFiles/Steel Bank Common Lisp/1.4.14" sbcl_bin
+        if: steps.cache.outputs.cache-hit != 'true'
 
-      # - name: Get LISP deps
-      #   run: |
-      #     cd ~/quicklisp/local-projects/
-      #     (test -d rocketman) || git clone --depth=1 https://github.com/azimut/rocketman
-      #     (test -d rocketman) && ( cd rocketman; git pull https://github.com/azimut/rocketman)
-      #     (test -d cepl) || git clone --depth=1 https://github.com/azimut/cepl
-      #     (test -d cepl)  && ( cd cepl ; git pull https://github.com/azimut/cepl)
-      #     (test -d glsl-spec)  || git clone --depth=1 https://github.com/azimut/glsl-spec
-      #     (test -d glsl-spec)  && ( cd glsl-spec ; git pull https://github.com/azimut/glsl-spec)
-      #     (test -d cepl.fond)  || git clone --depth=1 https://github.com/cbaggers/cepl.fond
-      #     (test -d cepl.fond)  && ( cd cepl.fond ; git pull https://github.com/cbaggers/cepl.fond)
+      - name: Install SBCL 2.1.9
+        run: |
+          cd ~/Downloads
+          export SBCL_HOME="$PWD/sbcl_bin";
+          export PATH="$PWD/sbcl_bin:${PATH}";
+          wget http://downloads.sourceforge.net/project/sbcl/sbcl/2.1.9/sbcl-2.1.9-source.tar.bz2
+          tar xjf sbcl-2.1.9-source.tar.bz2
+          cd sbcl-2.1.9
+          sh make.sh --with-sb-core-compression
+          unset SBCL_HOME
+          INSTALL_ROOT=~/sbcl ./install.sh
+        shell: bash
+        if: steps.cache.outputs.cache-hit != 'true'
 
-      # - name: Build Binary
-      #   run: |
-      #     export PATH="$HOME/sbcl/bin:${PATH}"
-      #     cd bin/
-      #     make scenic
-      #     make tar
+      - name: Install quicklisp
+        run: |
+          export SBCL_HOME="$HOME/sbcl/lib/sbcl"
+          export PATH="$HOME/sbcl/bin:${PATH}"
+          cd ~/Downloads
+          wget https://beta.quicklisp.org/quicklisp.lisp
+          sbcl --disable-debugger \
+               --eval '(load "quicklisp.lisp")' \
+               --eval '(quicklisp-quickstart:install)' \
+               --eval '(ql-util:without-prompting (ql:add-to-init-file))' \
+               --eval '(ql:update-all-dists)' \
+               --eval '(ql-dist:install-dist "http://bodge.borodust.org/dist/org.borodust.bodge.txt" :replace t :prompt nil)' \
+               --quit
+        shell: bash
+        if: steps.cache.outputs.cache-hit != 'true'
 
-      # - uses: actions/upload-artifact@v2
-      #   with:
-      #     name: scenic-linux
-      #     path: |
-      #       scenic.tar
-      #     if-no-files-found: error
+      - name: Get LISP deps
+        run: |
+          cd ~/quicklisp/local-projects/
+          (test -d rocketman) || git clone --depth=1 https://github.com/azimut/rocketman
+          (test -d rocketman) && ( cd rocketman; git pull https://github.com/azimut/rocketman)
+          (test -d cepl)      || git clone --depth=1 https://github.com/azimut/cepl
+          (test -d cepl)      && ( cd cepl ; git pull https://github.com/azimut/cepl)
+          (test -d glsl-spec) || git clone --depth=1 https://github.com/azimut/glsl-spec
+          (test -d glsl-spec) && ( cd glsl-spec ; git pull https://github.com/azimut/glsl-spec)
+          (test -d cepl.fond) || git clone --depth=1 https://github.com/cbaggers/cepl.fond
+          (test -d cepl.fond) && ( cd cepl.fond ; git pull https://github.com/cbaggers/cepl.fond)
+        shell: bash
+
+      - name: Build Binary
+        run: |
+          export PATH="$HOME/sbcl/bin:${PATH}"
+          cd bin/
+          make scenic
+        shell: bash
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: scenic-windows
+          path: |
+            bin
+          if-no-files-found: error
+
