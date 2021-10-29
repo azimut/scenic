@@ -1,4 +1,6 @@
 # scenic
+[![Linux Build](https://github.com/azimut/scenic/actions/workflows/linux.yml/badge.svg)](https://github.com/azimut/scenic/actions/workflows/linux.yml)
+[![Windows Build](https://github.com/azimut/scenic/actions/workflows/windows.yml/badge.svg)](https://github.com/azimut/scenic/actions/workflows/windows.yml)
 
 Yet another toy demo/graphics toolkit. Using CEPL.
 
