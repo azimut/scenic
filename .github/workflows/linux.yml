@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: APT deps
-        runs: |
+        run: |
           sudo apt-get update
           sudo apt-get install -y libassimp4 libsdl2-dev sbcl wget
 
