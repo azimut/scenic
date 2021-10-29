@@ -112,7 +112,7 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-          name: scenic-windows
+          name: scenic-x64-windows
           path: |
             bin
           if-no-files-found: error
