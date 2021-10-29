@@ -4,16 +4,18 @@ on: [push]
 
 jobs:
   build:
-    if: ${{ false }} # disable for now
     runs-on: ubuntu-18.04
     steps:
 
       - uses: actions/checkout@v2
 
-      - name: Setup
-        run: |
+      - name: APT deps
+        runs: |
           sudo apt-get update
           sudo apt-get install -y libassimp4 libsdl2-dev sbcl wget
+
+      - name: mkdir
+        run: |
           mkdir -pv ~/Downloads
           mkdir -pv ~/sbcl
           mkdir -pv ~/quicklisp
@@ -41,7 +43,7 @@ jobs:
           echo $HOME/sbcl/bin >> $GITHUB_PATH
         if: steps.cache.outputs.cache-hit == 'true'
 
-      - name: Download SBCL
+      - name: Download Bootstraping SBCL
         run: |
           cd ~/Downloads
           wget http://downloads.sourceforge.net/project/sbcl/sbcl/2.1.9/sbcl-2.1.9-source.tar.bz2
