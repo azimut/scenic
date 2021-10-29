@@ -50,14 +50,16 @@
     (ode-stop-world)
     (reset-material-counter)
     (skitter-cleanup)
-    (skitter:listen-to #'window-listener-trampoline (skitter:window 0) :size)
+    (skitter-listen)
     (ode-init-world)
     (init-all-the-things)
     (setf (last-time *state*) (get-internal-real-time)))
   (defun main-loop ()
+    (when (or (key-down-p key.escape))
+      (stop))
     (let* ((scene  (current-scene))
            (camera (active-camera scene)))
-      (when (zerop (mod fc 10))
+      (when (zerop (mod fc 5))
         (setf current-time (current-time))
         (setf dt (- tt current-time .001d0))
         (setf dt (if (> dt .16d0) .00001d0 dt))
@@ -83,10 +85,10 @@
       (as-frame
         (blit scene (post scene) camera dt)
         ;;(draw-tex-tr (first (sam (alexandria:lastcar (actors scene)))))
-        ;;(draw-tex-br (first (sam camera))); ALBEDO
-        ;;(draw-tex-bl (second (sam camera))); NORMALS?
-        ;; (draw-tex-tr (third (sam camera))); POSITION?
-        ;;(draw-tex-tl (fourth (sam camera)));; ???
+        ;; (draw-tex-br (first (sam camera))); ALBEDO
+        ;; (draw-tex-bl (second (sam camera))); POS
+        ;;(draw-tex-tr (third (sam camera))) ; NORMAL
+        ;; (draw-tex-tl (fourth (sam camera)));; ???
         ;; (draw-tex-tr (first (sam (capture    scene))))
         ;; (draw-tex-tl (first (sam (prefilter  scene))))
         ;; (draw-tex-bl (first (sam (irradiance scene))))
