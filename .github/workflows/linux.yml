@@ -12,7 +12,7 @@ jobs:
       - name: APT deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y libassimp4 libsdl2-dev sbcl wget
+          sudo apt-get install -y libassimp4 sbcl wget
 
       - name: mkdir
         run: |
@@ -58,31 +58,43 @@ jobs:
           INSTALL_ROOT=~/sbcl ./install.sh
         if: steps.cache.outputs.cache-hit != 'true'
 
+      - name: Build SDL 2.0.16
+        run: |
+          cd ~/Download
+          wget https://www.libsdl.org/release/SDL2-2.0.16.tar.gz
+          tar xvzf SDL2-2.0.16.tar.gz
+          cd SDL2-2.0.16
+          ./configure
+          make
+      - name: Install SDL 2.0.16
+        run: |
+          cd ~/Downloads/SDL2-2.0.16
+          make install
+
       - name: Install quicklisp
         run: |
           cd ~/Downloads
           export PATH="$HOME/sbcl/bin:${PATH}"
           wget https://beta.quicklisp.org/quicklisp.lisp
-          sbcl --disable-debugger \
+          sbcl --non-interactive \
                --eval '(load "quicklisp.lisp")' \
                --eval '(quicklisp-quickstart:install)' \
                --eval '(ql-util:without-prompting (ql:add-to-init-file))' \
                --eval '(ql:update-all-dists)' \
-               --eval '(ql-dist:install-dist "http://bodge.borodust.org/dist/org.borodust.bodge.txt" :replace t :prompt nil)' \
-               --quit
+               --eval '(ql-dist:install-dist "http://bodge.borodust.org/dist/org.borodust.bodge.txt" :replace t :prompt nil)'
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Get LISP deps
         run: |
           cd ~/quicklisp/local-projects/
           (test -d rocketman) || git clone --depth=1 https://github.com/azimut/rocketman
-          (test -d rocketman) && ( cd rocketman; git pull https://github.com/azimut/rocketman)
-          (test -d cepl) || git clone --depth=1 https://github.com/azimut/cepl
-          (test -d cepl)  && ( cd cepl ; git pull https://github.com/azimut/cepl)
-          (test -d glsl-spec)  || git clone --depth=1 https://github.com/azimut/glsl-spec
-          (test -d glsl-spec)  && ( cd glsl-spec ; git pull https://github.com/azimut/glsl-spec)
-          (test -d cepl.fond)  || git clone --depth=1 https://github.com/cbaggers/cepl.fond
-          (test -d cepl.fond)  && ( cd cepl.fond ; git pull https://github.com/cbaggers/cepl.fond)
+          ( cd rocketman/ ; git pull )
+          (test -d cepl)      || git clone --depth=1 https://github.com/azimut/cepl
+          ( cd cepl/      ; git pull )
+          (test -d glsl-spec) || git clone --depth=1 https://github.com/azimut/glsl-spec
+          ( cd glsl-spec/ ; git pull )
+          (test -d cepl.fond) || git clone --depth=1 https://github.com/cbaggers/cepl.fond
+          ( cd cepl.fond/ ; git pull )
 
       - name: Build Binary
         run: |
