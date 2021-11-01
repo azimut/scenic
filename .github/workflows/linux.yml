@@ -60,12 +60,13 @@ jobs:
 
       - name: Build SDL 2.0.16
         run: |
-          cd ~/Download
+          cd ~/Downloads
           wget https://www.libsdl.org/release/SDL2-2.0.16.tar.gz
           tar xvzf SDL2-2.0.16.tar.gz
           cd SDL2-2.0.16
           ./configure
           make
+        if: steps.cache.outputs.cache-hit != 'true'
       - name: Install SDL 2.0.16
         run: |
           cd ~/Downloads/SDL2-2.0.16
