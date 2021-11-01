@@ -22,15 +22,6 @@ jobs:
           mkdir -p $HOME/AppData/Local/cache/common-lisp
         shell: bash
 
-      - run: choco install lessmsi make 7zip wget
-      - uses: lukka/run-vcpkg@v10
-        id: runvcpkg
-        with:
-          runVcpkgFormatString: '[`install`, `--recurse`, `--x-install-root`, `$[env.VCPKG_INSTALLED_DIR]`, `--triplet`, `$[env.VCPKG_DEFAULT_TRIPLET]`]'
-          vcpkgGitCommitId: 843e0ba0d8f9c9c572e45564263eedfc7745e74f
-          runVcpkgInstall: true
-      - run: cp -v vcpkg/packages/*/bin/*.dll C:/windows/system32/
-
       - name: Get Current Month
         id: current-month
         run: |
@@ -52,6 +43,15 @@ jobs:
         run: |
           echo $HOME/sbcl/bin >> $GITHUB_PATH
         if: steps.cache.outputs.cache-hit == 'true'
+
+      - run: choco install lessmsi make 7zip wget
+      - uses: lukka/run-vcpkg@v10
+        id: runvcpkg
+        with:
+          runVcpkgFormatString: '[`install`, `--recurse`, `--x-install-root`, `$[env.VCPKG_INSTALLED_DIR]`, `--triplet`, `$[env.VCPKG_DEFAULT_TRIPLET]`]'
+          vcpkgGitCommitId: 843e0ba0d8f9c9c572e45564263eedfc7745e74f
+          runVcpkgInstall: true
+      - run: cp -v vcpkg/packages/*/bin/*.dll C:/windows/system32/
 
       - name: Install Bootstraping SBCL 1.4.14
         run: |
