@@ -16,7 +16,7 @@ else
              --eval '(ql:quickload :scenic)' \
              --eval '(deploy:define-library CL-OPENGL-BINDINGS::OPENGL :dont-deploy t)' \
              --eval '(asdf:make :scenic :force t)'
-	rm -v -f libstdc* # NOTE: bodge-ode (?) dep
+	rm -v -f libstdc* # NOTE: bodge-ode dep
 	rm -v -f libgcc*
 endif
 strip:

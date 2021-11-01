@@ -58,18 +58,18 @@ jobs:
           INSTALL_ROOT=~/sbcl ./install.sh
         if: steps.cache.outputs.cache-hit != 'true'
 
-      - name: Build SDL 2.0.16
+      - name: Build SDL 2.0.12
         run: |
           cd ~/Downloads
-          wget https://www.libsdl.org/release/SDL2-2.0.16.tar.gz
-          tar xvzf SDL2-2.0.16.tar.gz
-          cd SDL2-2.0.16
+          wget https://www.libsdl.org/release/SDL2-2.0.12.tar.gz
+          tar xvzf SDL2-2.0.12.tar.gz
+          cd SDL2-2.0.12
           ./configure
           make
         if: steps.cache.outputs.cache-hit != 'true'
-      - name: Install SDL 2.0.16
+      - name: Install SDL 2.0.12
         run: |
-          cd ~/Downloads/SDL2-2.0.16
+          cd ~/Downloads/SDL2-2.0.12
           sudo make install prefix=/usr
 
       - name: Install quicklisp
