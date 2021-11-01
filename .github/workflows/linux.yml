@@ -110,3 +110,11 @@ jobs:
           path: |
             scenic.tar
           if-no-files-found: error
+
+      - name: setup upterm session
+        uses: mxschmitt/action-tmate@v3
+        #uses: seemethere/action-tmate@skip_dependency_installation
+        if: ${{ failure() }}
+        with:
+          #install_dependencies: false
+          sudo: false
