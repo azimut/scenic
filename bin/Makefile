@@ -7,6 +7,7 @@ ifeq ($(OS),Windows_NT)
              --eval '(ql:quickload :deploy)' \
              --load ../scenic.asd \
              --eval '(ql:quickload :scenic)' \
+             --eval '(deploy:define-library CL-OPENGL-BINDINGS::OPENGL :dont-deploy t)' \
              --eval '(asdf:make :scenic :force t)'
 else
 	sbcl --non-interactive \
