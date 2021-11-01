@@ -4,6 +4,7 @@ on: [push]
 
 jobs:
   build:
+    #if: ${{ false }}  # disable for now
     runs-on: windows-2016
     env:
       VCPKG_CONCURRENCY: 1
@@ -20,15 +21,6 @@ jobs:
           mkdir -p $HOME/.cache/common-lisp
           mkdir -p $HOME/AppData/Local/cache/common-lisp
         shell: bash
-
-      - run: choco install lessmsi make 7zip wget
-      - uses: lukka/run-vcpkg@v10
-        id: runvcpkg
-        with:
-          runVcpkgFormatString: '[`install`, `--recurse`, `--x-install-root`, `$[env.VCPKG_INSTALLED_DIR]`, `--triplet`, `$[env.VCPKG_DEFAULT_TRIPLET]`]'
-          vcpkgGitCommitId: 843e0ba0d8f9c9c572e45564263eedfc7745e74f
-          runVcpkgInstall: true
-      - run: cp -v vcpkg/packages/*/bin/*.dll C:/windows/system32/
 
       - name: Get Current Month
         id: current-month
@@ -51,6 +43,15 @@ jobs:
         run: |
           echo $HOME/sbcl/bin >> $GITHUB_PATH
         if: steps.cache.outputs.cache-hit == 'true'
+
+      - run: choco install lessmsi make 7zip wget
+      - uses: lukka/run-vcpkg@v10
+        id: runvcpkg
+        with:
+          runVcpkgFormatString: '[`install`, `--recurse`, `--x-install-root`, `$[env.VCPKG_INSTALLED_DIR]`, `--triplet`, `$[env.VCPKG_DEFAULT_TRIPLET]`]'
+          vcpkgGitCommitId: 843e0ba0d8f9c9c572e45564263eedfc7745e74f
+          runVcpkgInstall: true
+      - run: cp -v vcpkg/packages/*/bin/*.dll C:/windows/system32/
 
       - name: Install Bootstraping SBCL 1.4.14
         run: |
@@ -94,13 +95,13 @@ jobs:
         run: |
           cd ~/quicklisp/local-projects/
           (test -d rocketman) || git clone --depth=1 https://github.com/azimut/rocketman
-          (test -d rocketman) && ( cd rocketman; git pull https://github.com/azimut/rocketman)
+          ( cd rocketman ; git pull )
           (test -d cepl)      || git clone --depth=1 https://github.com/azimut/cepl
-          (test -d cepl)      && ( cd cepl ; git pull https://github.com/azimut/cepl)
+          ( cd cepl      ; git pull )
           (test -d glsl-spec) || git clone --depth=1 https://github.com/azimut/glsl-spec
-          (test -d glsl-spec) && ( cd glsl-spec ; git pull https://github.com/azimut/glsl-spec)
+          ( cd glsl-spec ; git pull )
           (test -d cepl.fond) || git clone --depth=1 https://github.com/cbaggers/cepl.fond
-          (test -d cepl.fond) && ( cd cepl.fond ; git pull https://github.com/cbaggers/cepl.fond)
+          ( cd cepl.fond ; git pull )
         shell: bash
 
       - name: Build Binary
