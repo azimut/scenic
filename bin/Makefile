@@ -2,23 +2,20 @@
 
 scenic:
 ifeq ($(OS),Windows_NT)
-	sbcl --disable-debugger \
+	sbcl --non-interactive \
              --eval '(load "~/quicklisp/setup.lisp")' \
              --eval '(ql:quickload :deploy)' \
              --load ../scenic.asd \
              --eval '(ql:quickload :scenic)' \
-             --eval '(asdf:make :scenic :force t)' \
-             --quit
+             --eval '(asdf:make :scenic :force t)'
 else
-	sbcl --disable-debugger \
+	sbcl --non-interactive \
              --eval '(load "~/quicklisp/setup.lisp")' \
              --eval '(ql:quickload :deploy)' \
              --load ../scenic.asd \
              --eval '(ql:quickload :scenic)' \
              --eval '(deploy:define-library CL-OPENGL-BINDINGS::OPENGL :dont-deploy t)' \
-             --eval '(asdf:make :scenic :force t)' \
-             --quit
-	rm -v -f libSDL2*
+             --eval '(asdf:make :scenic :force t)'
 	rm -v -f libstdc* # NOTE: bodge-ode (?) dep
 	rm -v -f libgcc*
 endif
