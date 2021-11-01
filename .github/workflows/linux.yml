@@ -61,7 +61,6 @@ jobs:
       - name: Build SDL 2.0.12
         run: |
           cd ~/Downloads
-          rm -rf ./SDL*
           wget https://www.libsdl.org/release/SDL2-2.0.12.tar.gz
           tar xzf SDL2-2.0.12.tar.gz
           cd SDL2-2.0.12
