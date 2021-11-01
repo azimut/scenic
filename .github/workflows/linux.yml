@@ -43,14 +43,14 @@ jobs:
           echo $HOME/sbcl/bin >> $GITHUB_PATH
         if: steps.cache.outputs.cache-hit == 'true'
 
-      - name: Download Bootstraping SBCL
+      - name: Download SBCL 2.1.9
         run: |
           cd ~/Downloads
           wget http://downloads.sourceforge.net/project/sbcl/sbcl/2.1.9/sbcl-2.1.9-source.tar.bz2
           tar xjf sbcl-2.1.9-source.tar.bz2
         if: steps.cache.outputs.cache-hit != 'true'
 
-      - name: Install SBCL
+      - name: Install SBCL 2.1.9
         run: |
           cd ~/Downloads/sbcl-2.1.9
           sh make.sh --with-sb-core-compression
