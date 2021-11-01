@@ -30,7 +30,7 @@ jobs:
         id: cache
         uses: actions/cache@v2
         env:
-          cache-name: cache-sbcl-compressed
+          cache-name: cache-sbcl-compressed-sdl
         with:
           path: |
             ~/Downloads/
@@ -63,11 +63,11 @@ jobs:
           cd ~/Downloads
           rm -rf ./SDL*
           wget https://www.libsdl.org/release/SDL2-2.0.12.tar.gz
-          tar xvzf SDL2-2.0.12.tar.gz
+          tar xzf SDL2-2.0.12.tar.gz
           cd SDL2-2.0.12
           ./configure
           make
-        #if: steps.cache.outputs.cache-hit != 'true'
+        if: steps.cache.outputs.cache-hit != 'true'
       - name: Install SDL 2.0.12
         run: |
           cd ~/Downloads/SDL2-2.0.12
