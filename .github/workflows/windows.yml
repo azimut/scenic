@@ -24,8 +24,7 @@ jobs:
 
       - name: Get Current Month
         id: current-month
-        run: |
-          echo "::set-output name=value::$(date -u "+%Y-%m")"
+        run: echo "::set-output name=value::$(date -u '+%Y-%m')"
       - name: Cache SBCL Setup
         id: cache
         uses: actions/cache@v2
@@ -117,4 +116,8 @@ jobs:
           path: |
             bin
           if-no-files-found: error
+
+      - name: DEBUG SHELL
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ failure() }}
 
