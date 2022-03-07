@@ -21,11 +21,13 @@ else
 	rm -f AppDir/libgcc*
 endif
 
+
 scenic.AppImage: AppDir/scenic AppRun iconfile.svg scenic.desktop
+	wget -c -O ~/Downloads/appimagetool https://github.com/AppImage/AppImageKit/releases/download/12/appimagetool-x86_64.AppImage
+	chmod +x ~/Downloads/appimagetool
 	install -D scenic.desktop AppDir/scenic.desktop
 	install -D AppRun         AppDir/AppRun
 	install -D iconfile.svg   AppDir/iconfile.svg
-	wget -c -O ~/Downloads/appimagetool https://github.com/AppImage/AppImageKit/releases/download/12/appimagetool-x86_64.AppImage
 	ARCH=x86_64 ~/Downloads/appimagetool -v AppDir scenic.AppImage
 
 .PHONY: tar
