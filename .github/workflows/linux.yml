@@ -100,7 +100,7 @@ jobs:
 
       - name: Build Binary
         run: |
-          export PATH="$HOME/sbcl/bin:${PATH}""
+          export PATH="$HOME/sbcl/bin:${PATH}"
           cd bin/
           make scenic.AppImage
 
