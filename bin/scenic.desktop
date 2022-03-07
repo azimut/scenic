@@ -1,0 +1,11 @@
+[Desktop Entry]
+X-AppImage-Arch=x86_64
+X-AppImage-Version=latest
+X-AppImage-Name=scenic
+Name=scenic
+Exec=scenic
+Icon=iconfile
+Type=Application
+Terminal=false
+Categories=Utility;
+Comment=

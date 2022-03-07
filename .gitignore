@@ -26,6 +26,9 @@
 *.zip
 bin/*
 !bin/Makefile
+!bin/AppRun
+!bin/iconfile.svg
+!bin/scenic.desktop
 
 # Emacs
 

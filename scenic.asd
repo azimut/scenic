@@ -27,7 +27,7 @@
                #:with-setf)
   :defsystem-depends-on (:deploy)
   :build-operation "deploy-op"
-  :build-pathname "scenic"
+  :build-pathname "AppDir/scenic"
   :entry-point "scenic:start"
   :components
   ((:file "package")

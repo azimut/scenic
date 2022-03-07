@@ -7,6 +7,16 @@
 (defun make-defer-postprocess (&key (exposure 1f0))
   (make-instance 'defer :exposure exposure))
 
+(defun-g point-light-attenuation ((linear    :float)
+                                  (quadratic :float)
+                                  (light-pos :vec3)
+                                  (frag-pos  :vec3))
+  "Can be usefult to apply distance attenuation to the ambient of a pointlight"
+  (let ((distance (length (- light-pos frag-pos))))
+    (/ 1f0 (+ 1f0
+              (* linear distance)
+              (* quadratic distance)))))
+
 (defun-g defered-frag ((uv :vec2)
                        &uniform
                        (sample1      :sampler-2d)
@@ -49,19 +59,21 @@
     (dotimes (i (scene-data-npoint scene))
       (with-slots (colors positions linear quadratic far fudge) pointlights
         (incf final-color
-              (* (pbr-point-lum (aref positions i) frag-pos cam-pos
-                                frag-norm
-                                roughness
-                                metallic
-                                color
-                                specular
-                                (aref linear i) (aref quadratic i) (aref colors i))
-                 (shadow-factor pointshadows
-                                frag-pos
-                                (aref positions i) ;;?
-                                (aref far i)
-                                (aref fudge i)
-                                i)))))
+              (+ (* color 0.001
+                    (point-light-attenuation (aref linear i) (aref quadratic i) (aref positions i) frag-pos))
+                 (* (pbr-point-lum (aref positions i) frag-pos cam-pos
+                                   frag-norm
+                                   roughness
+                                   metallic
+                                   color
+                                   specular
+                                   (aref linear i) (aref quadratic i) (aref colors i))
+                    (shadow-factor pointshadows
+                                   frag-pos
+                                   (aref positions i) ;;?
+                                   (aref far i)
+                                   (aref fudge i)
+                                   i))))))
     (dotimes (i (scene-data-nspot scene))
       (with-slots (colors positions linear quadratic far cutoff outer-cutoff direction lightspace fudge) spotlights
         (incf final-color

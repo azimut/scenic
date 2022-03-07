@@ -15,20 +15,34 @@
   (init-state
    (list (make-material :roughness .8 :metallic .02 :specular .1)
          (make-material :roughness .4 :metallic .4  :specular .1)))
-  ;;#+nil
+  #+nil
   (let ((s1 (make-scene-ode :color (v! .2 .2 .2 1) :post (list (make-defer-postprocess)))))
     (register (make-defered :downscale .25 :pos (v! 2 2 2) :rot (q:point-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0))) s1)
     (register (make-box :w 20f0 :d 20f0 :pos (v! 0 -.5 0)) s1)
-    (register (make-box :pos (v! 2 1 2)) s1)
-    (register (make-point :far 20f0 :pos (v! 2 4 2) :color (v! .3 .4 .1)) s1)
-    (register (make-point :far 20f0 :pos (v! -2 2 -2) :color (v! .1 .1 .3) :linear 0.35 :quadratic 0.44) s1)
+    (register (make-spot :far 20f0 :near 4f0 :pos (v! -2 8 -2) :color (v! .5 .1 .3) :rot (q:point-at (v! 0 1 0) (v! -2 8 -2) (v! 0 0 0))) s1)
     ;;(register (make-directional :pos (v! 150 333 223)) s1)
     (register s1 *state*))
-  #+nil
+  ;;#+nil
   (let ((s1 (make-scene :color (v! .2 .2 .2 1))))
     (register (make-perspective :downscale .25 :pos (v! 2 2 2) :rot (q:point-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0))) s1)
     (register (make-directional :pos (v! 150 333 223)) s1)
+    (register s1 *state*))
+  #+nio
+  (let ((s1 (make-scene-ode :color (v! .2 .2 .2 1) :post (list (make-defer-postprocess)))))
+    #+nil
+    (register (make-defered :downscale .25 :pos (v! -14.65844 4.4909353 0.22071815)
+                            :rot (q! 0.95456934 -0.0030270235 -0.297679 0.013245501))
+              s1)
+    (mapcar (lambda (a) (register a s1)) (make-building-physics (space s1)))
+    (register (make-physic-camera :pos (v! -9.748983 6.841267 -0.19243619)
+                                  :space (space s1)
+                                  :downscale .25)
+              s1)
+    ;;(register (make-directional :pos (v! 150 333 223)) s1)
+    (register (make-point :pos (v! -10 5  0) :far 20f0 :fudge 0.2)  s1)
+    (register (make-point :pos (v! -11 8 -5) :far 20f0 :fudge 0.08) s1)
     (register s1 *state*)))
+
 
 (defclass tick (event)
   ((tt :initarg :tt :reader tt)
@@ -84,19 +98,16 @@
       (incf fc)
       (as-frame
         (blit scene (post scene) camera dt)
-        ;;(draw-tex-tr (first (sam (alexandria:lastcar (actors scene)))))
         ;; (draw-tex-br (first (sam camera))); ALBEDO
         ;; (draw-tex-bl (second (sam camera))); POS
-        ;;(draw-tex-tr (third (sam camera))) ; NORMAL
+        ;; (draw-tex-tr (third (sam camera))) ; NORMAL
         ;; (draw-tex-tl (fourth (sam camera)));; ???
         ;; (draw-tex-tr (first (sam (capture    scene))))
         ;; (draw-tex-tl (first (sam (prefilter  scene))))
         ;; (draw-tex-bl (first (sam (irradiance scene))))
-        ;; (draw-tex-br (first (sam *irradiance*)))
-        ;;(draw-tex-tl (first (sam camera)) :color-scale (v! 10 10 10 1) )
-        ;;(draw-tex-br (spot-sam *state*) :index 0)
-        ;;(draw-tex-br (point-sam *state*)  :index 0)
-        ;;(draw-tex-br (dir-sam *state*) :index 0)
+        ;;(draw-tex-br (point-sam *state*) :index 0)
+        ;;(draw-tex-br (spot-sam  *state*) :index 0)
+        ;;(draw-tex-br (dir-sam   *state*) :index 0)
         ))))
 
 (defun start ()

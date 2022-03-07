@@ -13,6 +13,9 @@ jobs:
       VCPKG_FEATURE_FLAGS: fastbuild,versions
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
       - name: mkdir
         run: |
           mkdir -p $HOME/Downloads
@@ -107,17 +110,32 @@ jobs:
         run: |
           export PATH="$HOME/sbcl/bin:${PATH}"
           cd bin/
-          make scenic
+          make tar
         shell: bash
 
-      - uses: actions/upload-artifact@v2
+      - name: Dev Release
+        uses: marvinpinto/action-automatic-releases@latest
+        if: "!startsWith(github.ref, 'refs/tags/')"
         with:
-          name: scenic-x64-windows
-          path: |
-            bin
-          if-no-files-found: error
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: "Development Build"
+          files: |
+            bin/scenic*.tgz
+            LICENSE
 
-      - name: DEBUG SHELL
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ failure() }}
+      - name: Stable Release
+        uses: marvinpinto/action-automatic-releases@latest
+        if: "startsWith(github.ref, 'refs/tags/')"
+        with:
+          prerelease: false
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          files: |
+            bin/scenic*.tgz
+            LICENSE
+
+      # - name: DEBUG SHELL
+      #   uses: mxschmitt/action-tmate@v3
+      #   if: ${{ failure() }}
 
