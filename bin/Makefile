@@ -21,7 +21,7 @@ scenic.AppImage: AppDir/scenic AppRun iconfile.svg scenic.desktop appimagetool
 	install -D scenic.desktop AppDir/scenic.desktop
 	install -D AppRun         AppDir/AppRun
 	install -D iconfile.svg   AppDir/iconfile.svg
-	ARCH=x86_64 appimagetool -v AppDir scenic.AppImage
+	ARCH=x86_64 ./appimagetool -v AppDir scenic.AppImage
 
 .PHONY: tar
 tar: scenic-$(OS).tgz
