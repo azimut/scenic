@@ -111,7 +111,7 @@ jobs:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: "latest-linux"
           prerelease: true
-          title: "Development Build"
+          title: "Development Linux Build"
           files: |
             bin/scenic.AppImage
             LICENSE

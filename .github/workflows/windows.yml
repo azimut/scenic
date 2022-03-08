@@ -120,7 +120,7 @@ jobs:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: "latest-windows"
           prerelease: true
-          title: "Development Build"
+          title: "Development Windows Build"
           files: |
             bin/scenic*.tgz
             LICENSE
