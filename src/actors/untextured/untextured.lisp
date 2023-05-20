@@ -13,4 +13,3 @@
   (apply #'make-instance 'untextured :buf (cylinder radius height) initargs))
 (defun make-cone (&rest initargs &key (radius 1f0) (height 1f0) &allow-other-keys)
   (apply #'make-instance 'untextured :buf (cone radius height) initargs))
-

@@ -13,14 +13,14 @@
 	   (- b2 b1))
 	(- a2 a1))))
 
+(defun cpu-1-linear-to-srgb (c)
+  (expt c #.(/ 2.2)))
+
 (defun cpu-1-tone-map-reinhard (color1 exposure)
   (declare (type single-float color1 exposure))
   (let* ((col (* color1 exposure))
          (r   (/ col (+ 1f0 col))))
     (cpu-1-linear-to-srgb r)))
-
-(defun cpu-1-linear-to-srgb (c)
-  (expt c #.(/ 2.2)))
 
 (defun cpu-1-tone-map-acesfilm (x exposure)
   (let ((x (* exposure x))
@@ -34,7 +34,7 @@
         (+ e (* x (+ d (* c x))))))))
 
 (defun get-current-exposure ()
-  (exposure (post (current-scene))))
+  (exposure (car (post (current-scene)))))
 
 (defun range-function-for-texture (texture)
   "returns an one(1) arg lambda that performs the value mapping"

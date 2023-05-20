@@ -40,6 +40,3 @@
            :color color
            :material material
            :materials (materials-ubo *state*))))
-
-
-
