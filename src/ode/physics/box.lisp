@@ -16,5 +16,3 @@
       (%ode:mass-set-box  mass density x y z)
       (%ode:body-set-mass body mass)
       (%ode:geom-set-body geom body))))
-
-

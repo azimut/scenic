@@ -81,7 +81,7 @@
         (issue scene 'tick :tt tt :dt dt :fc fc))
       (upload scene)
       (update scene dt)
-      (rocket-update)
+      ;; (rocket-update)
       (decay-events)
       ;; Lights/Shadows
       (dolist (l (remove-if #'point-p (lights scene)))
@@ -98,6 +98,7 @@
       (incf fc)
       (as-frame
         (blit scene (post scene) camera dt)
+        ;; (draw-tex-br (first (lights (current-scene))))
         ;; (draw-tex-br (first (sam camera))); ALBEDO
         ;; (draw-tex-bl (second (sam camera))); POS
         ;; (draw-tex-tr (third (sam camera))) ; NORMAL

@@ -120,5 +120,3 @@
       (with-setf (clear-color) (color obj)
         (clear-fbo fbo)
         (call-next-method)))))
-
-
