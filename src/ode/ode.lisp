@@ -6,8 +6,6 @@
 (defvar *space* nil)
 (defvar *contactgroup* nil)
 
-(defmethod collide (o1 o2))
-
 ;; FIME: leaking? c-with would free it...
 (defun ode-geom-get-position (geom)
   (declare (type sb-sys:system-area-pointer geom))

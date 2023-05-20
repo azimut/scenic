@@ -62,7 +62,9 @@
   (%ode:geom-set-position (slot-value physic 'geom) (x v) (y v) (z v)))
 
 (defmethod handle :around ((e tick) (obj physic))
-  (when (and *world* (not (immovablep obj)))
+  (when (and *world*
+             (not (immovablep obj))
+             (not (zerop (%ode:body-is-enabled (slot-value obj 'body)))))
     (call-next-method)))
 (defmethod handle :after ((e tick) (obj physic))
   (with-slots (pos rot orot geom) obj

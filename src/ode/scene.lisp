@@ -8,6 +8,8 @@
    (stepper :reader stepper :initform (make-stepper (seconds .05) (seconds .05))))
   (:documentation "have a SCENE inherit from this, and send the SPACE to init geometries"))
 
+(defmethod collide (o1 o2))
+
 (defclass scene-ode (scene ode-space) ())
 (defclass scene-ibl-ode (scsene-ibl ode-space) ())
 
@@ -21,7 +23,7 @@
     (%ode:init-ode)
     (setf *world*        (%ode:world-create)
           *contactgroup* (%ode:joint-group-create 0)))
-  (%ode:world-set-gravity *world* 0f0 -9.8f0 0f0)
+  (%ode:world-set-gravity *world* 0f0 -90.8f0 0f0)
   ;; CFM = Constraint Force Mixing
   ;; changes stiffness of a joint.
   (%ode:world-set-cfm                       *world* 1f-5)
@@ -64,29 +66,31 @@
         (return-from gg))
       (cffi-c-ref:c-with ((contact %ode:contact :clear t :count 5))
         (dotimes (i 5)
-          (setf (contact i :surface :mode) (logior %ode:+contact-bounce+
-                                                   %ode:+contact-slip1+
-                                                   ;; %ode:+contact-slip2+
-                                                   ;; %ode:+contact-approx1+
-                                                   ;; %ode:+contact-soft-erp+
-                                                   %ode:+contact-soft-cfm+)
-                (contact i :surface :slip1) .7f0
+          (setf (contact i :surface :mode)
+                (logior %ode:+contact-bounce+
+                        ;;%ode:+contact-slip1+
+                        ;; %ode:+contact-slip2+
+                        %ode:+contact-approx1+
+                        %ode:+contact-soft-erp+
+                        %ode:+contact-soft-cfm+
+                        )
+                ;;(contact i :surface :slip1) .7f0
                 ;; (contact i :surface :slip2) .7f0
-                ;;(contact i :surface :soft-erp) .96f0
+                (contact i :surface :soft-erp) 0.05;; .96f0
                 ;; friction parameter
                 (contact i :surface :mu) ode:+infinity+
-                (contact i :surface :mu2) 0f0
+                ;;(contact i :surface :mu2) 0f0
                 ;; bounce is the amount of "bouncyness"
-                (contact i :surface :bounce) .1f0
+                (contact i :surface :bounce) 0f0;; .1f0
                 ;; bounce_vel is the minimum incoming velocity to cause a bounce
-                (contact i :surface :bounce-vel) .1f0
+                (contact i :surface :bounce-vel) 0.1;;.1f0
                 ;; constraint force mixing parameter
-                (contact i :surface :soft-cfm) .01f0))
-        (let ((numc (%ode:collide g1 g2 5
-                                  (contact :geom &)
-                                  (cffi:foreign-type-size '%ode:contact))))
+                (contact i :surface :soft-cfm) 0.0005;;.01f0
+                ))
+        (let ((numc (%ode:collide g1 g2 5 (contact :geom &) (cffi:foreign-type-size '%ode:contact))))
           (when (plusp numc)
-            (when (and b1 b2))
+            (when (and b1 b2)
+              )
             (dotimes (i numc)
               (%ode:joint-attach
                (%ode:joint-create-contact *world* *contactgroup* (contact i))
