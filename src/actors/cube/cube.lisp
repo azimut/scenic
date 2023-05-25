@@ -33,13 +33,13 @@
   (cube-vert g-pnt)
   (cube-frag :vec3))
 
-(defmethod draw :around ((obj cube) camera time)
+(defmethod paint :around (scene (obj cube) camera time)
   (with-setf* ((depth-test-function) #'<=
                (cull-face) :front
                (depth-mask) NIL)
     (call-next-method)))
 
-(defmethod draw ((obj cube) camera time)
+(defmethod paint (scene (obj cube) camera time)
   (with-slots (buf sam color) obj
     (map-g #'cube-pipe buf
            :sam sam
@@ -47,6 +47,7 @@
            :view (q:to-mat4 (q:inverse (rot camera)))
            :proj (projection camera))))
 
+;; TODO: texture caching
 (defun make-cube-tex (&rest paths)
   "Returns a gpu texture FROM the provided images"
   (assert (= 6 (length paths)))
@@ -55,7 +56,7 @@
       (ca (mapcar
            (lambda (p)
              (dirt:load-image-to-c-array
-              (asdf:system-relative-pathname :incandescent p)))
+              (asdf:system-relative-pathname :scenic p)))
            paths))
     (make-texture ca :element-type :rgb8 :cubes t)))
 

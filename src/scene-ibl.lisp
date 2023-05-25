@@ -3,8 +3,8 @@
 (defclass scene-ibl (scene ibl)
   ())
 
-(defun make-scene-ibl ()
-  (make-instance 'scene-ibl))
+(defun make-scene-ibl (&rest args)
+  (apply #'make-instance 'scene-ibl args))
 
 (defmethod pos ((scene scene-ibl))
   (pos (capture scene)))
@@ -14,6 +14,10 @@
 (defmethod (setf pos) :after (_ (scene scene-ibl))
   (setf (drawp (prefilter  scene)) T
         (drawp (irradiance scene)) T))
+
+(defmethod (setf color) :after (_ (scene scene-ibl))
+  ;;? this triggers something i cannot replicate otherwise
+  (setf (pos scene) (copy-seq (pos scene))))
 
 (defmethod draw :before ((scene scene-ibl) (camera perspective) dt)
   (draw scene (capture    scene) dt)

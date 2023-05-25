@@ -121,5 +121,3 @@
              :pointlights (point-ubo *state*)
              :pointshadows (point-sam *state*)
              :projections (ubo camera)))))
-
-

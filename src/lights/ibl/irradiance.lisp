@@ -66,4 +66,3 @@
            :projections (ubo camera)
            :world (model->world camera)
            :sam (first (sam (capture scene))))))
-

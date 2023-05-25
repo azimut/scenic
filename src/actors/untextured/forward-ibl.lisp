@@ -94,24 +94,26 @@
 (defmethod paint ((scene scene-ibl) (actor untextured) (camera renderable) time)
   (with-slots (buf scale color material) actor
     (map-g #'untextured-ibl-pipe buf
-           :brdf (brdf-sam *state*)
-           :prefilter (first (sam (prefilter scene)))
-           :irradiance (first (sam (irradiance scene)))
+           :time time
            :scene (ubo scene)
            :cam-pos (pos camera)
-           :dirshadows (dir-sam *state*)
-           :pointshadows (point-sam *state*)
-           :spotshadows (spot-sam *state*)
-           :model-world (model->world actor)
-           :world-view (world->view camera)
-           :view-clip (projection camera)
            :scale scale
            :color color
            :material material
            :materials (materials-ubo *state*)
+           ;; IBL
+           :brdf (brdf-sam *state*)
+           :prefilter (first (sam (prefilter scene)))
+           :irradiance (first (sam (irradiance scene)))
+           ;; Matrices
+           :model-world (model->world actor)
+           :world-view (world->view camera)
+           :view-clip (projection camera)
+           ;; Shadows
+           :dirshadows (dir-sam *state*)
+           :pointshadows (point-sam *state*)
+           :spotshadows (spot-sam *state*)
+           ;; Lights
            :dirlights (dir-ubo *state*)
            :pointlights (point-ubo *state*)
-           :spotlights (spot-ubo *state*)
-           :time time)))
-
-
+           :spotlights (spot-ubo *state*))))

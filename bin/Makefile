@@ -14,7 +14,7 @@ ifneq ($(OS),Windows_NT)
 endif
 
 appimagetool:
-	wget -O appimagetool https://github.com/AppImage/AppImageKit/releases/download/12/appimagetool-x86_64.AppImage
+	wget -O appimagetool 'https://github.com/AppImage/AppImageKit/releases/download/12/appimagetool-x86_64.AppImage'
 	chmod +x appimagetool
 
 scenic.AppImage: AppDir/scenic AppRun iconfile.svg scenic.desktop appimagetool

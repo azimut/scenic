@@ -46,7 +46,7 @@
   :vertex   (hdri-vert g-pnt)
   :fragment (hdri-frag :vec3))
 
-(defmethod draw ((actor hdri) camera (time single-float))
+(defmethod paint (scene (actor hdri) camera time)
   (with-slots (buf sam scale color) actor
     (map-g #'hdri-pipe buf
            :sam sam

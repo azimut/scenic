@@ -32,7 +32,7 @@
 (defmethod print-object ((obj scene) stream)
   (print-unreadable-object (obj stream :type T :identity T)
     (with-slots (actors lights cameras) obj
-      (format stream "ACTORS:~a LIGHTS:~a CAMERAS:~a"
+      (format stream "A:~a L:~a C:~a"
               (length actors) (length lights) (length cameras)))))
 
 (defstruct-g (scene-data :layout :std-140)
@@ -50,8 +50,13 @@
       (init-light light idx)
       (incf idx))))
 
-(defmethod (setf color) :before (new-value (obj scene))
-  (check-type new-value rtg-math.types:vec4))
+(defmethod (setf color) (new-color (scene scene))
+  (etypecase new-color
+    (rtg-math.types:vec3
+     (setf (slot-value scene 'color)
+           (v! (x new-color) (y new-color) (z new-color) 1)))
+    (rtg-math.types:vec4
+     (setf (slot-value scene 'color) new-color))))
 
 (defmethod initialize-instance :before ((obj scene) &key color)
   (check-type color rtg-math.types:vec4))
