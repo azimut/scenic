@@ -1,6 +1,6 @@
 (in-package #:scenic)
 
-(defclass scene (event-loop)
+(defclass scene ()
   ((cameras      :initarg :cameras
                  :initform ()
                  :accessor      cameras
@@ -21,7 +21,8 @@
    (ubo          :reader ubo :documentation "scene-data UBO")
    (color        :initarg :color
                  :accessor color
-                 :documentation "(clear-color) color"))
+                 :documentation "(clear-color) color")
+   (name         :reader name :initarg :name))
   (:default-initargs
    :post (list (make-simple-postprocess))
    :actors ()
@@ -32,8 +33,12 @@
 (defmethod print-object ((obj scene) stream)
   (print-unreadable-object (obj stream :type T :identity T)
     (with-slots (actors lights cameras) obj
-      (format stream "A:~a L:~a C:~a"
-              (length actors) (length lights) (length cameras)))))
+      (if (slot-boundp obj 'name)
+          (format stream "~s A:~a L:~a C:~a"
+                  (slot-value obj 'name)
+                  (length actors) (length lights) (length cameras))
+          (format stream "A:~a L:~a C:~a"
+                  (length actors) (length lights) (length cameras))))))
 
 (defstruct-g (scene-data :layout :std-140)
   (ndir   :int)

@@ -39,6 +39,7 @@
            (call-next-method start obj))
           (t (call-next-method)))))
 
+#+nil
 (defmethod update :after ((obj animated) dt)
   (when-let ((inc (inc obj)))
     (incf (clock obj) inc)))

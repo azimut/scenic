@@ -1,6 +1,6 @@
 (in-package #:scenic)
 
-(defclass screen (font postprocess)
+(defclass screentext (font postprocess)
   ((pos   :accessor pos   :initarg :pos)
    (color :accessor color :initarg :color)
    (scale :accessor scale :initarg :scale))
@@ -8,17 +8,17 @@
    :scale 2f0
    :pos (v! 0 0)
    :color (v! 1 1 1 1))
-  (:documentation "2D on screen text"))
+  (:documentation "2D on screentext text"))
 
-(defmethod print-object ((obj screen) stream)
+(defmethod print-object ((obj screentext) stream)
   (print-unreadable-object (obj stream :type T :identity T)
     (with-slots (pos path) obj
       (format stream "(~$ ~$) ~s" (x pos) (y pos) path))))
 
-(defun make-screen (&rest args)
-  (apply #'make-instance 'screen args))
+(defun make-screentext (&rest args)
+  (apply #'make-instance 'screentext args))
 
-(defmethod initialize-instance :after ((obj screen) &key msg)
+(defmethod initialize-instance :after ((obj screentext) &key msg)
   (setf (msg obj) msg))
 
 (defstruct-g fond-vertex
@@ -41,7 +41,7 @@
   (tvert fond-vertex)
   (tfrag :vec2))
 
-(defmethod blit (scene (obj screen) camera time)
+(defmethod blit (scene (obj screentext) camera time)
   (with-slots (pos color blend scale fond-text fond-font) obj
     (with-blending blend
       (map-g #'fond-pipeline (cepl.fond::fond-text-stream fond-text)
@@ -49,4 +49,3 @@
              :extent (v! pos (dim camera))
              :scale scale
              :color color))))
-

@@ -3,7 +3,7 @@
 (defgeneric register (unit container))
 
 (defmethod register :after (unit (scene scene))
-  (add-listener unit scene))
+  (add-listener unit *state*))
 
 (defmethod register ((actor actor) scene)
   (push actor (actors scene)))

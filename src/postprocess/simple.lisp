@@ -30,27 +30,14 @@
   (let* ((final-color (s~ (texture sam uv) :xyz))
          (ldr  (tone-map-acesfilm final-color exposure))
          (luma (rgb->luma-bt601 ldr)))
-    (v! ldr luma)
-    ;;(tone-map-reinhard final-color exposure)
-    ))
+    (v! ldr luma)))
 
 (defpipeline-g generic-2d-pipe (:points)
   :fragment (frag-2d :vec2))
 
-(defgeneric blit (scene postprocess camera time)
-  (:method (scene (postprocess list) camera time)
-    (dolist (post postprocess)
-      (blit scene post camera time)))
-  (:documentation "blit to screen"))
-
-(defmethod blit :around (scene postprocess camera time)
-  (with-setf* ((depth-test-function) NIL
-               (depth-mask)          NIL
-               (cull-face)           NIL)
-    (call-next-method)))
-
 (defmethod blit (scene (postprocess simple) (camera renderable) time)
-  (with-slots (exposure bs) postprocess
-    (map-g #'generic-2d-pipe bs
-           :sam (first (sam camera))
-           :exposure exposure)))
+  (with-slots (exposure prev bs) *state*
+    (with-slots (exposure) postprocess
+      (map-g #'generic-2d-pipe bs
+             :sam (first (sam prev))
+             :exposure exposure))))
