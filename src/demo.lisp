@@ -50,14 +50,17 @@
                :linear 0.35
                :quadratic 0.44)
               s1)
+    (register (make-billboards
+               :sam (get-tex "static/monster/860_leaf.png"))
+              s1)
     (register (make-instance
                'untextured
                :buf (assimp-load-mesh "static/bunny.obj")
-               :pos (v! 0 0.85 0))
+               :pos (v! 0 0.85 -3))
               s1)
     (register (make-box :w 20f0 :d 20f0 :pos (v! 0 -.5 0)) s1)
     (register s1 *state*))
-  ;;#+nil
+  #+nil
   (let ((s1 (make-scene
              :name "defered"
              :color (v! .2 .2 .2 1)))

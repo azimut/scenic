@@ -1,23 +1,18 @@
 (in-package #:scenic)
 
 (defclass billboards (particles)
-  ((sam          :reader  sam)
-   (blend        :reader  blend)
-   (path         :initarg :path)
-   (image-format :initarg :image-format))
+  ((sam   :initarg :sam   :reader sam)
+   (blend :initarg :blend :reader blend))
   (:default-initargs
-   :image-format :rgba8)
+   :blend (make-blending-params)
+   :sam (error "you need to define a :sam"))
   (:documentation "point->billboards"))
 
 (defun make-billboards (&rest args)
   (apply #'make-instance 'billboards args))
 
 (defmethod initialize-instance :before ((obj billboards) &key path)
-  (assert (probe-file path)))
-(defmethod initialize-instance :after ((obj billboards) &key path image-format)
-  (with-slots (tex sam blend) obj
-    (setf sam   (get-tex path nil t image-format))
-    (setf blend (make-blending-params))))
+  (assert (probe-file (resolve-path path))))
 
 (defun-g billboard-vert ((pdata pdata) &uniform (world-view :mat4))
   (with-slots (pos life dir) pdata
