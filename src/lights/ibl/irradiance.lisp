@@ -58,7 +58,7 @@
   :fragment (irradiance-frag :vec4))
 
 (defmethod draw ((scene scene) (camera irradiance) time)
-  (log4cl:log-info)
+  (log4cl:log-info "drawing irradiance")
   (with-setf* ((resolution (current-viewport)) (v! 32 32)
                (depth-test-function) #'<=
                (cull-face) :front)

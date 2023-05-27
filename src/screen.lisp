@@ -5,17 +5,15 @@
    (next :accessor next :allocation :class :documentation "next screen capture")))
 
 (defmethod initialize-instance :after ((obj screen) &key)
+  (log4cl:log-info "making screen...")
   (flet ((make-renderable ()
-           (setf (slot-value obj 'prev)
-                 (make-instance
-                  'renderable
-                  :dim  (viewport-dimensions (current-viewport))
-                  :sample-opts '((:wrap :clamp-to-edge))
-                  :texture-opts `((0 :element-type :rgba16f))))))
-    (unless (slot-boundp obj 'prev)
-      (setf (slot-value obj 'prev) (make-renderable)))
-    (unless (slot-boundp obj 'next)
-      (setf (slot-value obj 'next) (make-renderable)))))
+           (make-instance
+            'renderable
+            :dim  (viewport-dimensions (current-viewport))
+            :sample-opts '((:wrap :clamp-to-edge))
+            :texture-opts `((0 :element-type :rgba16f)))))
+    (setf (slot-value obj 'prev) (make-renderable))
+    (setf (slot-value obj 'next) (make-renderable))))
 
 (defmethod free :after ((obj screen))
   (free (prev obj))

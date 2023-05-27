@@ -27,13 +27,14 @@
     (register cam s1)
     (register lp1 s1)
     (register s1 *state*))
-
-  (let ((s1 (make-scene :name "forward"
-                        :post (list (make-simple-postprocess)
-                                    (make-dither))))
+  ;;#+nil
+  (let ((s1 (make-scene
+             :name "forward"
+             :post (list (make-dither)
+                         (make-simple-postprocess))))
         (cam (make-perspective
-              :pos (v! 2 2 2)
-              :rot (q:point-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0))))
+              :pos (v! -2 4 -2)
+              :rot (q:point-at (v! 0 1 0) (v! -2 4 -2) (v! 0 0 0))))
         )
     ;; (register (make-cube "static/ThickCloudsWater/left.png"
     ;;                      "static/ThickCloudsWater/right.png"
@@ -49,7 +50,11 @@
                :linear 0.35
                :quadratic 0.44)
               s1)
-    (register (make-box :pos (v! 0 1 0)) s1)
+    (register (make-instance
+               'untextured
+               :buf (assimp-load-mesh "static/bunny.obj")
+               :pos (v! 0 0.85 0))
+              s1)
     (register (make-box :w 20f0 :d 20f0 :pos (v! 0 -.5 0)) s1)
     (register s1 *state*))
   ;;#+nil
@@ -66,8 +71,13 @@
               :rot (q:point-at (v! 0 1 0) (v! -2 2 -2) (v! 0 0 0)))))
     (register cam s1)
     (register ls1 s1)
-    (register (make-textured :pos (v! 0 1 0)) s1)
-    (register (make-box :w 20f0 :d 20f0 :pos (v! 0 -.5 0)) s1)
-    (register s1 *state*))
-
-  )
+    (register (make-instance
+               'untextured
+               :buf (assimp-load-mesh "static/bunny.obj")
+               :pos (v! 0 0.85 0))
+              s1)
+    (register (make-textured
+               :pos (v! 0 -.5 0)
+               :buf (box 20f0 1f0 20f0 t))
+              s1)
+    (register s1 *state*)))

@@ -375,12 +375,12 @@
 (defun remove-nil-plist (plist)
   (loop :for (p v) :on plist :by #'cddr
         :when v
-        :append (list p v)))
+          :append (list p v)))
 
 (defun assimp-load-meshes (file)
   "returns a list of meshes, each one being a plist. Everything should
    be cached."
-  (let* ((path   (truename file))
+  (let* ((path   (resolve-path file))
          (scene  (assimp-safe-import-into-lisp path))
          (meshes (ai:meshes scene)))
     (loop :for mesh :across meshes
@@ -418,3 +418,10 @@
                                   (aref (ai:animations scene) 0))
                                  'single-float)
                                 0f0)))))))))
+
+(defun assimp-load-mesh (file)
+  "returns a single buffer"
+  (serapeum:~> (resolve-path file)
+               (assimp-load-meshes)
+               (first)
+               (getf :buf)))

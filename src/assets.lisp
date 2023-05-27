@@ -170,6 +170,11 @@
 ;;----------------------------------------
 ;; Dirt - image loader into CEPL sampler
 
+(defun resolve-path (file)
+  (if (uiop:absolute-pathname-p file)
+      file
+      (asdf:system-relative-pathname :scenic file)))
+
 (defun list-tex ()
   (alexandria:maphash-keys #'print *samplers*))
 

@@ -11,10 +11,25 @@
    (sample-opts  :initarg  :sample-opts))
   (:default-initargs
    :downscale 1f0
-   :texture-opts '((0 :element-type :rgba32f) (:d :element-type :depth-component24))
-   :sample-opts '((:wrap :clamp-to-edge) (:wrap :clamp-to-edge))
+   :texture-opts '((0 :element-type :rgba32f)
+                   (:d :element-type :depth-component24))
+   :sample-opts '((:wrap :clamp-to-edge)
+                  (:wrap :clamp-to-edge))
    :dim '(128 128))
   (:documentation "an fbo-sampler pair"))
+
+(defmethod initialize-instance
+    :after ((obj renderable) &key texture-opts sample-opts dim downscale)
+  (with-slots (fbo tex sam res) obj
+    (setf res (v! dim))
+    (setf tex (alloc-textures texture-opts dim downscale))
+    (setf sam (alloc-samplers tex sample-opts))
+    (setf fbo (alloc-fbo      tex texture-opts))))
+
+(defmethod print-object ((obj renderable) stream)
+  (print-unreadable-object (obj stream :type T :identity T)
+    (format stream "~a ID=~d"
+            (dim obj) (%cepl.types:%fbo-id (fbo obj)))))
 
 (defmethod free :after ((obj renderable))
   (free (fbo obj))
@@ -41,7 +56,7 @@
       (call-next-method))))
 
 (defmethod resize ((obj renderable))
-  (log4cl:log-info)
+  (log4cl:log-info "resizing from " obj)
   (with-slots (dim downscale texture-opts sample-opts (old-tex tex) (old-sam sam) (old-fbo fbo)) obj
     (let* ((new-tex (alloc-textures texture-opts dim downscale))
            (new-sam (alloc-samplers new-tex sample-opts))
@@ -79,10 +94,3 @@
   (loop :for tex :in textures
         :for opt :in sample-opts
         :collect (apply #'sample tex opt)))
-
-(defmethod initialize-instance :after ((obj renderable) &key texture-opts sample-opts dim downscale)
-  (with-slots (fbo tex sam res) obj
-    (setf res (v! dim))
-    (setf tex (alloc-textures texture-opts dim downscale))
-    (setf sam (alloc-samplers tex sample-opts))
-    (setf fbo (alloc-fbo      tex texture-opts))))

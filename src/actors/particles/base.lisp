@@ -11,7 +11,7 @@
    (bs          :reader bs :allocation :class))
   (:default-initargs
    :n-particles 100)
-  (:documentation "template class for particles"))
+  (:documentation "template class for particles, using transform feedback"))
 
 (defstruct-g pdata
   (pos  :vec3)
