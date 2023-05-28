@@ -1,6 +1,8 @@
 (in-package #:scenic)
 
-(defun-g untextured-ibl-frag ((uv :vec2) (frag-norm :vec3) (frag-pos :vec3)
+(defun-g untextured-ibl-frag ((uv         :vec2)
+                              (frag-norm  :vec3)
+                              (frag-pos   :vec3)
                               (dir-pos   (:vec4 2))
                               (spot-pos  (:vec4 2))
                               &uniform

@@ -27,7 +27,7 @@
     (register cam s1)
     (register lp1 s1)
     (register s1 *state*))
-  ;;#+nil
+  #+nil
   (let ((s1 (make-scene
              :name "forward"
              :post (list (make-dither)
@@ -60,10 +60,12 @@
               s1)
     (register (make-box :w 20f0 :d 20f0 :pos (v! 0 -.5 0)) s1)
     (register s1 *state*))
-  #+nil
+  ;;#+nil
   (let ((s1 (make-scene
              :name "defered"
-             :color (v! .2 .2 .2 1)))
+             :color (v! .2 .2 .2 1)
+             :post (list (make-instance 'ssao)
+                         (make-simple-postprocess))))
         (ls1 (make-spot
               :far 20f0 :near 4f0
               :pos (v! -2 8 -2)

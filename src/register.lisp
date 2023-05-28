@@ -11,9 +11,6 @@
 (defmethod register ((actor particles) scene)
   (push actor (actors scene)))
 
-(defmethod register ((post postprocess) scene)
-  (push post (post scene)))
-
 (defmethod register ((camera defered) scene)
   (push camera (cameras scene)))
 (defmethod register ((camera perspective) scene)

@@ -11,7 +11,7 @@
 (defmethod collide (o1 o2))
 
 (defclass scene-ode (scene ode-space) ())
-(defclass scene-ibl-ode (scsene-ibl ode-space) ())
+(defclass scene-ibl-ode (scene-ibl ode-space) ())
 
 (defun make-scene-ode (&rest args)
   (apply #'make-instance 'scene-ode args))

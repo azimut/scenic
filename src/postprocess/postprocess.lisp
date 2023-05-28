@@ -1,11 +1,12 @@
 (in-package #:scenic)
 
-(defclass postprocess ()
+(defclass postprocess (listener)
   ((bs :reader bs
        :allocation :class
        :documentation "buffer stream for single stage pipelines")))
 
 (defmethod initialize-instance :after ((obj postprocess) &key)
+  (add-listener obj *state*)
   (unless (slot-boundp obj 'bs)
     (setf (slot-value obj 'bs)
           (make-buffer-stream nil :primitive :points))))
