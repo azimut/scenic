@@ -8,6 +8,17 @@
   (god-move .2 dt camera)
   (full-rot .2 dt camera))
 
+(defmethod update ((obj directional) dt)
+  #+nil
+  (let* ((new-pos (v3:*s (v! -20 40 50) 1f0))
+         (new-dis (v3:distance new-pos (v! 0 0 0))))
+    (setf (pos obj) new-pos)
+    (setf (rot obj)  (q:point-at (v! 0 1 0) new-pos (v! 0 0 0)))
+    (setf (far obj)  (+ new-dis (* new-dis .2)))
+    (setf (near obj) (- new-dis (* new-dis .1)))
+    (setf (fs obj) (v2! 30))
+    ))
+
 (defun init-all-the-things ()
   (init-state
    `(,(make-material :roughness .8 :metallic .02 :specular .1)
@@ -30,8 +41,8 @@
   #+nil
   (let ((s1 (make-scene
              :name "forward"
-             :post (list (make-dither)
-                         (make-simple-postprocess))))
+             :post (list ;;(make-dither)
+                    (make-simple-postprocess))))
         (cam (make-perspective
               :pos (v! -2 4 -2)
               :rot (q:point-at (v! 0 1 0) (v! -2 4 -2) (v! 0 0 0))))
@@ -44,6 +55,12 @@
     ;;                      "static/ThickCloudsWater/back.png")
     ;;           s1)
     (register cam s1)
+    ;; (register (make-spot
+    ;;            :far 20f0 :near 4f0
+    ;;            :pos (v! -2 8 -2)
+    ;;            :color (light-color 10)
+    ;;            :rot (q:point-at (v! 0 1 0) (v! -2 8 -2) (v! 0 0 0)))
+    ;;           s1)
     (register (make-point
                :pos (v! -2 2 -2)
                :color (light-color 11)
@@ -64,18 +81,30 @@
   (let ((s1 (make-scene
              :name "defered"
              :color (v! .2 .2 .2 1)
-             :post (list (make-instance 'ssao)
-                         (make-simple-postprocess))))
-        (ls1 (make-spot
-              :far 20f0 :near 4f0
-              :pos (v! -2 8 -2)
-              :color (light-color 10)
-              :rot (q:point-at (v! 0 1 0) (v! -2 8 -2) (v! 0 0 0))))
+             :post (list ;;(make-instance 'ssao)
+                    (make-simple-postprocess)
+                    (make-instance 'dof))))
         (cam (make-defered
               :pos (v! -2 2 -2)
               :rot (q:point-at (v! 0 1 0) (v! -2 2 -2) (v! 0 0 0)))))
     (register cam s1)
-    (register ls1 s1)
+    #+nil
+    (register (make-spot
+               :far 20f0 :near 4f0
+               :pos (v! -2 8 -2)
+               :color (light-color 10)
+               :rot (q:point-at (v! 0 1 0) (v! -2 8 -2) (v! 0 0 0)))
+              s1)
+    (register (make-directional
+               :pos (v! -20 40 50)
+               :rot (q:point-at (v! 0 1 0) (v! -20 40 50) (v! 0 0 0))
+               :near 60f0
+               :far 80f0
+               :fs (v2! 30)
+               :color (light-color 5))
+              s1)
+    (register (make-box :h 10 :w 2f0 :d 2f0 :pos (v! 8 5   9)) s1)
+    (register (make-box :h 10 :w 2f0 :d 2f0 :pos (v! 8 5 -11)) s1)
     (register (make-instance
                'untextured
                :buf (assimp-load-mesh "static/bunny.obj")

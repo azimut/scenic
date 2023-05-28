@@ -20,7 +20,7 @@
    (noise-sam     :reader   ssao-noise-sam)
    (kernel-number :accessor ssao-kernel-number :initarg :kernel-number)
    (kernel-effect :accessor ssao-kernel-effect :initarg :kernel-effect)
-   (kernel-radius        :accessor ssao-kernel-radius :initarg :kernel-radius))
+   (kernel-radius :accessor ssao-kernel-radius :initarg :kernel-radius))
   (:default-initargs
    :kernel-radius 0.1f0
    :kernel-effect 1f0

@@ -67,6 +67,7 @@
    (:file "postprocess/dither")
    (:file "postprocess/defer/defer")
    (:file "postprocess/defer/ibl")
+   (:file "postprocess/dof")
    (:file "actors/untextured/untextured")
    (:file "actors/untextured/defer")
    (:file "actors/untextured/forward")

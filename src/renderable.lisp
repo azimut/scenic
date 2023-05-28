@@ -53,10 +53,10 @@
         (new-dim (list (round (* (first  (dim obj)) (downscale obj)))
                        (round (* (second (dim obj)) (downscale obj))))))
     (when (not (equal old-dim new-dim))
+      (log4cl:log-info old-dim new-dim)
       (call-next-method))))
 
 (defmethod resize ((obj renderable))
-  (log4cl:log-info "resizing from " obj)
   (with-slots (dim downscale texture-opts sample-opts (old-tex tex) (old-sam sam) (old-fbo fbo)) obj
     (let* ((new-tex (alloc-textures texture-opts dim downscale))
            (new-sam (alloc-samplers new-tex sample-opts))
