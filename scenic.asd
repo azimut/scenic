@@ -45,6 +45,7 @@
    (:file "screen")
    (:file "state")
    (:file "control")
+   (:file "actors/drawable")
    (:file "actors/actor")
    (:file "material/lambert")
    (:file "material/pbr")

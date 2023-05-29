@@ -1,10 +1,8 @@
 (in-package #:scenic)
 
 (defclass directional (orth light)
-  ((drawp   :initarg :drawp   :accessor drawp
-            :documentation "if TRUE would draw the scene from the light POV"))
+  ()
   (:default-initargs
-   :drawp T
    :fs (v2! 10)
    :near  1f0
    :far 100f0)
@@ -100,11 +98,6 @@
            :world-view (world->view camera)
            :view-clip (projection camera)
            :scale scale)))
-
-(defmethod draw :around ((obj scene) (light directional) _)
-  (when (drawp light)
-    (call-next-method)
-    (setf (drawp light) NIL)))
 
 (defmethod draw ((scene scene) (light directional) time)
   ;;(with-setf (cull-face) :front)

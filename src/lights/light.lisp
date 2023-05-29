@@ -1,6 +1,6 @@
 (in-package #:scenic)
 
-(defclass light (listener)
+(defclass light (listener drawable)
   ((fbo     :reader fbo :documentation "light camera fbo")
    (idx     :reader idx :documentation "light index on texture, for the type")
    (ubo     :reader ubo :documentation "reference to scene ubo with light data")
@@ -11,7 +11,9 @@
    (color   :initarg :color   :accessor color   :documentation "light color")
    (uploadp :initarg :uploadp :accessor uploadp :documentation "if TRUE, upload the information to the GPU"))
   (:default-initargs
+   :interval 0.01 ; multiple actors might be moving, but we want just one light update
    :uploadp T
+   :shadowp NIL
    :fudge 0.03
    :scale 1f0
    :debugp NIL
@@ -38,6 +40,10 @@
   (light-vert g-pnt)
   (light-frag))
 
+(defmethod draw :around (scene (obj light) time)
+  (call-next-method)
+  (setf (drawp obj) NIL))
+
 (defmethod paint :around (scene (actor drawable) (light light) _)
   (when (shadowp actor)
     (call-next-method)))
@@ -55,3 +61,10 @@
     (mapcan (lambda (light) (setf (debugp light) tmp))
             (lights (current-scene)))
     (setf tmp (not tmp))))
+
+(defclass movement (event)
+  ())
+
+(defmethod handle :after ((event movement) (obj light))
+  (setf (uploadp obj) T)
+  (setf (drawp   obj) T))

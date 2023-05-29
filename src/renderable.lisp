@@ -1,6 +1,6 @@
 (in-package #:scenic)
 
-(defclass renderable ()
+(defclass renderable (drawable)
   ((fbo          :reader   fbo)
    (tex          :reader   tex)
    (sam          :reader   sam)
@@ -10,6 +10,7 @@
    (texture-opts :initarg  :texture-opts)
    (sample-opts  :initarg  :sample-opts))
   (:default-initargs
+   :shadowp NIL
    :downscale 1f0
    :texture-opts '((0 :element-type :rgba32f)
                    (:d :element-type :depth-component24))
@@ -53,7 +54,7 @@
         (new-dim (list (round (* (first  (dim obj)) (downscale obj)))
                        (round (* (second (dim obj)) (downscale obj))))))
     (when (not (equal old-dim new-dim))
-      (log4cl:log-info old-dim new-dim)
+      (log4cl:log-info obj old-dim)
       (call-next-method))))
 
 (defmethod resize ((obj renderable))

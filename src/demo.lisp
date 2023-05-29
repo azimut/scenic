@@ -10,7 +10,7 @@
 
 (defmethod update ((obj directional) dt)
   #+nil
-  (let* ((new-pos (v3:*s (v! -20 40 50) 1f0))
+  (let* ((new-pos (v3:*s (v! -20 30 20) 1f0))
          (new-dis (v3:distance new-pos (v! 0 0 0))))
     (setf (pos obj) new-pos)
     (setf (rot obj)  (q:point-at (v! 0 1 0) new-pos (v! 0 0 0)))
@@ -23,6 +23,30 @@
   (init-state
    `(,(make-material :roughness .8 :metallic .02 :specular .1)
      ,(make-material :roughness .4 :metallic .4  :specular .1)))
+  (let* ((s1  (make-scene-ode :name "forward ode"))
+         (cam (make-perspective
+               :pos (v! 2 2 2)
+               :rot (q:point-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0)))))
+    (register s1 *state*)
+    (register (make-box :w 20f0 :d 20f0 :pos (v! 0 -.5 0))
+              s1)
+    (register (make-point
+               :pos (v! -2 2 -2)
+               :color (light-color 11)
+               :linear 0.35
+               :quadratic 0.44)
+              s1)
+    (register (make-instance
+               'physic-box
+               :pos (v! 0 4 0)
+               :rot (q:from-axis-angle (v! 0 1 0) (radians (random 360f0))))
+              s1)
+    (register (make-instance
+               'physic-box
+               :pos (v! 3 10 3)
+               :rot (q:from-axis-angle (v! 0 1 0) (radians (random 360f0))))
+              s1)
+    (register cam s1))
   #+nil
   (let ((s1  (make-scene-ibl))
         (cam (make-perspective
@@ -77,13 +101,14 @@
               s1)
     (register (make-box :w 20f0 :d 20f0 :pos (v! 0 -.5 0)) s1)
     (register s1 *state*))
-  ;;#+nil
+  #+nil
   (let ((s1 (make-scene
              :name "defered"
              :color (v! .2 .2 .2 1)
              :post (list ;;(make-instance 'ssao)
                     (make-simple-postprocess)
-                    (make-instance 'dof))))
+                    ;;(make-instance 'dof)
+                    )))
         (cam (make-defered
               :pos (v! -2 2 -2)
               :rot (q:point-at (v! 0 1 0) (v! -2 2 -2) (v! 0 0 0)))))

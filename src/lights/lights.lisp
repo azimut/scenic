@@ -61,4 +61,3 @@
     (setf dir-sam (sample dir-tex :wrap :clamp-to-border :minify-filter :nearest :magnify-filter :nearest))
     (setf dir-ubo (make-ubo NIL 'dir-light-data))
     (setf (cepl.samplers::border-color dir-sam) (v! 1 1 1 1))))
-

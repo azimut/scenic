@@ -11,12 +11,12 @@
 (defmethod collide (o1 o2))
 
 (defclass scene-ode (scene ode-space) ())
-(defclass scene-ibl-ode (scene-ibl ode-space) ())
+(defclass scene-ode-ibl (scene-ibl ode-space) ())
 
 (defun make-scene-ode (&rest args)
   (apply #'make-instance 'scene-ode args))
-(defun make-scene-ibl-ode (&rest args)
-  (apply #'make-instance 'scene-ibl-ode args))
+(defun make-scene-ode-ibl (&rest args)
+  (apply #'make-instance 'scene-ode-ibl args))
 
 (defun ode-init-world ()
   (unless *world*
@@ -53,9 +53,8 @@
   (%ode:space-destroy (space obj)))
 
 (block gg
-  (cffi:defcallback near-callback :void ((data :pointer)
-                                         (g1 %ode:geom-id)
-                                         (g2 %ode:geom-id))
+  (cffi:defcallback near-callback
+      :void ((data :pointer) (g1 %ode:geom-id) (g2 %ode:geom-id))
     (declare (ignore data))
     (let ((b1 (%ode:geom-get-body g1))
           (b2 (%ode:geom-get-body g2)))

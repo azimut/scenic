@@ -30,7 +30,7 @@
   :vertex (untextured-defered-vert g-pnt)
   :fragment (untextured-defered-frag :vec2 :vec3 :vec3))
 
-(defmethod paint (scene (actor untextured) (camera defered) time)
+(defmethod paint (scene (actor actor) (camera defered) time)
   (with-slots (buf scale color material) actor
     (map-g #'untextured-defered-pipe buf
            :model-world (model->world actor)

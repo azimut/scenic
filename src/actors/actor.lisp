@@ -1,12 +1,5 @@
 (in-package #:scenic)
 
-(defclass drawable ()
-  ((drawp   :accessor drawp   :initarg :drawp   :documentation "should be drawn?")
-   (shadowp :accessor shadowp :initarg :shadowp :documentation "casts shadow?"))
-  (:default-initargs
-   :drawp T
-   :shadowp T))
-
 (defclass actor (listener drawable)
   ((pos      :initarg :pos      :accessor pos      :documentation "3d position")
    (rot      :initarg :rot      :accessor rot      :documentation "3d rotation")
