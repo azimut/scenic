@@ -2,7 +2,7 @@
 
 (defclass uploadable ()
   ((uploadp :accessor uploadp :initform T))
-  (:documentation "to avoid uploading unless there is a reason"))
+  (:documentation "to avoid uploading outside lisp, unless there is a reason"))
 
 (defmethod upload :around ((obj uploadable))
   (when (uploadp obj)

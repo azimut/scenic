@@ -5,13 +5,12 @@
    (color :accessor color :initarg :color)
    (from  :accessor from  :initarg :from)
    (to    :accessor to    :initarg :to)
-   (ray   :reader   ray)
-   (hit   :reader   hit)
-   (gar   :reader   gar)
-   (buf   :reader   buf))
+   (ray   :reader   ray :documentation "ODE ray")
+   (hit   :reader   hit :documentation "ODE hitpoints")
+   (gar   :reader   gar :documentation "gpu array with from&to positions")
+   (buf   :reader   buf :documentation ":lines bufferstream of gpu array above"))
   (:default-initargs
    :space (space (current-scene))
-   :drawp T
    :shadowp NIL
    :color (v! 0 1 0))
   (:documentation "ode raycast, you wouldn't use this directly"))
@@ -42,7 +41,7 @@
       (%ode:geom-ray-set-length ray (v3:distance to from)))
     (with-gpu-array-as-c-array (carr gar)
       (setf (aref-c carr 0) (v! (x from) (y from) (z from)))
-      (setf (aref-c carr 1) (v! (x to) (y to) (z to))))))
+      (setf (aref-c carr 1) (v! (x   to) (y   to) (z   to))))))
 
 (defmethod (setf from) :after (_ (obj raycast)) (setf (uploadp obj) T))
 (defmethod (setf to)   :after (_ (obj raycast)) (setf (uploadp obj) T))
@@ -65,10 +64,19 @@
           (setf (hit-position 3) (contacts i :geom :depth)))))))
 
 (defun hit-p (raycast)
+  "returns a v4, of the place where the ray hitted something
+   :xyz are the 3D coordinates
+   :w is the distance to the hitpoint"
   (cffi-c-ref:c-let ((hit-position %ode:real :count 4 :from (hit raycast)))
-    (setf (hit-position 3) most-positive-single-float)
-    (%ode:space-collide2 (ray raycast) (space raycast) (hit-position &) (cffi:callback ray-callback))
-    (v! (hit-position 0) (hit-position 1) (hit-position 2) (hit-position 3))))
+    (setf (hit-position 3) ode:+infinity+)
+    (%ode:space-collide2 (ray raycast)
+                         (space raycast)
+                         (hit-position &)
+                         (cffi:callback ray-callback))
+    (v! (hit-position 0)
+        (hit-position 1)
+        (hit-position 2)
+        (hit-position 3))))
 
 (defun-g line-vert ((vert :vec3) &uniform (model-clip :mat4))
   (* model-clip (v! vert 1)))
@@ -86,3 +94,7 @@
     (map-g #'line-pipe buf
            :model-clip (m4:* (world->clip camera) (m4:translation to))
            :color color)))
+
+;; NOTE: usually not all actors upload...
+(defmethod update ((obj raycast) time)
+  (upload obj))
