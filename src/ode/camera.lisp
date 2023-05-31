@@ -8,7 +8,7 @@
    (radius  :reader radius  :initarg :radius)
    (len     :reader len     :initarg :len)
    (density :reader density :initarg :density)
-   (orot    :initarg :orot))
+   (orot    :reader orot    :initarg :orot))
   (:default-initargs
    :orot (cffi:foreign-alloc '%ode:real :count 4)
    :len .7f0

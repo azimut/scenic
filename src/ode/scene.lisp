@@ -75,7 +75,7 @@
                         )
                 ;;(contact i :surface :slip1) .7f0
                 ;; (contact i :surface :slip2) .7f0
-                (contact i :surface :soft-erp) 0.05;; .96f0
+                (contact i :surface :soft-erp) 0.3;; .96f0
                 ;; friction parameter
                 (contact i :surface :mu) ode:+infinity+
                 ;;(contact i :surface :mu2) 0f0

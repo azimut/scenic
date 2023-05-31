@@ -32,3 +32,10 @@
   (upload (capture    scene))
   (upload (prefilter  scene))
   (upload (irradiance scene)))
+
+;; NOTE: this assumes that IBL depends on the environment
+;;       not only the cubemap
+(defmethod handle ((e movement) (scene scene-ibl))
+  (setf (drawp (prefilter  scene)) T (uploadp (prefilter  scene)) T
+        (drawp (irradiance scene)) T (uploadp (irradiance scene)) T
+        (drawp (capture    scene)) T (uploadp (capture    scene)) T))

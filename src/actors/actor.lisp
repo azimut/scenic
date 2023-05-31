@@ -1,6 +1,6 @@
 (in-package #:scenic)
 
-(defclass actor (listener drawable)
+(defclass actor (listener drawable occluder paintable)
   ((pos      :initarg :pos      :accessor pos      :documentation "3d position")
    (rot      :initarg :rot      :accessor rot      :documentation "3d rotation")
    (buf      :initarg :buf      :accessor buf      :documentation "buffer stream")
@@ -71,10 +71,7 @@
           (q:to-mat4      rot))))
 
 (defmethod (setf pos) :before (new-value (obj actor))
-  (unless (v3:= (slot-value obj 'pos) new-value)
-    (let ((scene (current-scene)))
-      (mapc (lambda (l) (setf (drawp l) T)) (lights scene))
-      (when (typep scene 'scene-ibl)
-        (setf (pos scene) (pos scene))))))
+  (when (not (v3:= (slot-value obj 'pos) new-value))
+    (issue *state* 'movement)))
 
 (defmethod update ((obj actor) dt))

@@ -17,6 +17,7 @@
                #:log4cl
                #:livesupport
                #:nineveh
+               #:nepal
                #:cepl.fond
                #:fare-memoization
                ;;#:png
@@ -46,6 +47,8 @@
    (:file "state")
    (:file "control")
    (:file "actors/drawable")
+   (:file "actors/occluder")
+   (:file "actors/paintable")
    (:file "actors/actor")
    (:file "material/lambert")
    (:file "material/pbr")
@@ -100,4 +103,7 @@
    (:file "ode/physics/cone")
    (:file "ode/physics/newcyl")
    (:file "register")
+   (:file "audio/nepal")
+   (:file "audio/emitter")
+   (:file "audio/sfx")
    (:file "demo")))
