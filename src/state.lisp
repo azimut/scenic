@@ -2,7 +2,7 @@
 
 (defvar *state* nil)
 
-(defclass state (dirlights pointlights spotlights brdf screen event-loop)
+(defclass state (dirlights pointlights spotlights brdf screen)
   ((scenes        :initarg :scenes        :accessor scenes        :documentation "list of scenes")
    (scene-index   :initarg :scene-index   :accessor scene-index   :documentation "current scene index")
    (last-time     :initarg :last-time     :accessor last-time     :documentation "previous loop time")
@@ -40,7 +40,7 @@
       (setf (uploadp light) T
             (drawp   light) T))
     (let ((dim (dimensions (current-viewport))))
-      (issue *state* 'resize :width (nth 0 dim) :height (nth 1 dim)))))
+      (issue scene 'resize :width (nth 0 dim) :height (nth 1 dim)))))
 
 (defun next-scene ()
   (let ((next (1+ (scene-index *state*)))

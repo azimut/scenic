@@ -1,6 +1,6 @@
 (in-package #:scenic)
 
-(defclass scene ()
+(defclass scene (event-loop)
   ((cameras      :initarg :cameras
                  :initform ()
                  :accessor      cameras
@@ -66,25 +66,14 @@
 (defmethod initialize-instance :before ((obj scene) &key color)
   (check-type color rtg-math.types:vec4))
 
-(defmethod initialize-instance :after ((obj scene) &key lights)
-  (let ((ndir 0) (nspot 0) (npoint 0)
-        (dirs ()) (points ()) (spots ()))
-    #+nil
-    (dolist (light lights)
-      (etypecase light
-        (directional (push light dirs)   (incf ndir))
-        (point       (push light points) (incf npoint))
-        (spot        (push light spots)  (incf nspot))))
-    (with-slots (ubo) obj
-      (setf ubo (make-ubo NIL 'scene-data))
-      (with-gpu-array-as-c-array (c (ubo-data ubo))
-        (setf (scene-data-ndir   (aref-c c 0)) ndir)
-        (setf (scene-data-nspot  (aref-c c 0)) nspot)
-        (setf (scene-data-npoint (aref-c c 0)) npoint)))
-    ;; (init-collection dirs)
-    ;; (init-collection spots)
-    ;; (init-collection points)
-    ))
+(defmethod initialize-instance :after ((obj scene) &key post)
+  (mapcar (lambda (p) (add-listener p obj)) post )
+  (with-slots (ubo) obj
+    (setf ubo (make-ubo NIL 'scene-data))
+    (with-gpu-array-as-c-array (c (ubo-data ubo))
+      (setf (scene-data-ndir   (aref-c c 0)) 0)
+      (setf (scene-data-nspot  (aref-c c 0)) 0)
+      (setf (scene-data-npoint (aref-c c 0)) 0))))
 
 (defmethod free ((obj scene))
   (mapc #'free (cameras obj))

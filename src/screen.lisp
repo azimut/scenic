@@ -20,5 +20,5 @@
   (free (next obj)))
 
 (defmethod handle :after ((e resize) (obj screen))
-  (setf (dim (prev obj)) (list (width e) (height e))
-        (dim (next obj)) (list (width e) (height e))))
+  (setf (dim (prev *state*)) (list (width e) (height e))
+        (dim (next *state*)) (list (width e) (height e))))

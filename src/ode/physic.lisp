@@ -68,6 +68,6 @@
     (call-next-method)))
 (defmethod handle :after ((e tick) (obj physic))
   (with-slots (pos rot orot geom) obj
-    (issue *state* 'movement)
+    (issue (current-scene) 'movement)
     (setf pos (ode-geom-get-position geom))
     (setf rot (ode-geom-get-quaternion2 orot geom))))

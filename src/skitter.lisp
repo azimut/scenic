@@ -28,4 +28,4 @@
 (defun window-listener (dim)
   (let* ((w (x dim)) (h (* w 0.5625)))
     (setf (resolution (current-viewport)) (v! w h))
-    (issue *state* 'resize :height h :width w)))
+    (issue (current-scene) 'resize :height h :width w)))

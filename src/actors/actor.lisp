@@ -72,6 +72,6 @@
 
 (defmethod (setf pos) :before (new-value (obj actor))
   (when (not (v3:= (slot-value obj 'pos) new-value))
-    (issue *state* 'movement)))
+    (issue (current-scene) 'movement)))
 
 (defmethod update ((obj actor) dt))

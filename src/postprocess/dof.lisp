@@ -269,6 +269,6 @@
            :coc-h-sam      (first (sam render-coc-half)))))
 
 (defmethod handle ((e resize) (obj dof))
-  (setf (dim (dof-render-coc obj))      (list (width e) (height e)))
   (setf (dim (dof-render-coc-half obj)) (list (width e) (height e)))
-  (setf (dim (dof-render-bokeh obj))    (list (width e) (height e))))
+  (setf (dim (dof-render-bokeh    obj)) (list (width e) (height e)))
+  (setf (dim (dof-render-coc      obj)) (list (width e) (height e))))

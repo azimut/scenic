@@ -78,7 +78,7 @@
         (setf dt (- tt current-time .001d0))
         (setf dt (if (> dt .16d0) .00001d0 dt))
         (setf tt current-time)
-        (issue *state* 'tick :tt tt :dt dt :fc fc))
+        (issue scene 'tick :tt tt :dt dt :fc fc))
       (upload scene)
       (update scene dt)
       ;; (rocket-update)
@@ -94,22 +94,24 @@
               (draw scene p dt))
             (setf (drawp (first points)) NIL))))
       (draw scene camera dt)
-      (process *state*)
+      (process scene)
       (incf fc)
       (as-frame
         (blit scene (post scene) camera dt)
 
-        ;; (draw-tex
-        ;;  (first
-        ;;   (slot-value (second (post (current-scene))) 'dithers)))
+        ;;(draw-tex-br (first (sam (prev *state*))))
+        ;;(draw-tex-bl (first (sam (next *state*))))
 
-        ;;(draw-tex-tr (first (post scene)))
+        ;;(draw-tex-tr (first (sam (dof-render-coc      (first (post scene))))))
+        ;;(draw-tex-tr (first (sam (dof-render-bokeh    (first (post scene))))))
+        ;;(draw-tex-br (first (sam (dof-render-coc-half (first (post scene))))))
+
         ;; (draw-tex-br (first (lights (current-scene))))
 
         ;; (draw-tex-tl (fourth (sam camera)));; ???
-        ;; (draw-tex-tr (third (sam camera))) ; NORMAL
+        ;; (draw-tex-tr (third  (sam camera))); NORMAL
         ;; (draw-tex-bl (second (sam camera))); POS
-        ;; (draw-tex-br (first (sam camera))); ALBEDO
+        ;; (draw-tex-br (first  (sam camera))); ALBEDO
 
         ;; (draw-tex-tr (first (sam (capture    scene))))
         ;; (draw-tex-tl (first (sam (prefilter  scene))))
