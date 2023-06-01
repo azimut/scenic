@@ -47,32 +47,6 @@
                                (v3:*s (q:rotate *vec3-down* (rot camera))
                                       mult))))))
 
-(defun ode-move (camera dir3)
-  (when (zerop (%ode:body-is-enabled (body camera)))
-    (%ode:body-enable (body camera)))
-  (let ((dir3 (v3:*s dir3 10f0)))
-    (%ode:body-set-linear-vel (body camera)
-                              (x dir3)
-                              0.8
-                              (z dir3))))
-
-(defun human-move-ode (factor dt camera)
-  (when (plusp (%ode:body-is-enabled (body camera)))
-    (setf (pos camera) (ode-geom-get-position (geom camera))))
-  (when (key-down-p key.w) ;; ↑
-    (ode-move camera (q:to-direction (rot camera))))
-  (when (key-down-p key.s) ;; ↓
-    (ode-move camera (v3:* (q:to-direction (rot camera))
-                           (v! -1 0 -1))))
-  (when (key-down-p key.a) ;; ←
-    (ode-move camera (q:rotate *vec3-left* (rot camera))))
-  (when (key-down-p key.d) ;; →
-    (ode-move camera (q:rotate *vec3-right* (rot camera))))
-  (when (key-down-p key.space) ;; - up - jump
-    (when (zerop (%ode:body-is-enabled (body camera)))
-      (%ode:body-enable (body camera)))
-    (%ode:body-set-linear-vel (body camera) 0f0 5f0 0f0)))
-
 #+nil
 (defun human-move (factor dt camera)
   (declare (type single-float factor) (type double-float dt) )
@@ -135,40 +109,3 @@
 ;;------------------------------
 ;; Rotation
 
-(defun full-rot (factor dt camera)
-  (let ((angle (coerce (* factor (abs dt)) 'single-float)))
-    (when (key-down-p key.q)    (spin camera    angle))
-    (when (key-down-p key.e)    (spin camera (- angle)))
-    ;; NOTE: without being careful "tilt" spins the camera !?
-    (when (key-down-p key.up)   (tilt camera    angle))
-    (when (key-down-p key.down) (tilt camera (- angle)))
-    (human-rot factor dt camera)))
-
-(defun human-rot (factor dt camera)
-  (let ((angle (coerce (* factor (abs dt)) 'single-float)))
-    (when (key-down-p key.left)  (turn camera    angle))
-    (when (key-down-p key.right) (turn camera (- angle)))))
-
-(defun rot-from (current-rot axis ang)
-  (q:normalize
-   (q:* current-rot (q:from-axis-angle axis ang))))
-(defun turn (camera ang)
-  (setf (rot camera) (rot-from (rot camera) *vec3-up*      ang)))
-(defun tilt (camera ang)
-  (setf (rot camera) (rot-from (rot camera) *vec3-right*   ang)))
-(defun spin (camera ang)
-  (setf (rot camera) (rot-from (rot camera) *vec3-forward* ang)))
-
-;;------------------------------
-;; Mouse
-
-(defun mouse-spin (camera)
-  (when (mouse-button (mouse) mouse.left)
-    (let ((move (v2:*s (mouse-move (mouse))
-                       0.03)))
-      (setf (rot camera)
-            (q:normalize
-             (q:* (rot camera)
-                  (q:normalize
-                   (q:* (q:from-axis-angle *vec3-right* (- (y move)))
-                        (q:from-axis-angle *vec3-up*    (- (x move)))))))))))
