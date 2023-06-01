@@ -8,10 +8,21 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 
 ;; Copied from Shirakumo/trial
 
+(defclass listener ()
+  ())
+
 (defclass event ()
   ())
 
-(defclass listener ()
+(defclass class-changed (event)
+  ((changed-class :initarg :changed-class :accessor changed-class)))
+
+(defclass tick (event)
+  ((tt :initarg :tt :accessor tt)
+   (dt :initarg :dt :accessor dt)
+   (fc :initarg :fc :accessor fc)))
+
+(defclass movement (event)
   ())
 
 (defgeneric add-listener (listener event-loop))
@@ -127,11 +138,3 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                      for (var name) = (enlist slot slot)
                      collect `(,var (slot-value ,variable ',name)))
            ,@body)))))
-
-(defclass tick (event)
-  ((tt :initarg :tt :accessor tt)
-   (dt :initarg :dt :accessor dt)
-   (fc :initarg :fc :accessor fc)))
-
-(defclass class-changed (event)
-  ((changed-class :initarg :changed-class :accessor changed-class)))

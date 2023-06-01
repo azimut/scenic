@@ -62,9 +62,6 @@
             (lights (current-scene)))
     (setf tmp (not tmp))))
 
-(defclass movement (event)
-  ())
-
 (defmethod handle :after ((event movement) (obj light))
   (setf (uploadp obj) T)
   (setf (drawp   obj) T))
