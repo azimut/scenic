@@ -1,12 +1,27 @@
 (in-package #:scenic)
 
+(defmethod hit-object ((obj physic-box))
+  (print (list "hit physic-box" (pos obj))))
+
 (defmethod update ((camera perspective) dt)
   (god-move .2 dt camera)
   (full-rot .2 dt camera))
 
 (defmethod update ((camera defered) dt)
-  (god-move .2 dt camera)
-  (full-rot .2 dt camera))
+  ;; (tank-move-ode camera .9)
+  ;; (tank-rot .2 dt camera)
+  (human-move-ode camera .9)
+  (human-rot .2 dt camera)
+  ;; (god-move .2 dt camera)
+  ;; (full-rot .2 dt camera)
+  )
+
+;; (defvar *sfx*
+;;   (nepal:make-sfx :newpitter '("/home/sendai/bc.wav")
+;;                   :pos (copy-seq (pos (current-camera)))
+;;                   :loop-p t))
+;;(nepal::play *sfx*)
+;; (nepal::stop *sfx*)
 
 (defmethod update ((obj directional) dt)
   #+nil
@@ -23,11 +38,29 @@
   (init-state
    `(,(make-material :roughness .8 :metallic .02 :specular .1)
      ,(make-material :roughness .4 :metallic .4  :specular .1)))
-  (let* ((s1  (make-scene-ode :name "forward ode"))
-         (cam (make-perspective
-               :pos (v! 2 2 2)
-               :rot (q:point-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0)))))
+  (let* ((s1  (make-scene-ode :name "forward ode")))
     (register s1 *state*)
+    (register (make-physic-camera
+               :pos (v! 2 .3 2)
+               ;;:rot (q:point-at (v! 0 1 0) (v! 2 .3 2) (v! 0 0 0))
+               )
+              s1)
+    #+nil
+    (register (make-instance
+               'camera-audio-defered
+               :pos (v! 2 .3 2)
+               :rot (q:point-at (v! 0 1 0) (v! 2 .3 2) (v! 0 0 0)))
+              s1)
+    #+nil
+    (register (make-instance
+               'audio-sfx
+               :name :weird
+               :pos (v! 3 8 2)
+               :loop-p t
+               :max-distance 12f0
+               :ref-distance 1.5f0
+               :paths '("/home/sendai/bc.wav"))
+              s1)
     (register (make-box :w 20f0 :d 20f0 :pos (v! 0 -.5 0))
               s1)
     (register (make-point
@@ -45,8 +78,7 @@
                'physic-box
                :pos (v! 3 10 3)
                :rot (q:from-axis-angle (v! 0 1 0) (radians (random 360f0))))
-              s1)
-    (register cam s1))
+              s1))
   #+nil
   (let ((s1  (make-scene-ibl))
         (cam (make-perspective

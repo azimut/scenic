@@ -4,8 +4,9 @@
 (defvar *contactgroup* nil)
 
 (defclass ode-space ()
-  ((space   :reader space)
-   (stepper :reader stepper :initform (make-stepper (seconds .05) (seconds .05))))
+  ((space      :reader space)
+   (stepper    :reader stepper :initform (make-stepper (seconds .05) (seconds .05)))
+   (floor-geom :reader floor-geom))
   (:documentation "have a SCENE inherit from this, and send the SPACE to init geometries"))
 
 (defmethod collide (o1 o2))
@@ -45,9 +46,9 @@
   t)
 
 (defmethod initialize-instance :after ((obj ode-space) &key)
-  (with-slots (space) obj
+  (with-slots (space floor-geom) obj
     (setf space (%ode:hash-space-create nil))
-    (%ode:create-plane space 0f0 1f0 0f0 0f0)))
+    (setf floor-geom (%ode:create-plane space 0f0 1f0 0f0 0f0))))
 
 (defmethod free :after ((obj ode-space))
   (%ode:space-destroy (space obj)))
@@ -75,7 +76,8 @@
                         )
                 ;;(contact i :surface :slip1) .7f0
                 ;; (contact i :surface :slip2) .7f0
-                (contact i :surface :soft-erp) 0.3;; .96f0
+                ;; error reduction - spippery/cartoonish
+                (contact i :surface :soft-erp) 0.3;; 0.1-0.6
                 ;; friction parameter
                 (contact i :surface :mu) ode:+infinity+
                 ;;(contact i :surface :mu2) 0f0
@@ -83,8 +85,8 @@
                 (contact i :surface :bounce) 0f0;; .1f0
                 ;; bounce_vel is the minimum incoming velocity to cause a bounce
                 (contact i :surface :bounce-vel) 0.1;;.1f0
-                ;; constraint force mixing parameter
-                (contact i :surface :soft-cfm) 0.0005;;.01f0
+                ;; constraint force mixing parameter, soft/bouncy
+                (contact i :surface :soft-cfm) 0.01;; .01f0 - 0.5
                 ))
         (let ((numc (%ode:collide g1 g2 5 (contact :geom &) (cffi:foreign-type-size '%ode:contact))))
           (when (plusp numc)
