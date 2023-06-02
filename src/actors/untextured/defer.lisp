@@ -20,7 +20,7 @@
                                   (material  :int)
                                   (materials pbr-material :ubo))
   (with-slots (roughness specular metallic emissive) materials
-    (let ((ao 0.8f0))
+    (let ((ao 0f0))
       (values (v! color (aref roughness material))
               (v! frag-pos ao)
               (v! frag-norm (aref specular material))
