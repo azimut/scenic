@@ -3,13 +3,14 @@
 (defvar *emitters* ())
 
 (defclass emitter ()
-  ())
+  ()
+  (:documentation "works together with the RAY in CAMERA-AUDIO"))
 
 (defmethod initialize-instance :after ((obj emitter) &key)
   (push obj *emitters*))
 
 (defmethod free :after ((obj emitter))
-  (delete obj *emitters*))
+  (setf *emitters* (remove obj *emitters*)))
 
 (defmethod update ((camera camera-audio-defered) dt)
   ;; (god-move .2 dt camera)
