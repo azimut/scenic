@@ -6,6 +6,7 @@
   (add-listener unit scene))
 
 (defmethod register ((actor actor) scene)
+  (issue scene 'movement)
   (push actor (actors scene)))
 
 (defmethod register ((actor particles) scene)
