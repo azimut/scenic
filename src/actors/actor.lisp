@@ -9,7 +9,7 @@
    (material :initarg :material :accessor material :documentation "material index"))
   (:default-initargs
    :material 0
-   :color (v! 0.5 0.5 0.5)
+   :color (v! 1 1 1)
    :pos (v! 0 0 0)
    :rot (q:identity)
    :scale 1f0
