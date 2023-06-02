@@ -30,16 +30,6 @@
     (call-next-method)
     (setf (uploadp light) NIL)))
 
-(defun-g light-vert ((vert g-pnt) &uniform (model-clip :mat4) (scale :float))
-  (let* ((pos (* scale (pos vert)))
-         (clip-pos (* model-clip (v! pos 1))))
-    clip-pos))
-(defun-g light-frag (&uniform (color :vec3))
-  (v! color 1))
-(defpipeline-g light-pipe ()
-  (light-vert g-pnt)
-  (light-frag))
-
 (defmethod draw :around (scene (obj light) time)
   (call-next-method)
   (setf (drawp obj) NIL))
@@ -47,6 +37,21 @@
 (defmethod paint :around (scene (actor drawable) (light light) _)
   (when (shadowp actor)
     (call-next-method)))
+
+(defmethod handle :after ((event movement) (obj light))
+  (setf (uploadp obj) T)
+  (setf (drawp   obj) T))
+
+(defun-g light-vert ((vert g-pnt) &uniform (model-clip :mat4) (scale :float))
+  (let ((pos (* scale (pos vert))))
+    (* model-clip (v! pos 1))))
+
+(defun-g light-frag (&uniform (color :vec3))
+  (v! (* color 100) 1)) ;; NOTE: blow it to cancel shading
+
+(defpipeline-g light-pipe ()
+  :vertex (light-vert g-pnt)
+  :fragment (light-frag))
 
 (defmethod paint (scene (light light) (camera renderable) _)
   (with-slots (buf color scale debugp) light
@@ -61,7 +66,3 @@
     (mapcan (lambda (light) (setf (debugp light) tmp))
             (lights (current-scene)))
     (setf tmp (not tmp))))
-
-(defmethod handle :after ((event movement) (obj light))
-  (setf (uploadp obj) T)
-  (setf (drawp   obj) T))
