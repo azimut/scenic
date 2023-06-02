@@ -1,7 +1,7 @@
 (in-package #:scenic)
 
 (defclass raycast (uploadable drawable)
-  ((space :reader   space :initarg :space :documentation "ODE space")
+  ((space :reader   space :documentation "ODE space")
    (color :accessor color :initarg :color)
    (from  :accessor from  :initarg :from)
    (to    :accessor to    :initarg :to
@@ -13,7 +13,6 @@
   (:default-initargs
    :from (v! 0 2 0)
    :to   (v! 0 0 0)
-   :space (space (current-scene))
    :shadowp NIL
    :color (v! 0 1 0))
   (:documentation "ode raycast, you wouldn't use this directly"))
@@ -29,10 +28,13 @@
 
 (defmethod initialize-instance :before ((obj raycast) &key from to)
   (assert (not (v3:= from to))))
-(defmethod initialize-instance :after ((obj raycast) &key space)
-  (with-slots (hit ray gar buf) obj
+(defmethod initialize-instance :after ((obj raycast) &key)
+  (with-slots (hit ray gar buf space) obj
+    (setf space (space (current-scene)))
     (setf hit (cffi:foreign-alloc '%ode:real :count 4))
     (setf ray (%ode:create-ray space 0f0))
+    (%ode:geom-set-category-bits ray (getf *ode-bits* :ray))
+    (%ode:geom-set-collide-bits ray (logand #xffffffff (lognot (getf *ode-bits* :camera))))
     (setf gar (make-gpu-array nil :element-type :vec3 :dimensions 2))
     (setf buf (make-buffer-stream gar :primitive :lines)))
   (upload obj))

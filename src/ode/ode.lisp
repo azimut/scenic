@@ -5,6 +5,10 @@
 (defvar *world* nil)
 (defvar *space* nil)
 (defvar *contactgroup* nil)
+(defparameter *ode-bits*
+  '(:camera #b0001
+    :ray    #b0010
+    :floor  #b0100));; :floor not being used?
 
 ;; FIME: leaking? c-with would free it...
 (defun ode-geom-get-position (geom)
