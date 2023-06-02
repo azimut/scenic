@@ -15,7 +15,7 @@
   (when (zerop (%ode:body-is-enabled body))
     (%ode:body-enable body))
   (cffi-c-ref:c-let ((vel %ode:real :from (%ode:body-get-linear-vel body)))
-    (%ode:body-set-linear-vel body (* (vel 0) .9) 6f0 (* (vel 2) .9))))
+    (%ode:body-set-linear-vel body (vel 0) 10f0 (vel 2))))
 
 ;;--------------------------------------------------
 ;; Tank Controls - Two directions
@@ -26,7 +26,7 @@
     (let ((new-dir3 (v3:*s (v3:+ dir3 (v! (vel 0) (vel 1) (vel 2))) factor)))
       (%ode:body-set-linear-vel body (x new-dir3) (y new-dir3) (z new-dir3)))))
 
-(defmethod tank-move-ode (camera factor)
+(defmethod tank-move-ode ((camera physic-camera) factor)
   ;; Visually move it
   (when (plusp (%ode:body-is-enabled (body camera)))
     (setf (pos camera) (ode-geom-get-position (geom camera))))
@@ -48,8 +48,7 @@
 ;; FPS Controls - Four directions
 ;; TODO: movement combinations, duplicate forces
 
-(defmethod human-move-ode
-    ((camera physic-camera) factor)
+(defmethod human-move-ode ((camera physic-camera) factor)
   ;; Visually move it
   (when (plusp (%ode:body-is-enabled (body camera)))
     (setf (pos camera) (ode-geom-get-position (geom camera))))

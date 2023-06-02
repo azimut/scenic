@@ -13,7 +13,6 @@
     (setf (nepal::pos camera) new-value)
     (setf (from camera) new-value)))
 
-(defclass camera-audio-perspective (perspective camera-audio)
-  ())
-(defclass camera-audio-defered (defered camera-audio)
-  ())
+(defclass camera-audio-perspective (perspective camera-audio) ())
+(defclass camera-audio-defered (defered camera-audio) ())
+(defclass camera-audio-ode (physic-camera camera-audio) ())

@@ -95,11 +95,10 @@
             (dotimes (i numc)
               (%ode:joint-attach
                (%ode:joint-create-contact *world* *contactgroup* (contact i))
-               b1 b2)))))))
+               b1 b2))))))))
 
-  (defmethod update :after ((obj ode-space) dt)
-    (with-slots (space stepper) obj
-      (when (funcall stepper)
-        (%ode:space-collide space nil (cffi:callback near-callback))
-        (%ode:world-quick-step *world* 0.0099f0)
-        (%ode:joint-group-empty *contactgroup*)))))
+(defmethod handle :after ((e tick) (obj ode-space))
+  (with-slots (space stepper) obj
+    (%ode:space-collide space nil (cffi:callback near-callback))
+    (%ode:world-quick-step *world* 0.01f0)
+    (%ode:joint-group-empty *contactgroup*)))

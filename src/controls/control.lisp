@@ -98,14 +98,10 @@
 (defun god-move (factor dt camera)
   (declare (type single-float factor) (type double-float dt))
   (let ((mult (coerce (* factor (abs dt)) 'single-float)))
-    (when (key-down-p key.w)     (move camera *vec3-forward* mult)) ;; ↑
+    (when (key-down-p key.w)     (move camera *vec3-back*    mult)) ;; ↑
+    (when (key-down-p key.s)     (move camera *vec3-forward* mult)) ;; ↓
     (when (key-down-p key.a)     (move camera *vec3-left*    mult)) ;; ←
-    (when (key-down-p key.s)     (move camera *vec3-back*    mult)) ;; ↓
     (when (key-down-p key.d)     (move camera *vec3-right*   mult)) ;; →
     (when (key-down-p key.space) (move camera *vec3-up*      mult))
     (when (key-down-p key.c)     (move camera *vec3-down*    mult)))
   (pos camera))
-
-;;------------------------------
-;; Rotation
-
