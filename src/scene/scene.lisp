@@ -3,22 +3,23 @@
 (defclass scene (event-loop)
   ((cameras      :initarg :cameras
                  :initform ()
-                 :accessor      cameras
+                 :accessor cameras
                  :documentation "list of cameras")
    (camera-index :initarg :camera-index
-                 :reader  camera-index
+                 :reader   camera-index
                  :documentation "camera index of the active camera")
    (lights       :initarg :lights
                  :initform ()
-                 :accessor        lights
+                 :accessor lights
                  :documentation "LIGHTS instance")
    (actors       :initarg :actors
-                 :accessor      actors
+                 :accessor actors
                  :documentation "list of scene actors")
    (post         :initarg :post
                  :accessor post
                  :documentation "post processing function")
-   (ubo          :reader ubo :documentation "scene-data UBO")
+   (ubo          :reader ubo
+                 :documentation "scene-data UBO")
    (color        :initarg :color
                  :accessor color
                  :documentation "(clear-color) color")
@@ -47,13 +48,6 @@
 
 (defun make-scene (&rest args)
   (apply #'make-instance 'scene args))
-
-#+nil
-(defun init-collection (lights)
-  (let ((idx 0))
-    (dolist (light lights)
-      (init-light light idx)
-      (incf idx))))
 
 (defmethod (setf color) (new-color (scene scene))
   (etypecase new-color

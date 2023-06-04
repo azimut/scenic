@@ -9,8 +9,11 @@
    :dim '(128 128)
    :texture-opts '(( 0 :cubes t :element-type :rgb16f :mipmap 5)
                    (:d :cubes t :element-type :depth-component24))
-   :sample-opts '((:wrap :clamp-to-edge :magnify-filter :linear)
-                  (:wrap :clamp-to-edge :magnify-filter :linear :minify-filter :linear)))
+   :sample-opts '((:wrap           :clamp-to-edge
+                   :magnify-filter :linear)
+                  (:wrap           :clamp-to-edge
+                   :magnify-filter :linear
+                   :minify-filter  :linear)))
   (:documentation "prefilter cubemap, for specular calculation"))
 
 (defmethod (setf roughness) :before (new-value (obj prefilter))
@@ -48,14 +51,16 @@
                      n-dot-l))
             (incf total-weight n-dot-l)))))
     (divf prefiltered-color (vec3 total-weight))
-    (v! prefiltered-color 1)))
+    (v! prefiltered-color 1)
+    ;;(v! 0 1 0 1)
+    ))
 
 (defpipeline-g prefilter-pipe ()
   :vertex   (irradiance-vert g-pnt)
   :geometry (irradiance-geom)
   :fragment (prefilter-frag :vec4))
 
-(defmethod draw ((scene scene) (camera prefilter) _)
+(defmethod draw ((scene scene-ibl) (camera prefilter) time)
   (log4cl:log-info "drawing prefilter")
   (with-setf* ((resolution (current-viewport)) (v! 128 128)
                (depth-test-function) #'<=
@@ -63,8 +68,8 @@
     (with-slots (buf roughness fbo ubo) camera
       (map-g #'prefilter-pipe buf
              :roughness roughness
-             :world (model->world camera)
              :projections ubo
+             :world (model->world camera)
              :sam (first (sam (capture scene)))))))
 
 (defun make-prefilter (&rest args)

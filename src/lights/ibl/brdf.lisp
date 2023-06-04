@@ -95,6 +95,3 @@
     (setf sam (sample tex :wrap :clamp-to-edge :magnify-filter :linear :minify-filter :linear))
     (with-setf (resolution (current-viewport)) (v! 512 512)
       (map-g-into fbo #'brdf-pipe bs))))
-
-(defun make-brdf ()
-  (make-instance 'brdf))

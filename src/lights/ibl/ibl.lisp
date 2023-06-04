@@ -61,9 +61,14 @@
          (irradiance (s~ (texture irradiance n) :xyz))
          (diffuse    (* irradiance color))
          ;; Specular
-         (r (reflect (- v) n))
-         (prefiltered-color (s~ (texture-lod prefilter r (* roughness 4f0)) :xyz))
-         (env-brdf (s~ (texture brdf (v! (max (dot n v) 0) roughness)) :xy))
+         ;;(r (reflect (- v) n)); unflipped
+         (r (reflect v n)); flipped version
+         (prefiltered-color
+           (s~ (texture-lod prefilter r (* roughness 4f0))
+               :xyz))
+         (env-brdf
+           (s~ (texture brdf (v! (max (dot n v) 0) roughness))
+               :xy))
          (specular (* prefiltered-color
                       (+ (* f (x env-brdf))
                          (y env-brdf))))
