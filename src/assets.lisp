@@ -184,6 +184,7 @@
   (clrhash *samplers*))
 
 (defun get-tex (path &optional (force nil) (mipmap t) (image-format :rgba8))
+  (log4cl:log-info "loading texture" path)
   (when force
     (let ((s (gethash path *samplers*)))
       (when s

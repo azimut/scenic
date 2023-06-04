@@ -34,9 +34,10 @@
   (textured-frag :vec2 :vec3 :vec3 :mat3 :vec3 :vec3))
 
 (defmethod paint (scene (actor textured) (camera defered) time)
-  (with-slots (buf scale uv-repeat specmap albedo normal aomap color) actor
+  (with-slots (buf scale uv-repeat specmap roughmap albedo normal aomap color) actor
     (map-g #'textured-pipe buf
            :color color
+           :roughmap roughmap
            :specmap specmap
            :aomap aomap
            :albedo albedo

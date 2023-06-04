@@ -380,6 +380,7 @@
 (defun assimp-load-meshes (file)
   "returns a list of meshes, each one being a plist. Everything should
    be cached."
+  (log4cl:log-info file)
   (let* ((path   (resolve-path file))
          (scene  (assimp-safe-import-into-lisp path))
          (meshes (ai:meshes scene)))

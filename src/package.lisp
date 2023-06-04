@@ -58,6 +58,7 @@
    Z=Quadratic")
 
 ;; https://docs.unity3d.com/ScriptReference/Vector3.html
+(defvar *vec3-zero*    (v!  0  0  0))
 (defvar *vec3-right*   (v!  1  0  0))
 (defvar *vec3-left*    (v! -1  0  0))
 (defvar *vec3-up*      (v!  0  1  0))

@@ -6,7 +6,7 @@
   (:default-initargs
    :buf (box)
    :shadowp NIL)
-  (:documentation "RGB8 cubemap from 6 images"))
+  (:documentation "textured RGB8 cubemap, from 6 images"))
 
 (defmethod print-object ((obj cube) stream)
   (print-unreadable-object (obj stream :type T :identity T)
@@ -61,8 +61,12 @@
     (make-texture ca :element-type :rgb8 :cubes t)))
 
 (defmethod initialize-instance :after ((obj cube) &key tex)
-  (setf (slot-value obj 'sam) (sample tex :wrap :clamp-to-edge :magnify-filter :linear)))
+  (setf (slot-value obj 'sam)
+        (sample tex :wrap :clamp-to-edge :magnify-filter :linear)))
 
 (defun make-cube (left right up down front back &rest args)
   (let ((tex (make-cube-tex left right up down front back)))
     (apply #'make-instance 'cube :tex tex args)))
+
+(defun cube-p (obj)
+  (typep obj 'cube))
