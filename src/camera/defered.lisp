@@ -1,8 +1,11 @@
 (in-package #:scenic)
 
 (defclass defered (renderable pers)
-  ()
+  ((fakeambient :initarg :fakeambient
+                :accessor fakeambient
+                :documentation "used to calculate a fake ambient light, on defered a single value works well enough for all materials"))
   (:default-initargs
+   :fakeambient 0f0
    :texture-opts
    '((0  :element-type :rgba16f); color    roughness
      (1  :element-type :rgba32f); pos      ao
@@ -16,6 +19,11 @@
      (:wrap :clamp-to-edge)
      (:wrap :clamp-to-edge)))
   (:documentation "defered perspective renderable camera"))
+
+(defmethod initialize-instance :before ((obj defered) &key fakeambient)
+  (check-type fakeambient (float 0 1)))
+(defmethod (setf fakeambient) :before (new-value (obj defered))
+  (check-type new-value (float 0 1)))
 
 (defun make-defered (&rest args)
   (apply #'make-instance 'defered args))

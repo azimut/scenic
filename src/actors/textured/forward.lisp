@@ -32,61 +32,77 @@
                                 (dirshadows   :sampler-2d-array)
                                 (spotshadows  :sampler-2d-array)
                                 (pointshadows :sampler-cube-array))
-  (let ((color     (pow (s~ (texture albedo uv) :xyz) (vec3 2.2)))
-        (roughness (x (texture roughmap uv)))
-        (ao        (x (texture aomap    uv)))
-        (spec      (x (texture specmap  uv)))
-        (metallic  0.04)
+  (let ((color       (pow (s~ (texture albedo uv) :xyz) (vec3 2.2)))
+        (roughness   (x (texture roughmap uv)))
+        (ao          (x (texture aomap    uv)))
+        (spec        (x (texture specmap  uv)))
+        (fakeambient (aref (pbr-material-fakeambient materials) material))
+        (metallic     0.04)
         ;;(normal    (norm-from-map normalmap uv tbn))
-        ;;(normal    (norm-from-map normalmap uv frag-pos frag-norm))
-        (normal    frag-norm)
+        (normal      (norm-from-map normalmap uv frag-pos frag-norm))
+        ;;(normal    frag-norm)
         (final-color (v! 0 0 0)))
     (dotimes (i (scene-data-ndir scene))
-      (with-slots (colors positions fudge) dirlights
+      (with-slots (colors positions fudge)
+          dirlights
         (incf final-color
-              (* (pbr-direct-lum (aref positions i) frag-pos cam-pos normal
-                                 roughness
-                                 metallic
-                                 color
-                                 spec
-                                 (aref colors i))
-                 (shadow-factor dirshadows (aref dir-pos i) (aref fudge i) i)))))
+              (+ (* fakeambient (* color ao))
+                 (* (pbr-direct-lum (aref positions i) frag-pos cam-pos normal
+                                    roughness
+                                    metallic
+                                    color
+                                    spec
+                                    (aref colors i))
+                    (shadow-factor dirshadows (aref dir-pos i) (aref fudge i) i))))))
     (dotimes (i (scene-data-npoint scene))
-      (with-slots (colors positions linear quadratic far fudge) pointlights
+      (with-slots (colors positions linear quadratic far fudge)
+          pointlights
         (incf final-color
-              (* (pbr-point-lum (aref positions i) frag-pos cam-pos normal
-                                roughness
-                                metallic
-                                color
-                                spec
-                                (aref linear    i)
-                                (aref quadratic i)
-                                (aref colors    i))
-                 (shadow-factor pointshadows
-                                frag-pos
-                                (aref positions i)
-                                (aref far i)
-                                (aref fudge i)
-                                i)))))
+              (+ (* fakeambient (* color ao)
+                    (point-light-attenuation
+                     (aref linear i)
+                     (aref quadratic i)
+                     (aref positions i)
+                     frag-pos))
+                 (* (pbr-point-lum (aref positions i) frag-pos cam-pos normal
+                                   roughness
+                                   metallic
+                                   color
+                                   spec
+                                   (aref linear    i)
+                                   (aref quadratic i)
+                                   (aref colors    i))
+                    (shadow-factor pointshadows
+                                   frag-pos
+                                   (aref positions i)
+                                   (aref far i)
+                                   (aref fudge i)
+                                   i))))))
     (dotimes (i (scene-data-nspot scene))
-      (with-slots (colors positions linear quadratic far cutoff outer-cutoff direction fudge lightspace)
+      (with-slots (colors positions linear quadratic cutoff outer-cutoff direction fudge)
           spotlights
         (incf final-color
-              (* (pbr-spot-lum (aref positions i) frag-pos cam-pos normal
-                               roughness
-                               metallic
-                               color
-                               spec
-                               (aref colors       i)
-                               (aref direction    i)
-                               (aref cutoff       i)
-                               (aref outer-cutoff i)
-                               (aref linear       i)
-                               (aref quadratic    i))
-                 (shadow-factor spotshadows
-                                (aref spot-pos i)
-                                (aref fudge    i)
-                                i)))))
+              (+ (* fakeambient (* color ao)
+                    (point-light-attenuation
+                     (aref linear i)
+                     (aref quadratic i)
+                     (aref positions i)
+                     frag-pos))
+                 (* (pbr-spot-lum (aref positions i) frag-pos cam-pos normal
+                                  roughness
+                                  metallic
+                                  color
+                                  spec
+                                  (aref colors       i)
+                                  (aref direction    i)
+                                  (aref cutoff       i)
+                                  (aref outer-cutoff i)
+                                  (aref linear       i)
+                                  (aref quadratic    i))
+                    (shadow-factor spotshadows
+                                   (aref spot-pos i)
+                                   (aref fudge    i)
+                                   i))))))
     (v! final-color 1)))
 
 (defpipeline-g textured-forward-pipe ()
@@ -99,10 +115,16 @@
    :vec3 :vec3))
 
 (defmethod paint (scene (actor textured) (camera renderable) time)
-  (with-slots (buf scale uv-repeat albedo normal aomap roughmap specmap) actor
+  (with-slots (buf scale uv-repeat albedo normal aomap roughmap specmap material)
+      actor
     (map-g #'textured-forward-pipe buf
+           :uv-repeat uv-repeat
+           :scale scale
            :scene (ubo scene)
            :cam-pos (pos camera)
+           ;; Material
+           :material material
+           :materials (materials-ubo *state*)
            ;; Shadows
            :dirshadows (dir-sam *state*)
            :spotshadows (spot-sam *state*)
@@ -120,6 +142,4 @@
            ;; Matrices
            :model-world (model->world actor)
            :world-view (world->view camera)
-           :view-clip (projection camera)
-           :uv-repeat uv-repeat
-           :scale scale)))
+           :view-clip (projection camera))))

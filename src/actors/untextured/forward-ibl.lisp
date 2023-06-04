@@ -41,7 +41,8 @@
                               color
                               1f0)))
     (dotimes (i (scene-data-ndir scene))
-      (with-slots (colors positions fudge) dirlights
+      (with-slots (colors positions fudge)
+          dirlights
         (incf final-color
               (* (pbr-direct-lum (aref positions i) frag-pos cam-pos frag-norm
                                  (aref (pbr-material-roughness materials) material)
@@ -51,7 +52,8 @@
                                  (aref colors i))
                  (shadow-factor dirshadows (aref dir-pos i) (aref fudge i) i)))))
     (dotimes (i (scene-data-npoint scene))
-      (with-slots (colors positions linear quadratic far fudge) pointlights
+      (with-slots (colors positions linear quadratic far fudge)
+          pointlights
         (incf final-color
               (* (pbr-point-lum (aref positions i) frag-pos cam-pos
                                 frag-norm
@@ -67,7 +69,8 @@
                                 (aref fudge i)
                                 i)))))
     (dotimes (i (scene-data-nspot scene))
-      (with-slots (colors positions linear quadratic far cutoff outer-cutoff direction fudge) spotlights
+      (with-slots (colors positions linear quadratic cutoff outer-cutoff direction fudge)
+          spotlights
         (incf final-color
               (* (pbr-spot-lum (aref positions i) frag-pos cam-pos
                                frag-norm
@@ -82,12 +85,7 @@
                                (aref linear i)
                                (aref quadratic i))
                  (shadow-factor spotshadows (aref spot-pos i) (aref fudge i) i)))))
-    (v! (+ final-color ambient) 1)
-    ;;(v! final-color 1)
-    ;;ambient
-    ;;final-color
-    ;;(v! 1 0 0 1)
-    ))
+    (v! (+ final-color ambient) 1)))
 
 (defpipeline-g untextured-ibl-pipe ()
   :vertex (untextured-vert g-pnt)
