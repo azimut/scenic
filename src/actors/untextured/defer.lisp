@@ -20,17 +20,22 @@
                                   (material  :int)
                                   (materials pbr-material :ubo))
   (with-slots (roughness specular metallic emissive) materials
-    (let ((ao 0f0))
-      (values (v! color (aref roughness material))
-              (v! frag-pos ao)
-              (v! frag-norm (aref specular material))
-              (v! (aref metallic material) (aref emissive material))))))
+    (let ((ao .1f0)
+          (roughness (aref roughness material))
+          (specular  (aref specular  material))
+          (metallic  (aref metallic  material))
+          (emissive  (aref emissive  material)))
+      (values (v! color     roughness)
+              (v! frag-pos  ao)
+              (v! frag-norm specular)
+              (v! metallic
+                  emissive)))))
 
 (defpipeline-g untextured-defered-pipe ()
   :vertex (untextured-defered-vert g-pnt)
   :fragment (untextured-defered-frag :vec2 :vec3 :vec3))
 
-(defmethod paint (scene (actor actor) (camera defered) time)
+(defun paint-all (actor camera)
   (with-slots (buf scale color material) actor
     (map-g #'untextured-defered-pipe buf
            :model-world (model->world actor)
@@ -40,3 +45,9 @@
            :color color
            :material material
            :materials (materials-ubo *state*))))
+
+(defmethod paint ((scene scene) (actor untextured) (camera defered) time)
+  (paint-all actor camera))
+
+(defmethod paint ((scene scene-ibl) (actor untextured) (camera defered) time)
+  (paint-all actor camera))
