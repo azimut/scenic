@@ -92,6 +92,7 @@
    (:file "actors/text/screen")
    (:file "actors/cube/cube")
    (:file "actors/cube/hdri")
+   (:file "actors/cube/sky")
    (:file "ode/ode")
    (:file "ode/derived")
    (:file "ode/scene")
