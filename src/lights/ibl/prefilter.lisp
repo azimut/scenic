@@ -2,7 +2,8 @@
 
 (defclass prefilter (capture)
   ((buf       :initarg :buf)
-   (roughness :initarg :roughness :accessor roughness))
+   (roughness :initarg :roughness
+              :accessor roughness))
   (:default-initargs
    :roughness 0.8
    :buf (box)
@@ -51,9 +52,7 @@
                      n-dot-l))
             (incf total-weight n-dot-l)))))
     (divf prefiltered-color (vec3 total-weight))
-    (v! prefiltered-color 1)
-    ;;(v! 0 1 0 1)
-    ))
+    (v! prefiltered-color 1)))
 
 (defpipeline-g prefilter-pipe ()
   :vertex   (irradiance-vert g-pnt)
