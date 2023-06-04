@@ -13,7 +13,7 @@
                    :magnify-filter :linear)
                   (:wrap           :clamp-to-edge
                    :magnify-filter :linear
-                   :minify-filter  :linear)))
+                   :minify-filter  :linear-mipmap-linear)))
   (:documentation "prefilter cubemap, for specular calculation"))
 
 (defmethod (setf roughness) :before (new-value (obj prefilter))

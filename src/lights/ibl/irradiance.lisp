@@ -4,7 +4,15 @@
   ((buf :initarg :buf :reader buf))
   (:default-initargs
    :buf (box)
-   :dim '(32 32))
+   :dim '(32 32)
+   :texture-opts '(( 0 :element-type :rgb16f :cubes t)
+                   (:d :element-type :depth-component24 :cubes t))
+   :sample-opts '((:wrap           :clamp-to-edge
+                   :minify-filter  :linear
+                   :magnify-filter :linear)
+                  (:wrap           :clamp-to-edge
+                   :minify-filter  :linear
+                   :magnify-filter :linear)))
   (:documentation "doc"))
 
 (defun make-irradiance (&rest args)

@@ -49,25 +49,28 @@
          (tbn (mat3 t0 b0 n0))
          (dir-pos       (vector (v! 0 0 0 0) (v! 0 0 0 0)))
          (spot-pos      (vector (v! 0 0 0 0) (v! 0 0 0 0)))
-         (tan-dir-pos   (vector (v! 0 0 0) (v! 0 0 0)))
-         (tan-spot-pos  (vector (v! 0 0 0) (v! 0 0 0)))
-         (tan-point-pos (vector (v! 0 0 0) (v! 0 0 0) (v! 0 0 0) (v! 0 0 0))))
+         (tan-dir-pos   (vector   (v! 0 0 0)   (v! 0 0 0)))
+         (tan-spot-pos  (vector   (v! 0 0 0)   (v! 0 0 0)))
+         (tan-point-pos (vector   (v! 0 0 0)   (v! 0 0 0) (v! 0 0 0) (v! 0 0 0))))
+
     (dotimes (i (scene-data-ndir scene))
-      (setf (aref dir-pos i) (*  (aref (lightspace dirlights) i) world-pos)))
+      (setf (aref dir-pos i)  (* (aref (lightspace dirlights)  i) world-pos)))
     (dotimes (i (scene-data-nspot scene))
-      (setf (aref spot-pos i) (*  (aref (lightspace spotlights) i) world-pos)))
+      (setf (aref spot-pos i) (* (aref (lightspace spotlights) i) world-pos)))
+
     (dotimes (i (scene-data-ndir scene))
       (setf (aref tan-dir-pos i) (* tbn (aref (positions dirlights) i))))
     (dotimes (i (scene-data-nspot scene))
       (setf (aref tan-spot-pos i) (* tbn (aref (positions spotlights) i))))
     (dotimes (i (scene-data-npoint scene))
       (setf (aref tan-point-pos i) (* tbn (aref (positions pointlights) i))))
-    (values clip-pos (treat-uvs uv) norm (s~ world-pos :xyz)
+
+    (values clip-pos
+            (treat-uvs uv) norm (s~ world-pos :xyz)
             tbn
-            dir-pos spot-pos
-            tan-dir-pos tan-spot-pos tan-point-pos
-            (* tbn cam-pos)
-            (* tbn (s~ world-pos :xyz)))))
+            dir-pos spot-pos ;; worldpos in lightspace
+            tan-dir-pos tan-spot-pos tan-point-pos;; tbn ->
+            (* tbn cam-pos) (* tbn (s~ world-pos :xyz)))))
 
 ;; Defer
 

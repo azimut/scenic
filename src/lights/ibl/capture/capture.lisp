@@ -7,8 +7,12 @@
   (:default-initargs
    :texture-opts '(( 0 :element-type :rgb16f :cubes t)
                    (:d :element-type :depth-component24 :cubes t))
-   :sample-opts '((:wrap :clamp-to-edge :minify-filter :linear :magnify-filter :linear)
-                  (:wrap :clamp-to-edge :minify-filter :linear :magnify-filter :linear))
+   :sample-opts '((:wrap           :clamp-to-edge
+                   :minify-filter  :linear-mipmap-linear
+                   :magnify-filter :linear)
+                  (:wrap           :clamp-to-edge
+                   :minify-filter  :linear
+                   :magnify-filter :linear))
    :dim '(128 128)
    :uploadp T
    :drawp T
