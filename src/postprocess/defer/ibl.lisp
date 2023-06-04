@@ -23,12 +23,12 @@
          (color2    (texture sample2 uv))
          (color3    (texture sample3 uv))
          (color4    (texture sample4 uv))
-         (roughness (w color1))
-         (ao        (w color2))
-         (specular  (w color3))
          (color     (s~ color1 :xyz))
          (frag-pos  (s~ color2 :xyz))
          (frag-norm (s~ color3 :xyz))
+         (roughness (w color1))
+         (ao        (w color2))
+         (specular  (w color3))
          (metallic  (x color4))
          (emissive  (y color4))
          (final-color (v! 0 0 0))
@@ -95,7 +95,9 @@
                                 (* (aref lightspace i) (v! frag-pos 1))
                                 (aref fudge i)
                                 i)))))
-    (v! (+ ambient final-color) 1)))
+    (v! (+ ambient final-color) 1)
+    ;;(v! ambient 1)
+    ))
 
 (defpipeline-g defer-ibl-pipe (:points)
   :fragment (defered-ibl-frag :vec2))
@@ -103,21 +105,24 @@
 (defmethod blit ((scene scene-ibl) (postprocess list) (camera defered) time)
   (destructuring-bind (s1 s2 s3 s4 _) (sam camera)
     (declare (ignore _))
-    (with-slots (bs) *state*
-      (map-g #'defer-ibl-pipe bs
-             :sample1 s1
-             :sample2 s2
-             :sample3 s3
-             :sample4 s4
-             :brdf (brdf-sam *state*)
-             :prefilter (first (sam (prefilter scene)))
-             :irradiance (first (sam (irradiance scene)))
-             :cam-pos (pos (current-camera))
-             :dirshadows (dir-sam *state*)
-             :spotshadows (spot-sam *state*)
-             :pointshadows (point-sam *state*)
-             :dirlights (dir-ubo *state*)
-             :spotlights (spot-ubo *state*)
-             :pointlights (point-ubo *state*)
-             :scene (ubo scene)
-             :time time))))
+    (with-slots (prev bs) *state*
+      (map-g-into (fbo prev) #'defer-ibl-pipe bs
+                  :sample1 s1
+                  :sample2 s2
+                  :sample3 s3
+                  :sample4 s4
+                  :cam-pos (pos (current-camera))
+                  :scene (ubo scene)
+                  :time time
+                  ;; IBL
+                  :brdf (brdf-sam *state*)
+                  :prefilter (first (sam (prefilter scene)))
+                  :irradiance (first (sam (irradiance scene)))
+                  ;; Shadows
+                  :dirshadows (dir-sam *state*)
+                  :spotshadows (spot-sam *state*)
+                  :pointshadows (point-sam *state*)
+                  ;; Lights
+                  :dirlights (dir-ubo *state*)
+                  :spotlights (spot-ubo *state*)
+                  :pointlights (point-ubo *state*)))))

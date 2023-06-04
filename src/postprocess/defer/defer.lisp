@@ -32,11 +32,11 @@
          (roughness (w color1))
          (ao        (w color2))
          (specular  (w color3))
+         (metallic  (x color4))
+         (emissive  (y color4))
          (color     (s~ color1 :xyz))
          (frag-pos  (s~ color2 :xyz))
          (frag-norm (s~ color3 :xyz))
-         (metallic  (x color4))
-         (emissive  (y color4))
          (final-color (v! 0 0 0)))
     (dotimes (i (scene-data-ndir scene))
       (with-slots (colors positions lightspace fudge) dirlights

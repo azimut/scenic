@@ -16,7 +16,8 @@
 (defpipeline-g pass-pipe (:points)
   :fragment (pass-frag :vec2))
 
-(defmethod blit :around (scene (postprocess list) camera time)
+(defmethod blit
+    :around (scene (postprocess list) camera time)
   (with-setf* ((depth-test-function) NIL
                (depth-mask)          NIL
                (cull-face)           NIL)

@@ -11,7 +11,7 @@
             'renderable
             :dim  (viewport-dimensions (current-viewport))
             :sample-opts '((:wrap :clamp-to-edge))
-            :texture-opts `((0 :element-type :rgba16f)))))
+            :texture-opts `((0 :element-type :rgba32f)))))
     (setf (slot-value obj 'prev) (make-renderable))
     (setf (slot-value obj 'next) (make-renderable))))
 

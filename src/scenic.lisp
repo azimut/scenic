@@ -99,8 +99,8 @@
       (as-frame
         (blit scene (post scene) camera dt)
 
-        ;;(draw-tex-br (first (sam (prev *state*))))
-        ;;(draw-tex-bl (first (sam (next *state*))))
+        ;; (draw-tex-bl (first (sam (prev *state*))))
+        ;; (draw-tex-br (first (sam (next *state*))))
 
         ;;(draw-tex-tr (first (sam (dof-render-coc      (first (post scene))))))
         ;;(draw-tex-tr (first (sam (dof-render-bokeh    (first (post scene))))))
@@ -108,18 +108,19 @@
 
         ;; (draw-tex-br (first (lights (current-scene))))
 
-        ;; (draw-tex-tl (fourth (sam camera)));; ???
-        ;; (draw-tex-tr (third  (sam camera))); NORMAL
-        ;; (draw-tex-bl (second (sam camera))); POS
-        ;; (draw-tex-br (first  (sam camera))); ALBEDO
+        ;; (draw-tex-tl (first  (sam camera))); ALBEDO
+        ;; (draw-tex-tr (second (sam camera))); POS
+        ;; (draw-tex-bl (third  (sam camera))); NORMAL
+        ;; (draw-tex-br (fourth (sam camera))) ;; ???
 
-        ;; (draw-tex-tr (first (sam (capture    scene))))
-        ;; (draw-tex-tl (first (sam (prefilter  scene))))
-        ;; (draw-tex-bl (first (sam (irradiance scene))))
+        ;; (draw-tex-tl (first (sam (capture    scene))))
+        ;; (draw-tex-tr (first (sam (irradiance scene))))
+        ;; (draw-tex-bl (first (sam (prefilter  scene))))
+        ;; (draw-tex-br (brdf-sam *state*))
 
-        ;;(draw-tex-br (point-sam *state*) :index 0)
-        ;;(draw-tex-br (spot-sam  *state*) :index 0)
-        ;;(draw-tex-br (dir-sam   *state*) :index 0)
+        ;; (draw-tex-br (point-sam *state*) :index 0)
+        ;; (draw-tex-br (spot-sam  *state*) :index 0)
+        ;; (draw-tex-br (dir-sam   *state*) :index 0)
         ))))
 
 (defun start ()
