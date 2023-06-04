@@ -78,8 +78,7 @@
     (dotimes (i (scene-data-nspot scene))
       (with-slots (colors positions linear quadratic far cutoff outer-cutoff direction fudge) spotlights
         (incf final-color
-              (* (pbr-spot-lum (aref positions i) frag-pos cam-pos
-                               frag-norm
+              (* (pbr-spot-lum (aref positions i) frag-pos cam-pos frag-norm
                                (aref (pbr-material-roughness materials) material)
                                (aref (pbr-material-metallic materials) material)
                                color

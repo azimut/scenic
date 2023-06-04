@@ -121,7 +121,8 @@
          (proj-coords   (+ .5 (* .5 proj-coords)))
          (current-depth (z proj-coords))
          (closest-depth (x (texture light-sampler (v! (s~ proj-coords :xy) light-index))))
-         (shadow        (step (- current-depth bias) closest-depth)))
+         (shadow        (step (- current-depth bias)
+                              closest-depth)))
     (if (> current-depth 1)
         1f0
         shadow)))

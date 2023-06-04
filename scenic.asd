@@ -80,7 +80,7 @@
    (:file "actors/untextured/forward")
    (:file "actors/untextured/forward-ibl")
    (:file "actors/textured/textured")
-   ;;(:file "actors/textured/forward")
+   (:file "actors/textured/forward")
    (:file "actors/textured/defer")
    (:file "actors/textured/assimp")
    (:file "actors/assimp/bones-helpers")

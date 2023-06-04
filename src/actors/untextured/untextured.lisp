@@ -4,7 +4,7 @@
   ()
   (:documentation "pbr untextured"))
 
-(defun make-lattice (&rest initargs &key (w 100f0) (h 100f0))
+(defun make-lattice (&rest initargs &key (w 100f0) (h 100f0) &allow-other-keys)
   (remf initargs :w) (remf initargs :h)
   (make-instance 'untextured :buf (lattice w h)))
 (defun make-box (&rest initargs &key (w 1f0) (h 1f0) (d 1f0) &allow-other-keys)
