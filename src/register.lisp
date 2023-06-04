@@ -1,5 +1,7 @@
 (in-package #:scenic)
 
+;; This became a big hack/escaping hatch...but I am ok with it :)
+
 (defgeneric register (unit container))
 
 (defmethod register :after (unit (scene scene))
@@ -19,6 +21,7 @@
 (defmethod register ((camera orthogonal) scene)
   (push camera (cameras scene)))
 
+;; TODO: keep directional light first, due assumptions made on fog/sky
 (defmethod register ((light light) scene)
   (with-slots (idx fbo) light
     (flet ((same-light (x) (typep x (class-name-of light))))
@@ -42,5 +45,6 @@
       (call-next-method))))
 
 (defmethod register ((scene scene) (state state))
+  (add-listener state scene)
   (push scene (scenes state))
   (incf (slot-value state 'scene-index)))

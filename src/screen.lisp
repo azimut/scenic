@@ -1,6 +1,6 @@
 (in-package #:scenic)
 
-(defclass screen ()
+(defclass screen (listener)
   ((prev :accessor prev :allocation :class :documentation "previous screen capture")
    (next :accessor next :allocation :class :documentation "next screen capture")))
 
