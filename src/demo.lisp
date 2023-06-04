@@ -34,6 +34,17 @@
     (setf (fs obj) (v2! 30))
     ))
 
+(defmethod update ((obj spot) dt)
+  ;;#+nil
+  (let* ((new-pos (v3:*s (v! -2 8 -2) 1f0))
+         (new-dis (v3:distance new-pos (v! 0 0 0))))
+    ;; (setf (pos obj) new-pos)
+    ;; (setf (rot obj)  (q:point-at (v! 0 1 0) new-pos (v! 0 0 0)))
+    (setf (near obj) (- new-dis (* new-dis .7)))
+    (setf (far obj)  (+ new-dis (* new-dis 2)))
+    (setf (fov obj) 100f0)
+    ))
+
 (defun init-all-the-things ()
   (init-state
    `(,(make-material :roughness .8 :metallic .02 :specular .1)
@@ -173,7 +184,6 @@
                          "static/ThickCloudsWater/front.png"
                          "static/ThickCloudsWater/back.png")
               s1)
-
     (register (make-directional
                :pos (v! -20 40 50)
                :rot (q:point-at (v! 0 1 0) (v! -20 40 50) (v! 0 0 0))
@@ -203,3 +213,72 @@
                :buf (box 50f0 1f0 50f0 t))
               s1)
     (register s1 *state*)))
+
+(defun init-all-the-things ()
+  (init-state
+   `(,(make-material :roughness .8 :metallic .02 :specular .1 :fakeambient .001)
+     ,(make-material :roughness .4 :metallic .4  :specular .1)))
+  (defered-spot-bunny-floor-textured)
+  (forward-spot-bunny-floor-textured))
+
+(defun defered-spot-bunny-floor-textured ()
+  (let ((s1 (make-scene
+             :name "defered bunny spotlight")))
+    (register s1 *state*)
+    (register (make-defered
+               :pos (v! -2 2 -2)
+               :rot (q:point-at (v! 0 1 0) (v! -2 2 -2) (v! 0 0 0)))
+              s1)
+    (register (make-spot
+               :cutoff 0.2 :outer-cutoff 0.8
+               :fov 100f0
+               :far 16.12 :near 5.939
+               :pos (v! -2 8 -2)
+               :color (light-color 10)
+               :rot (q:point-at (v! 0 1 0) (v! -2 8 -2) (v! 0 0 0)))
+              s1)
+    (dotimes (i 20)
+      (register (make-instance 'untextured
+                               :buf (box 1f0 5f0 1f0)
+                               :pos (v! (random-in-range -15f0 15f0)
+                                        (random-in-range 1.0 2.5)
+                                        (random-in-range -15f0 15f0)))
+                s1))
+    (register (make-instance
+               'untextured
+               :buf (assimp-load-mesh "static/bunny.obj")
+               :pos (v! 0 0.85 0))
+              s1)
+    (register (make-instance 'textured :buf (lattice 100f0 100f0 500 500 t))
+              s1)))
+
+(defun forward-spot-bunny-floor-textured ()
+  (let ((s1 (make-scene
+             :name "forward bunny spotlight")))
+    (register s1 *state*)
+    (register (make-perspective
+               :pos (v! -2 2 -2)
+               :rot (q:point-at (v! 0 1 0) (v! -2 2 -2) (v! 0 0 0)))
+              s1)
+    (register (make-spot
+               :cutoff 0.2 :outer-cutoff 0.8
+               :fov 100f0
+               :far 16.12 :near 5.939
+               :pos (v! -2 8 -2)
+               :color (light-color 10)
+               :rot (q:point-at (v! 0 1 0) (v! -2 8 -2) (v! 0 0 0)))
+              s1)
+    (dotimes (i 20)
+      (register (make-instance 'untextured
+                               :buf (box 1f0 5f0 1f0)
+                               :pos (v! (random-in-range -15f0 15f0)
+                                        (random-in-range 1.0 2.5)
+                                        (random-in-range -15f0 15f0)))
+                s1))
+    (register (make-instance
+               'untextured
+               :buf (assimp-load-mesh "static/bunny.obj")
+               :pos (v! 0 0.85 0))
+              s1)
+    (register (make-instance 'textured :buf (lattice 100f0 100f0 500 500 t))
+              s1)))
