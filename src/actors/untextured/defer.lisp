@@ -46,8 +46,8 @@
            :material material
            :materials (materials-ubo *state*))))
 
-(defmethod paint ((scene scene) (actor untextured) (camera defered) time)
+(defmethod paint ((scene scene) (camera defered) (actor untextured) time)
   (paint-all actor camera))
 
-(defmethod paint ((scene scene-ibl) (actor untextured) (camera defered) time)
+(defmethod paint ((scene scene-ibl) (camera defered) (actor untextured) time)
   (paint-all actor camera))

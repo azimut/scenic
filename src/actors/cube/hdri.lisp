@@ -19,14 +19,13 @@
                                          :rgba32f
                                          :rgb32f)))))
 
-(defun make-hdri (filepath &rest args)
-  (let ((tex (load-hdri filepath)))
-    (apply #'make-instance 'hdri :tex tex args)))
-
-(defun-g hdri-vert ((vert g-pnt) &uniform (view :mat4) (proj :mat4))
-  (let ((pos (pos vert)))
-    (values (s~ (* proj view (v! pos 1)) :xyww)
-            pos)))
+(defun make-hdri (filepath
+                  &rest args
+                  &aux (path (resolve-path filepath)))
+  (let ((sam (or (gethash path *samplers*)
+                 (setf (gethash path *samplers*)
+                       (load-hdri path)))))
+    (apply #'make-instance 'hdri :sam sam args)))
 
 (defun-g sample-spherical-map ((v :vec3))
   (let* ((uv (v! (atan (z v) (x v))
@@ -43,10 +42,10 @@
     (v! (* color3 color) 1)))
 
 (defpipeline-g hdri-pipe ()
-  :vertex   (hdri-vert g-pnt)
+  :vertex   (cube-vert g-pnt)
   :fragment (hdri-frag :vec3))
 
-(defmethod paint (scene (actor hdri) camera time)
+(defmethod paint (scene camera (actor hdri) time)
   (with-slots (buf sam scale color) actor
     (map-g #'hdri-pipe buf
            :sam sam

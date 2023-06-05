@@ -29,22 +29,22 @@
                        (dirlights   dir-light-data   :ubo)
                        (spotlights  spot-light-data  :ubo)
                        (pointlights point-light-data :ubo))
-  (let ((final-color (v! 0 0 0)))
+  (let ((final-color (v! 0 0 0))
+        (frag-pos3 (s~ frag-pos :xyz)))
     (dotimes (i (scene-data-ndir scene))
       (with-slots (colors positions)
           dirlights             ; TODO: SHADOW and light in clipspace?
         (incf final-color
               (dir-light-apply color (aref colors i) (aref positions i)
-                               (s~ frag-pos :xyz) frag-norm))))
+                               frag-pos3 frag-norm))))
     (dotimes (i (scene-data-npoint scene))
       (with-slots (colors positions linear quadratic far fudge)
           pointlights
         (incf final-color
               (* (point-light-apply color (aref colors i) (aref positions i)
-                                    (s~ frag-pos :xyz) frag-norm
+                                    frag-pos3 frag-norm
                                     (aref linear i) (aref quadratic i))
-                 (shadow-factor pointshadows
-                                (s~ frag-pos :xyz)
+                 (shadow-factor pointshadows frag-pos3
                                 (aref positions i)
                                 (aref far i)
                                 (aref fudge i)
@@ -54,7 +54,7 @@
           spotlights ;; TODO: shadow
         (incf final-color
               (spot-light-apply color (aref colors i) (aref positions i) (aref direction i)
-                                (s~ frag-pos :xyz) frag-norm
+                                frag-pos3 frag-norm
                                 (aref linear i) (aref quadratic i)
                                 (aref cutoff i) (aref outer-cutoff i)))))
     (v! final-color 1)))

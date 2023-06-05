@@ -67,13 +67,13 @@
   (setf (slot-value obj 'idx) idx)
   (setf (slot-value obj 'fbo) (make-fbo `(:d ,(texref (spot-tex *state*) :layer idx)))))
 
-(defmethod paint (scene actor (camera spot) time)
+(defmethod paint (scene (camera spot) actor time)
   (with-slots (buf scale) actor
     (map-g #'shadow-pipe buf
            :model->clip (model->clip actor camera)
            :scale scale)))
 
-(defmethod paint (scene (actor assimp-thing-with-bones) (camera spot) time)
+(defmethod paint (scene (camera spot) (actor assimp-thing-with-bones) time)
   (with-slots (buf scale bones) actor
     (map-g #'simplest-3d-bones-pipe buf
            :offsets bones
@@ -93,7 +93,7 @@
     (with-fbo-bound (fbo :attachment-for-size :d)
       (clear-fbo fbo :d)
       (dolist (a (actors scene))
-        (paint scene a light time)))))
+        (paint scene light a time)))))
 
 (defmethod point-size ((obj spot) nth)
   (let* ((index    (min nth (length *point-light-params*)))

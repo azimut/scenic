@@ -78,7 +78,7 @@
   :geometry (billboard-geom (:float 1) (:vec3 1))
   :fragment (billboard-frag :vec2 :float))
 
-(defmethod paint (scene (obj billboards) camera time)
+(defmethod paint (scene camera (obj billboards) time)
   "textured particles blended into the scene"
   ;; Use a simple mask when not using soft-particles
   ;; Otherwise, setf (depth-mask) to nil AND make sure is the first element

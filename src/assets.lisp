@@ -208,7 +208,10 @@
   (maphash-values #'free *c-samplers*)
   (clrhash *c-samplers*))
 
-(defun get-c-tex (path &optional (force nil) (image-format :rgb))
+(defun get-c-tex (path
+                  &rest args
+                  &key (force nil) (image-format :rgb)
+                  &allow-other-keys)
   (when force
     (let ((s (gethash path *c-samplers*)))
       (when s
@@ -217,8 +220,10 @@
   (let ((absolutep (uiop:absolute-pathname-p path)))
     (or (gethash path *c-samplers*)
         (setf (gethash path *c-samplers*)
-              (dirt:load-image-to-c-array
+              (apply
+               #'dirt:load-image-to-c-array
                (if absolutep
                    path
                    (asdf:system-relative-pathname :scenic path))
-               image-format)))))
+               image-format
+               args)))))

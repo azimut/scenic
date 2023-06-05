@@ -87,7 +87,7 @@
   (dolist (l (lights obj))
     (update l dt)))
 
-(defgeneric paint (scene actor camera time)
+(defgeneric paint (scene camera actor time)
   (:documentation "final stage of drawing for an individual ACTOR"))
 
 (defun current-scene ()
@@ -98,14 +98,20 @@
   (let ((scene (current-scene)))
     (nth (camera-index scene) (cameras scene))))
 
+(defun current-actors ()
+  (actors (current-scene)))
+
+(defun current-lights ()
+  (lights (current-scene)))
+
 (defun active-camera (scene)
   (nth (camera-index scene) (cameras scene)))
 
 (defmethod draw ((scene scene) (camera renderable) time)
   (dolist (l (lights scene))
-    (paint scene l camera time))
+    (paint scene camera l time))
   (dolist (a (actors scene))
-    (paint scene a camera time)))
+    (paint scene camera a time)))
 
 (defmethod draw :around ((obj scene) (camera renderable) time)
   (let ((fbo (fbo camera)))

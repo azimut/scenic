@@ -58,7 +58,7 @@
   (text-billboard-vert :vec3)
   (text-billboard-frag :vec2))
 
-(defmethod paint (scene (obj billboard) camera time)
+(defmethod paint (scene camera (obj billboard) time)
   (with-slots (sam color scale blend dtf) obj
     (with-blending blend
       (with-setf* ((depth-mask) nil

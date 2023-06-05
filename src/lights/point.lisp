@@ -109,7 +109,7 @@
   :geometry (shadowmap-point-geom)
   :fragment (shadowmap-point-frag :vec4))
 
-(defmethod paint (scene actor (light point) time)
+(defmethod paint (scene (light point) actor time)
   (with-slots (buf scale) actor
     (map-g #'shadowmap-point-pipe buf
            :scale scale
@@ -137,7 +137,7 @@
   :geometry (shadowmap-point-geom)
   :fragment (shadowmap-point-frag :vec4))
 
-(defmethod paint (scene (actor assimp-thing-with-bones) (light point) time)
+(defmethod paint (scene (light point) (actor assimp-thing-with-bones) time)
   (with-slots (buf scale bones) actor
     (map-g #'shadowmap-point-bones-pipe buf
            :scale scale
@@ -167,7 +167,7 @@
   (let ((fbo (fbo light)))
     (with-fbo-bound (fbo :attachment-for-size :d)
       (dolist (a (actors scene))
-        (paint scene a light time)))))
+        (paint scene light a time)))))
 
 (defmethod point-size ((obj point) nth)
   (let* ((index    (min nth (length *point-light-params*)))

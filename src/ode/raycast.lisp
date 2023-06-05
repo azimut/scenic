@@ -107,11 +107,11 @@
   (line-vert :vec3)
   (line-frag))
 
-(defmethod paint :around (scene (obj raycast) camera time)
+(defmethod paint :around (scene camera (obj raycast) time)
   #+nil
   (when (drawp obj)
     (call-next-method)))
-(defmethod paint (scene (obj raycast) camera time)
+(defmethod paint (scene camera (obj raycast) time)
   (with-slots (buf color from to) obj
     (map-g #'line-pipe buf
            :model-clip (world->clip camera)

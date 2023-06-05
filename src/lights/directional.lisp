@@ -52,7 +52,7 @@
   :vertex   (shadow-vert g-pnt)
   :fragment (shadow-frag))
 
-(defmethod paint (scene actor (camera directional) time)
+(defmethod paint (scene (camera directional) actor time)
   (with-slots (buf scale) actor
     (map-g #'shadow-pipe buf
            :model->clip (model->clip actor camera)
@@ -90,7 +90,7 @@
   :vertex   (vert-bones g-pnt tb-data assimp-bones)
   :fragment (simplest-3d-frag :vec2 :vec3 :vec3))
 
-(defmethod paint (scene (actor assimp-thing-with-bones) (camera directional) time)
+(defmethod paint (scene (camera directional) (actor assimp-thing-with-bones) time)
   (with-slots (buf scale bones) actor
     (map-g #'simplest-3d-bones-pipe buf
            :offsets bones
@@ -105,7 +105,7 @@
     (with-fbo-bound (fbo :attachment-for-size :d)
       (clear-fbo fbo :d)
       (dolist (a (actors scene))
-        (paint scene a light time)))))
+        (paint scene light a time)))))
 
 (defun make-directional (&rest args)
   (apply #'make-instance 'directional args))

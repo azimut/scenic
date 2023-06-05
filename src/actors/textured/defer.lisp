@@ -33,7 +33,7 @@
   (vert-with-tbdata-defer g-pnt tb-data)
   (textured-frag :vec2 :vec3 :vec3 :mat3 :vec3 :vec3))
 
-(defmethod paint (scene (actor textured) (camera defered) time)
+(defmethod paint (scene (camera defered) (actor textured) time)
   (with-slots (buf scale uv-repeat specmap roughmap albedo normal aomap color) actor
     (map-g #'textured-pipe buf
            :color color

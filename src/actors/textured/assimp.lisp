@@ -4,7 +4,7 @@
   (vert-with-tbdata-defer-bones g-pnt tb-data assimp-bones)
   (textured-frag :vec2 :vec3 :vec3 :mat3 :vec3 :vec3))
 
-(defmethod paint (scene (actor assimp-thing-with-bones) (camera defered) time)
+(defmethod paint (scene (camera defered) (actor assimp-thing-with-bones) time)
   (with-slots (buf scale albedo normal specmap aomap color bones) actor
     (map-g #'textured-bone-pipe buf
            :specmap specmap

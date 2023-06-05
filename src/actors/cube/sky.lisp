@@ -1,13 +1,26 @@
 (in-package #:scenic)
 
-;; NOTE: Technically not a cube...but fits ok in here
 ;; References:
 ;; - https://github.com/wwwtyro/glsl-atmosphere/
 
-(defclass sky (actor)
-  ()
+(defclass sky (cube capture)
+  ((sky-buf)
+   (intensity :accessor sky-intensity :initarg :intensity :documentation "intensity of the sun"))
   (:default-initargs
-   :buf (sphere)))
+   :dim '(2048 2048)
+   :texture-opts '((0 :element-type :rgba32f))
+   :sample-opts '((:wrap :clamp-to-edge))
+   :intensity 22f0))
+
+(defmethod initialize-instance :before ((obj sky) &key intensity)
+  (check-type intensity single-float))
+(defmethod initialize-instance :after ((obj sky) &key)
+  (setf (slot-value obj 'sky-buf) (sphere)))
+
+(defmethod (setf sky-intensity) :before (new-value (obj sky))
+  (check-type new-value single-float))
+(defmethod (setf sky-intensity) :after (new-value (obj sky))
+  (setf (paintp obj) T))
 
 ;; RSI
 ;; ray-sphere intersection that assumes
@@ -135,6 +148,7 @@
 
 (defun-g sky-frag ((frag-pos   :vec3)
                    &uniform
+                   (sun-intensity :float)
                    (light-pos   :vec3)
                    (light-color :vec3))
   (let* (;(offset (-  (v! 2000 9000 1000)))
@@ -142,16 +156,16 @@
          (color (* (atmosphere (normalize frag-pos)
                                (v! 0 (- 6372e3 (x offset)) 0)
                                light-pos
-                               22 ;; intensity of the sun
+                               sun-intensity ;; intensity of the sun
                                (- 6371e3 (y offset)) ;; radius of the planet
                                (- 6471e3 (z offset)) ;; radius of the atmos
                                (v! 5.5e-6 13.0e-6 22.4e-6) ;; rayleight coefficient
                                21e-6 ;; mie coefficient
-                               8e3  ;; rayleigh scale height
+                               8e3   ;; rayleigh scale height
                                1200  ;; mie scale height
-                               .758 ;; mie preferred scattering direction
-                               4 ; 16 AND 8
-                               2))))
+                               .758  ;; mie preferred scattering direction
+                               16    ;; 16 AND 8
+                               8))))
     (values (v! (* light-color color) 1)
             (v! (* 6 color) 1))));; ?????????
 
@@ -159,18 +173,16 @@
   :vertex (cube-vert g-pnt)
   :fragment (sky-frag :vec3))
 
-(defmethod paint (scene (actor sky) camera time)
-  (with-slots (buf) actor
-    (with-setf* ((cull-face) :front
-                 (depth-test-function) #'<=
-                 (depth-mask) nil)
-      (map-g #'sky-pipe buf
-             :light-pos (pos (first (lights scene)))
-             :light-color (color (first (lights scene)))
-             ;; Rotation without translation
-             :view (q:to-mat4
-                    (q:inverse (rot camera)))
-             :proj (projection  camera)))))
-
-(defun sky-p (obj)
-  (typep obj 'sky))
+(defmethod paint (scene camera (actor sky) time)
+  (with-slots (paintp) actor
+    (when paintp
+      (setf paintp nil)))
+  (with-slots (sky-buf intensity) actor
+    (map-g #'sky-pipe sky-buf
+           :sun-intensity intensity
+           :light-pos (pos (first (lights scene)))
+           :light-color (color (first (lights scene)))
+           ;; Rotation without translation
+           :view (q:to-mat4
+                  (q:inverse (rot camera)))
+           :proj (projection  camera))))

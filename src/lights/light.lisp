@@ -34,7 +34,7 @@
   (call-next-method)
   (setf (drawp obj) NIL))
 
-(defmethod paint :around (scene (actor drawable) (light light) _)
+(defmethod paint :around (scene (light light) (actor drawable) _)
   (when (shadowp actor)
     (call-next-method)))
 
@@ -53,7 +53,7 @@
   :vertex (light-vert g-pnt)
   :fragment (light-frag))
 
-(defmethod paint (scene (light light) (camera renderable) _)
+(defmethod paint (scene (camera renderable) (light light) _)
   (with-slots (buf color scale debugp) light
     (when debugp
       (map-g #'light-pipe buf

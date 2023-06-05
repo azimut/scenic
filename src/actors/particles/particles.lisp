@@ -78,7 +78,7 @@
     (rotatef str-src str-dst)
     (rotatef gar-src gar-dst)))
 
-(defmethod paint (scene (obj particles) camera time)
+(defmethod paint (scene camera (obj particles) time)
   (with-fbo-bound ((fbo camera))
     (clear-fbo (fbo camera))
     (with-slots (str-src color) obj
