@@ -3,7 +3,10 @@
 (defclass defered (renderable pers)
   ((fakeambient :initarg :fakeambient
                 :accessor fakeambient
-                :documentation "used to calculate a fake ambient light, on defered a single value works well enough for all materials"))
+                :documentation "used to calculate a fake ambient light, on defered a single value works well enough for all materials")
+   (blending    :initform (make-blending-params)
+                :reader blend
+                :documentation "used to blend environment maps on blit"))
   (:default-initargs
    :fakeambient 0f0
    :texture-opts

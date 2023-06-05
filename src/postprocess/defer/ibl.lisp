@@ -95,9 +95,9 @@
                                 (* (aref lightspace i) (v! frag-pos 1))
                                 (aref fudge i)
                                 i)))))
-    (v! (+ ambient final-color) 1)
-    ;;(v! ambient 1)
-    ))
+    (v! (+ ambient final-color)
+        ;; TODO: this alpha is to blend the possible cubemap
+        (- 1 (step (y color) 0f0)))))
 
 (defpipeline-g defer-ibl-pipe (:points)
   :fragment (defered-ibl-frag :vec2))
@@ -105,24 +105,29 @@
 (defmethod blit ((scene scene-ibl) (postprocess list) (camera defered) time)
   (destructuring-bind (s1 s2 s3 s4 _) (sam camera)
     (declare (ignore _))
-    (with-slots (prev bs) *state*
-      (map-g-into (fbo prev) #'defer-ibl-pipe bs
-                  :sample1 s1
-                  :sample2 s2
-                  :sample3 s3
-                  :sample4 s4
-                  :cam-pos (pos (current-camera))
-                  :scene (ubo scene)
-                  :time time
-                  ;; IBL
-                  :brdf (brdf-sam *state*)
-                  :prefilter (first (sam (prefilter scene)))
-                  :irradiance (first (sam (irradiance scene)))
-                  ;; Shadows
-                  :dirshadows (dir-sam *state*)
-                  :spotshadows (spot-sam *state*)
-                  :pointshadows (point-sam *state*)
-                  ;; Lights
-                  :dirlights (dir-ubo *state*)
-                  :spotlights (spot-ubo *state*)
-                  :pointlights (point-ubo *state*)))))
+    (with-blending (blend camera)
+      (with-slots (prev bs) *state*
+        (with-fbo-bound ((fbo prev))
+          (alexandria:when-let
+              ((actor (find-if #'cube-p (actors scene))))
+            (paint scene camera actor time))
+          (map-g #'defer-ibl-pipe bs
+                 :sample1 s1
+                 :sample2 s2
+                 :sample3 s3
+                 :sample4 s4
+                 :cam-pos (pos (current-camera))
+                 :scene (ubo scene)
+                 :time time
+                 ;; IBL
+                 :brdf (brdf-sam *state*)
+                 :prefilter (first (sam (prefilter scene)))
+                 :irradiance (first (sam (irradiance scene)))
+                 ;; Shadows
+                 :dirshadows (dir-sam *state*)
+                 :spotshadows (spot-sam *state*)
+                 :pointshadows (point-sam *state*)
+                 ;; Lights
+                 :dirlights (dir-ubo *state*)
+                 :spotlights (spot-ubo *state*)
+                 :pointlights (point-ubo *state*)))))))

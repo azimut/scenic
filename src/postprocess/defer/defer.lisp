@@ -91,7 +91,9 @@
                                    (* (aref lightspace i) (v! frag-pos 1))
                                    (aref fudge i)
                                    i))))))
-    (v! final-color 1)))
+    (v! final-color
+        ;; TODO: this alpha is to blend the possible cubemap
+        (- 1 (step (y color) 0f0)))))
 
 (defpipeline-g defer-pipe (:points)
   :fragment (defered-frag :vec2))
@@ -100,20 +102,25 @@
   (destructuring-bind (s1 s2 s3 s4 _) (sam camera)
     (declare (ignore _))
     (with-slots (prev bs) *state*
-      (map-g-into (fbo prev) #'defer-pipe bs
-                  :fakeambient (fakeambient camera)
-                  :cam-pos (pos camera)
-                  :scene (ubo scene)
-                  ;; Samples
-                  :sample1 s1
-                  :sample2 s2
-                  :sample3 s3
-                  :sample4 s4
-                  ;; Lights
-                  :dirlights (dir-ubo *state*)
-                  :spotlights (spot-ubo *state*)
-                  :pointlights (point-ubo *state*)
-                  ;; Shadows
-                  :dirshadows (dir-sam *state*)
-                  :spotshadows (spot-sam *state*)
-                  :pointshadows (point-sam *state*)))))
+      (with-fbo-bound ((fbo prev))
+        (with-blending (blend camera)
+          (alexandria:when-let
+              ((actor (find-if #'cube-p (actors scene))))
+            (paint scene camera actor time))
+          (map-g #'defer-pipe bs
+                 :fakeambient (fakeambient camera)
+                 :cam-pos (pos camera)
+                 :scene (ubo scene)
+                 ;; Samples
+                 :sample1 s1
+                 :sample2 s2
+                 :sample3 s3
+                 :sample4 s4
+                 ;; Lights
+                 :dirlights (dir-ubo *state*)
+                 :spotlights (spot-ubo *state*)
+                 :pointlights (point-ubo *state*)
+                 ;; Shadows
+                 :dirshadows (dir-sam *state*)
+                 :spotshadows (spot-sam *state*)
+                 :pointshadows (point-sam *state*)))))))

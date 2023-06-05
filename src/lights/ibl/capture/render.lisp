@@ -65,14 +65,3 @@
   :fragment (capture-frag :vec4 :vec3))
 
 ;;--------------------------------------------------
-
-(defun-g capture-cube-frag ((frag-pos  :vec4)
-                            (frag-norm :vec3) ;; keeping it to reuse other shaders
-                            &uniform
-                            (cube-sam  :sampler-cube))
-  (v! (s~ (texture cube-sam (s~ frag-pos :xyz)) :xyz) 1))
-
-(defpipeline-g capture-cube-pipe ()
-  :vertex   (capture-vert g-pnt)
-  :geometry (capture-geom (:vec3 3))
-  :fragment (capture-cube-frag :vec4 :vec3))
