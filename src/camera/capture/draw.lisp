@@ -1,6 +1,7 @@
 (in-package #:scenic)
 
 (defmethod draw ((scene scene) (camera capture) time)
+  (log4cl:log-info "capturing..." camera)
   (dolist (actor (actors scene))
     (paint scene camera actor time)))
 

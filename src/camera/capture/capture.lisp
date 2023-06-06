@@ -42,7 +42,8 @@
 
 (defmethod upload ((obj capture))
   (with-gpu-array-as-c-array (c (ubo-data (ubo obj)))
-    (setf (shadow-projections-mats (aref-c c 0)) (projection-mats obj))))
+    (setf (shadow-projections-mats (aref-c c 0))
+          (projection-mats obj))))
 
 (defun make-capture (&rest args)
   (apply #'make-instance 'capture args))
