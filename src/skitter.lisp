@@ -25,8 +25,9 @@
 (defun window-size-trampoline (&rest args)
   (window-listener (first args)))
 
-(defun window-listener (dim)
-  (let* ((w (x dim)) (h (* w 0.5625)))
+(defun window-listener (dim &aux (width (x dim)) (height (y dim)))
+  (let* ((w (if (> height width) width  (* height (/ 16 9f0))))
+         (h (if (> width height) height (* width  (/ 9 16f0)))))
     (setf (resolution (current-viewport)) (v! w h))
     (when (scenes *state*)
       (issue (current-scene) 'resize :height h :width w))))
