@@ -25,13 +25,23 @@
                     &uniform
                     (color :vec3)
                     (sam   :sampler-cube))
-  (let ((color3 (pow (s~ (texture sam tc) :xyz)
-                     (vec3 2.2))))
-    (values (v! (* color color3) 1))))
+  (let ((color3 (s~ (texture sam tc) :xyz)))
+    (v! (* color color3) 1)))
 
 (defpipeline-g cube-pipe ()
   (cube-vert g-pnt)
   (cube-frag :vec3))
+
+(defun-g cube-hdr-frag ((tc    :vec3)
+                        &uniform
+                        (color :vec3)
+                        (sam   :sampler-cube))
+  (let ((color3 (pow (s~ (texture sam tc) :xyz) (vec3 2.2f0))))
+    (v! (* color color3) 1)))
+
+(defpipeline-g cube-hdr-pipe ()
+  (cube-vert g-pnt)
+  (cube-hdr-frag :vec3))
 
 (defmethod paint :around (scene camera (obj cube) time)
   (with-setf* ((depth-test-function) #'<=
@@ -39,27 +49,27 @@
                (depth-mask) NIL)
     (call-next-method)))
 
+;;------------------------------
+
 (defun-g capture-cube-frag
-    ((frag-pos  :vec4)
+    ((frag-pos  :vec3)
      (frag-norm :vec3) ;; keeping it to reuse other shaders
      &uniform
      (cube-sam  :sampler-cube))
-  (v! (s~ (texture cube-sam (s~ frag-pos :xyz))
+  ;; NOTE: should I color correct here too?
+  (v! (s~ (texture cube-sam frag-pos)
           :xyz)
       1))
 
 (defpipeline-g capture-cube-pipe ()
   :vertex   (capture-vert g-pnt)
   :geometry (capture-geom (:vec3 3))
-  :fragment (capture-cube-frag :vec4 :vec3))
+  :fragment (capture-cube-frag :vec3 :vec3))
 
 ;; Used for IBL or other(? captures
 (defmethod paint (scene (camera capture) (actor cube) time)
-  (with-setf* ((depth-test-function) #'<=
-               (cull-face) :front
-               (depth-mask) NIL)
-    (with-slots (buf) actor
-      (map-g #'capture-cube-pipe buf
-             :world (m4:identity)      ;; ??
-             :projections (ubo camera) ;; ??
-             :cube-sam (sam actor)))))
+  (with-slots (buf) actor
+    (map-g #'capture-cube-pipe buf
+           :world (m4:identity)      ;; ??
+           :projections (ubo camera) ;; ??
+           :cube-sam (sam actor))))

@@ -98,7 +98,7 @@
    (:file "actors/cube/cube")
    (:file "actors/cube/envmap")
    (:file "actors/cube/hdri")
-   ;;(:file "actors/cube/sky")
+   (:file "actors/cube/sky")
    (:file "ode/ode")
    (:file "ode/derived")
    (:file "ode/scene")

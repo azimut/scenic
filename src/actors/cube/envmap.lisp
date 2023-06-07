@@ -27,7 +27,7 @@
 
 (defmethod paint (scene camera (obj envmap) time)
   (with-slots (buf sam color) obj
-    (map-g #'cube-pipe buf
+    (map-g #'cube-hdr-pipe buf
            :sam sam
            :color color
            :view (q:to-mat4 (q:inverse (rot camera)))

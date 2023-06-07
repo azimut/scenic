@@ -108,6 +108,7 @@
     (with-blending (blend camera)
       (with-slots (prev bs) *state*
         (with-fbo-bound ((fbo prev))
+          (clear-fbo (fbo prev)) ;; needed for scenes with no envmap
           (alexandria:when-let
               ((actor (find-if #'cube-p (actors scene))))
             (paint scene camera actor time))

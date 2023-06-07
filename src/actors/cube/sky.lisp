@@ -3,19 +3,18 @@
 ;; References:
 ;; - https://github.com/wwwtyro/glsl-atmosphere/
 
-(defclass sky (cube capture)
+(defclass sky (cube capture6)
   ((sky-buf)
-   (intensity :accessor sky-intensity :initarg :intensity :documentation "intensity of the sun"))
+   (intensity :accessor sky-intensity
+              :initarg :intensity
+              :documentation "intensity of the sun"))
   (:default-initargs
-   :dim '(2048 2048)
-   :texture-opts '((0 :element-type :rgba32f))
-   :sample-opts '((:wrap :clamp-to-edge))
    :intensity 22f0))
 
 (defmethod initialize-instance :before ((obj sky) &key intensity)
   (check-type intensity single-float))
 (defmethod initialize-instance :after ((obj sky) &key)
-  (setf (slot-value obj 'sky-buf) (sphere)))
+  (setf (slot-value obj 'sky-buf)  (sphere)))
 
 (defmethod (setf sky-intensity) :before (new-value (obj sky))
   (check-type new-value single-float))
@@ -166,23 +165,83 @@
                                .758  ;; mie preferred scattering direction
                                16    ;; 16 AND 8
                                8))))
+    ;;#+nil
     (values (v! (* light-color color) 1)
-            (v! (* 6 color) 1))));; ?????????
+            (v! (* 6 color) 1))
+    ;;(v! 1  0 0 1)
+    ));; ?????????
+
+(defun-g sky-frag ((frag-pos   :vec3)
+                   ;;(frag-norm  :vec3)
+                   &uniform
+                   (sun-intensity :float)
+                   (light-pos   :vec3)
+                   (light-color :vec3))
+  (let* (;(offset (-  (v! 2000 9000 1000)))
+         (offset (v! 0 0 0))
+         (color (* (atmosphere (normalize frag-pos)
+                               (v! 0 (- 6372e3 (x offset)) 0)
+                               light-pos
+                               sun-intensity ;; intensity of the sun
+                               (- 6371e3 (y offset)) ;; radius of the planet
+                               (- 6471e3 (z offset)) ;; radius of the atmos
+                               (v! 5.5e-6 13.0e-6 22.4e-6) ;; rayleight coefficient
+                               21e-6 ;; mie coefficient
+                               8e3   ;; rayleigh scale height
+                               1200  ;; mie scale height
+                               .758  ;; mie preferred scattering direction
+                               8                               ;; 16 AND 8
+                               4))))
+    ;;#+nil
+    (values (v! (* light-color color) 1)
+            ;;(v! (* 6 color) 1)
+            )
+    ;;(v! 0 1 0 1)
+    ))
 
 (defpipeline-g sky-pipe ()
-  :vertex (cube-vert g-pnt)
+  :vertex   (cube-vert g-pnt)
   :fragment (sky-frag :vec3))
 
-(defmethod paint (scene camera (actor sky) time)
-  (with-slots (paintp) actor
-    (when paintp
-      (setf paintp nil)))
-  (with-slots (sky-buf intensity) actor
-    (map-g #'sky-pipe sky-buf
-           :sun-intensity intensity
-           :light-pos (pos (first (lights scene)))
-           :light-color (color (first (lights scene)))
-           ;; Rotation without translation
-           :view (q:to-mat4
-                  (q:inverse (rot camera)))
-           :proj (projection  camera))))
+(let ((doit t))
+  (defmethod paint (scene camera (actor sky) time)
+    ;;#+nil
+    (with-slots (paintp rotations fbo) actor
+      (when (or doit paintp)
+        (setf paintp nil)
+        (setf doit nil)
+        (setf (pos actor) (v! 0 0 0))
+        (with-setf* ((depth-test-function) #'<=
+                     (cull-face) :front
+                     (resolution (current-viewport)) (v! 128 128)
+                     (depth-mask) NIL)
+          (loop :for qrotation :in rotations
+                :for cube-face :from 0
+                :do (setf (rot actor) qrotation)
+                    (setf (attachment fbo 0)
+                          (texref (tex actor) :cube-face cube-face))
+                    (with-fbo-bound (fbo)
+                      (clear-fbo fbo)
+                      (with-slots (sky-buf intensity) actor
+                        (map-g #'sky-pipe sky-buf
+                               :sun-intensity intensity
+                               :light-pos   (pos   (first (lights scene)))
+                               :light-color (color (first (lights scene)))
+                               ;; Rotation without translation
+                               :view (q:to-mat4
+                                      (q:inverse (rot actor)))
+                               :proj (projection actor)))))))
+      (with-slots (buf color sam) actor
+        (map-g #'cube-pipe buf
+               :color color
+               :view (q:to-mat4 (q:inverse (rot camera)))
+               :proj (projection camera)
+               :sam sam)))
+    #+nil
+    (with-slots (sky-buf intensity) actor
+      (map-g #'sky-pipe sky-buf
+             :sun-intensity intensity
+             :light-pos   (pos   (first (lights scene)))
+             :light-color (color (first (lights scene)))
+             :view (q:to-mat4 (q:inverse (rot camera)))
+             :proj (projection  camera)))))
