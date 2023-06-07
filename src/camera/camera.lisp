@@ -28,7 +28,8 @@
 
 (defclass resize (event)
   ((height :initarg :height :reader height)
-   (width  :initarg :width  :reader width)))
+   (width  :initarg :width  :reader width))
+  (:documentation "when a viewport resizes"))
 
 (defmethod handle :around ((e resize) (obj perspective))
   (when (equal obj (current-camera))

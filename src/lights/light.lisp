@@ -21,7 +21,7 @@
    :color (v! 1 1 1))
   (:documentation "base class for all lights"))
 
-(defmethod (setf pos)   :after (_ (obj light)) (setf (uploadp obj) T))
+(defmethod (setf pos)   :after (_ (obj light)) (setf (uploadp obj) T));; from children!
 (defmethod (setf color) :after (_ (obj light)) (setf (uploadp obj) T))
 (defmethod (setf fudge) :after (_ (obj light)) (setf (uploadp obj) T))
 

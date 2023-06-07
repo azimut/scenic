@@ -16,11 +16,6 @@
    `(,(make-material :roughness .8 :metallic .02 :specular .1)
      ,(make-material :roughness .4 :metallic .4  :specular .1))))
 
-(defclass tick (event)
-  ((tt :initarg :tt :reader tt)
-   (dt :initarg :dt :reader dt)
-   (fc :initarg :fc :reader fc)))
-
 (def-simple-main-loop play-render (:on-start #'init)
   (main-loop))
 
@@ -87,6 +82,7 @@
         ;; (draw-tex-tr (second (sam camera))); POS
         ;; (draw-tex-bl (third  (sam camera))); NORMAL
         ;; (draw-tex-br (fourth (sam camera))) ;; ???
+        ;; (draw-tex    (fifth (sam camera)) :scale .5) ;; DEPTH
 
         ;; (draw-tex-tl (first (sam (capture    scene))))
         ;; (draw-tex-tr (first (sam (irradiance scene))))

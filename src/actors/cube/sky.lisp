@@ -163,32 +163,6 @@
                                8e3   ;; rayleigh scale height
                                1200  ;; mie scale height
                                .758  ;; mie preferred scattering direction
-                               16    ;; 16 AND 8
-                               8))))
-    ;;#+nil
-    (values (v! (* light-color color) 1)
-            (v! (* 6 color) 1))
-    ;;(v! 1  0 0 1)
-    ));; ?????????
-
-(defun-g sky-frag ((frag-pos   :vec3)
-                   &uniform
-                   (sun-intensity :float)
-                   (light-pos   :vec3)
-                   (light-color :vec3))
-  (let* (;(offset (-  (v! 2000 9000 1000)))
-         (offset (v! 0 0 0))
-         (color (* (atmosphere (normalize frag-pos)
-                               (v! 0 (- 6372e3 (x offset)) 0)
-                               light-pos
-                               sun-intensity ;; intensity of the sun
-                               (- 6371e3 (y offset)) ;; radius of the planet
-                               (- 6471e3 (z offset)) ;; radius of the atmos
-                               (v! 5.5e-6 13.0e-6 22.4e-6) ;; rayleight coefficient
-                               21e-6 ;; mie coefficient
-                               8e3   ;; rayleigh scale height
-                               1200  ;; mie scale height
-                               .758  ;; mie preferred scattering direction
                                16 ;; 16 AND 8
                                8))))
     (v! (* light-color color) 1)))

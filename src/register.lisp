@@ -1,6 +1,7 @@
 (in-package #:scenic)
 
 ;; This became a big hack/escaping hatch...but I am ok with it :)
+;; I guess in a way it was the first iteration of an event loop.
 
 (defgeneric register (unit container))
 
