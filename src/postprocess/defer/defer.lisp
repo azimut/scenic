@@ -39,7 +39,8 @@
          (frag-norm (s~ color3 :xyz))
          (final-color (v! 0 0 0)))
     (dotimes (i (scene-data-ndir scene))
-      (with-slots (colors positions lightspace fudge) dirlights
+      (with-slots (colors positions lightspace fudge)
+          dirlights
         (incf final-color
               (+ (* fakeambient color)
                  (* (pbr-direct-lum (aref positions i) frag-pos cam-pos frag-norm
@@ -50,7 +51,8 @@
                                     (aref colors i))
                     (shadow-factor dirshadows (* (aref lightspace i) (v! frag-pos 1)) (aref fudge i) i))))))
     (dotimes (i (scene-data-npoint scene))
-      (with-slots (colors positions linear quadratic far fudge) pointlights
+      (with-slots (colors positions linear quadratic far fudge)
+          pointlights
         (incf final-color
               (+ (* fakeambient
                     (* color ao)
@@ -70,7 +72,8 @@
                                    (aref fudge i)
                                    i))))))
     (dotimes (i (scene-data-nspot scene))
-      (with-slots (colors positions linear quadratic far cutoff outer-cutoff direction lightspace fudge) spotlights
+      (with-slots (colors positions linear quadratic far cutoff outer-cutoff direction lightspace fudge)
+          spotlights
         (incf final-color
               (+ (* fakeambient
                     (* color ao)

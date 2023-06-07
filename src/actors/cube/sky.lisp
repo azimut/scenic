@@ -172,7 +172,6 @@
     ));; ?????????
 
 (defun-g sky-frag ((frag-pos   :vec3)
-                   ;;(frag-norm  :vec3)
                    &uniform
                    (sun-intensity :float)
                    (light-pos   :vec3)
@@ -211,26 +210,22 @@
         (setf paintp nil)
         (setf doit nil)
         (setf (pos actor) (v! 0 0 0))
-        (with-setf* ((depth-test-function) #'<=
-                     (cull-face) :front
-                     (resolution (current-viewport)) (v! 128 128)
-                     (depth-mask) NIL)
-          (loop :for qrotation :in rotations
-                :for cube-face :from 0
-                :do (setf (rot actor) qrotation)
-                    (setf (attachment fbo 0)
-                          (texref (tex actor) :cube-face cube-face))
-                    (with-fbo-bound (fbo)
-                      (clear-fbo fbo)
-                      (with-slots (sky-buf intensity) actor
-                        (map-g #'sky-pipe sky-buf
-                               :sun-intensity intensity
-                               :light-pos   (pos   (first (lights scene)))
-                               :light-color (color (first (lights scene)))
-                               ;; Rotation without translation
-                               :view (q:to-mat4
-                                      (q:inverse (rot actor)))
-                               :proj (projection actor)))))))
+        (loop :for qrotation :in rotations
+              :for cube-face :from 0
+              :do (setf (rot actor) qrotation)
+                  (setf (attachment fbo 0)
+                        (texref (tex actor) :cube-face cube-face))
+                  (with-fbo-bound (fbo)
+                    (clear-fbo fbo)
+                    (with-slots (sky-buf intensity) actor
+                      (map-g #'sky-pipe sky-buf
+                             :sun-intensity intensity
+                             :light-pos   (pos   (first (lights scene)))
+                             :light-color (color (first (lights scene)))
+                             ;; Rotation without translation
+                             :view (q:to-mat4
+                                    (q:inverse (rot actor)))
+                             :proj (projection actor))))))
       (with-slots (buf color sam) actor
         (map-g #'cube-pipe buf
                :color color
