@@ -189,14 +189,9 @@
                                8e3   ;; rayleigh scale height
                                1200  ;; mie scale height
                                .758  ;; mie preferred scattering direction
-                               8                               ;; 16 AND 8
-                               4))))
-    ;;#+nil
-    (values (v! (* light-color color) 1)
-            ;;(v! (* 6 color) 1)
-            )
-    ;;(v! 0 1 0 1)
-    ))
+                               16 ;; 16 AND 8
+                               8))))
+    (v! (* light-color color) 1)))
 
 (defpipeline-g sky-pipe ()
   :vertex   (cube-vert g-pnt)
@@ -204,9 +199,9 @@
 
 (let ((doit t))
   (defmethod paint (scene camera (actor sky) time)
-    ;;#+nil
     (with-slots (paintp rotations fbo) actor
       (when (or doit paintp)
+        (log4cl:log-info "SKYING" paintp doit)
         (setf paintp nil)
         (setf doit nil)
         (setf (pos actor) (v! 0 0 0))
@@ -215,17 +210,20 @@
               :do (setf (rot actor) qrotation)
                   (setf (attachment fbo 0)
                         (texref (tex actor) :cube-face cube-face))
-                  (with-fbo-bound (fbo)
-                    (clear-fbo fbo)
-                    (with-slots (sky-buf intensity) actor
-                      (map-g #'sky-pipe sky-buf
-                             :sun-intensity intensity
-                             :light-pos   (pos   (first (lights scene)))
-                             :light-color (color (first (lights scene)))
-                             ;; Rotation without translation
-                             :view (q:to-mat4
-                                    (q:inverse (rot actor)))
-                             :proj (projection actor))))))
+                  (clear-fbo fbo)
+                  (with-setf* ((resolution (current-viewport)) (v! 128 128))
+                    (with-fbo-bound (fbo)
+                      (log4cl:log-info "Printing face ~d" cube-face)
+                      (with-slots (sky-buf intensity) actor
+                        (map-g #'sky-pipe sky-buf
+                               :sun-intensity intensity
+                               :light-pos   (pos   (first (lights scene)))
+                               :light-color (color (first (lights scene)))
+                               ;; Rotation without translation
+                               :view (q:to-mat4
+                                      (q:inverse (rot actor)))
+                               :proj (projection actor))))))
+        (issue scene 'environment-changed))
       (with-slots (buf color sam) actor
         (map-g #'cube-pipe buf
                :color color

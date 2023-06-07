@@ -7,16 +7,14 @@
   (apply #'make-instance 'scene-ibl args))
 
 (defmethod (setf color) :after (_ (scene scene-ibl))
-  (setf (drawp (irradiance scene)) T
-        (drawp (prefilter  scene)) T
-        (drawp (capture    scene)) T))
+  (issue scene 'environment-changed))
 
-(defmethod draw :before ((scene scene-ibl) (camera defered) dt)
+(defmethod draw :after ((scene scene-ibl) (camera defered) dt)
   (draw scene (capture    scene) dt)
   (draw scene (prefilter  scene) dt)
   (draw scene (irradiance scene) dt))
 
-(defmethod draw :before ((scene scene-ibl) (camera perspective) dt)
+(defmethod draw :after ((scene scene-ibl) (camera perspective) dt)
   (draw scene (capture    scene) dt)
   (draw scene (prefilter  scene) dt)
   (draw scene (irradiance scene) dt))
@@ -29,3 +27,8 @@
   (upload (capture    scene))
   (upload (prefilter  scene))
   (upload (irradiance scene)))
+
+(defmethod handle ((event environment-changed) (scene scene-ibl))
+  (setf (drawp (irradiance scene)) T
+        (drawp (prefilter  scene)) T
+        (drawp (capture    scene)) T))

@@ -60,7 +60,6 @@
   :fragment (prefilter-frag :vec4))
 
 (defmethod draw ((scene scene-ibl) (camera prefilter) time)
-  (log4cl:log-info "drawing prefilter")
   (with-setf* ((resolution (current-viewport)) (v! 128 128)
                (depth-test-function) #'<=
                (cull-face) :front)

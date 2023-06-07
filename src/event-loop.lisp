@@ -23,7 +23,12 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
    (fc :initarg :fc :accessor fc)))
 
 (defclass movement (event)
-  ())
+  ()
+  (:documentation "when there is movement in the scene"))
+
+(defclass environment-changed (event)
+  ()
+  (:documentation "when the environment map of the scene changes"))
 
 (defgeneric add-listener (listener event-loop))
 (defgeneric remove-listener (listener event-loop))
