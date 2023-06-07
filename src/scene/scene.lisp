@@ -25,7 +25,7 @@
                  :documentation "(clear-color) color")
    (name         :reader name :initarg :name))
   (:default-initargs
-   :post (list (make-simple-postprocess))
+   :post (list (make-instance 'hdr-acesfilm))
    :actors ()
    :color (v! 0 0 0 0)
    :camera-index 0)
@@ -61,7 +61,7 @@
   (check-type color rtg-math.types:vec4))
 
 (defmethod initialize-instance :after ((obj scene) &key post)
-  (mapcar (lambda (p) (add-listener p obj)) post )
+  (mapc (lambda (p) (register p obj)) post)
   (with-slots (ubo) obj
     (setf ubo (make-ubo NIL 'scene-data))
     (with-gpu-array-as-c-array (c (ubo-data ubo))

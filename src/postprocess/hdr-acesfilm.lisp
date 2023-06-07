@@ -1,13 +1,7 @@
 (in-package #:scenic)
 
-(defclass simple (postprocess)
-  ((exposure :initarg :exposure
-             :initform (error ":exposure must be specified")
-             :accessor exposure
-             :documentation "camera exposure")))
-
-(defun make-simple-postprocess (&key (exposure 1f0))
-  (make-instance 'simple :exposure exposure))
+(defclass hdr-acesfilm (hdr)
+  ())
 
 ;; https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
 (defun-g linear-to-srgb ((c :vec3))
@@ -26,18 +20,18 @@
                (+ e (* x (+ d (* c x)))))
             0f0 1f0))))
 
-(defun-g frag-2d ((uv :vec2) &uniform (sam :sampler-2d) (exposure :float))
+(defun-g hdr-acesfilm-frag ((uv :vec2) &uniform (sam :sampler-2d) (exposure :float))
   (let* ((final-color (s~ (texture sam uv) :xyz))
          (ldr  (tone-map-acesfilm final-color exposure))
          (luma (rgb->luma-bt601 ldr)))
     (v! ldr luma)))
 
-(defpipeline-g generic-2d-pipe (:points)
-  :fragment (frag-2d :vec2))
+(defpipeline-g hdr-acesfilm-pipe (:points)
+  :fragment (hdr-acesfilm-frag :vec2))
 
-(defmethod blit (scene (postprocess simple) (camera renderable) time)
-  (with-slots (exposure prev bs) *state*
+(defmethod blit (scene (postprocess hdr-acesfilm) (camera renderable) time)
+  (with-slots (prev bs) *state*
     (with-slots (exposure) postprocess
-      (map-g #'generic-2d-pipe bs
+      (map-g #'hdr-acesfilm-pipe bs
              :sam (first (sam prev))
              :exposure exposure))))

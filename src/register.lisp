@@ -45,6 +45,9 @@
       (incf (scene-data-nspot (aref-c c 0)))
       (call-next-method))))
 
+(defmethod register ((post postprocess) (scene scene))
+  (push post (post scene)))
+
 (defmethod register ((scene scene) (state state))
   (add-listener state scene)
   (push scene (scenes state))
