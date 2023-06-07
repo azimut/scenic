@@ -8,7 +8,7 @@
    :roughness 0.8
    :buf (box)
    :dim '(128 128)
-   :texture-opts '(( 0 :cubes t :element-type :rgb16f :mipmap 5)
+   :texture-opts '(( 0 :cubes t :element-type :rgb16f :generate-mipmaps t)
                    (:d :cubes t :element-type :depth-component24))
    :sample-opts '((:wrap           :clamp-to-edge
                    :magnify-filter :linear)
