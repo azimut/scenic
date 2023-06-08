@@ -15,7 +15,7 @@ jobs:
       - name: APT deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y libassimp4 sbcl
+          sudo apt-get install -y libassimp5 sbcl
 
       - name: mkdir
         run: |
@@ -90,6 +90,8 @@ jobs:
       - name: Get LISP deps
         run: |
           cd ~/quicklisp/local-projects/
+          (test -d nepal)     || git clone --depth=1 https://github.com/azimut/nepal
+          ( cd nepal/     ; git pull )
           (test -d rocketman) || git clone --depth=1 https://github.com/azimut/rocketman
           ( cd rocketman/ ; git pull )
           (test -d cepl)      || git clone --depth=1 https://github.com/azimut/cepl
@@ -98,9 +100,8 @@ jobs:
           ( cd glsl-spec/ ; git pull )
           (test -d cepl.fond) || git clone --depth=1 https://github.com/cbaggers/cepl.fond
           ( cd cepl.fond/ ; git pull )
-          (test -d nepal)     || git clone --depth=1 https://github.com/azimut/nepal
-          ( cd nepal/     ; git pull )
-
+          (test -d classimp)  || git clone --depth=1 https://github.com/3b/classimp
+          ( cd classimp/  ; git pull )
 
       - name: Build Binary
         run: |
