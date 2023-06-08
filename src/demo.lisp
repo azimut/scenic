@@ -35,7 +35,7 @@
     ))
 
 (defmethod update ((obj spot) dt)
-  ;;#+nil
+  #+nil
   (let* ((new-pos (v3:*s (v! -2 8 -2) 1f0))
          (new-dis (v3:distance new-pos (v! 0 0 0))))
     ;; (setf (pos obj) new-pos)
@@ -44,7 +44,7 @@
     (setf (far obj)  (+ new-dis (* new-dis 2)))
     (setf (fov obj) 100f0)
     ))
-
+#+nil
 (defun init-all-the-things ()
   (init-state
    `(,(make-material :roughness .8 :metallic .02 :specular .1)
@@ -154,7 +154,7 @@
                                         (random-in-range 1.0 2.5)
                                         (random-in-range -15f0 15f0)))
                 s1))
-    ;;(register (make-instance 'sky) s1)
+    ;;(register (make-sky) s1)
     (register (make-bunny) s1)
     (register (make-untextured-floor) s1)
     (register s1 *state*))
@@ -163,7 +163,7 @@
              :name "defered ibl"
              :color (v! .2 .2 .2 1)
              :post (list ;;(make-instance 'ssao)
-                    (make-simple-postprocess)
+                    (make-instance 'hdr-acesfilm)
                     ;;(make-instance 'dof)
                     )))
         (cam (make-defered
@@ -194,7 +194,6 @@
                                         (random-in-range 1.0 2.5)
                                         (random-in-range -15f0 15f0)))
                 s1))
-
     (register (make-box :h 10 :w 2f0 :d 2f0 :pos (v! 8 5   9)) s1)
     (register (make-box :h 10 :w 2f0 :d 2f0 :pos (v! 8 5 -11)) s1)
     (register (make-bunny) s1)
@@ -217,15 +216,9 @@
                :pos (v! -2 2 -2)
                :rot (q:point-at (v! 0 1 0) (v! -2 2 -2) (v! 0 0 0)))
               s1)
-    (register (make-instance 'sky) s1);; !!!!
-    (register (make-spot
-               :cutoff 0.2 :outer-cutoff 0.8
-               :fov 100f0
-               :far 16.12 :near 5.939
-               :pos (v! -2 8 -2)
-               :color (light-color 10)
-               :rot (q:point-at (v! 0 1 0) (v! -2 8 -2) (v! 0 0 0)))
-              s1)
+    (register (make-sky) s1);; !!!!
+    (register (make-some-spot) s1)
+    ;;(register (make-some-directional) s1)
     (dotimes (i 20)
       (register (make-instance 'untextured
                                :buf (box 1f0 5f0 1f0)
@@ -234,7 +227,9 @@
                                         (random-in-range -15f0 15f0)))
                 s1))
     (register (make-bunny) s1)
-    (register (make-textured-floor) s1)))
+    ;;(register (make-textured-floor) s1)
+    (register (make-untextured-floor) s1)
+    ))
 
 (defun forward-spot-bunny-floor-textured ()
   (let ((s1 (make-scene
@@ -244,15 +239,9 @@
                :pos (v! -2 2 -2)
                :rot (q:point-at (v! 0 1 0) (v! -2 2 -2) (v! 0 0 0)))
               s1)
-    (register (make-instance 'sky) s1);; !!!!
-    (register (make-spot
-               :cutoff 0.2 :outer-cutoff 0.8
-               :fov 100f0
-               :far 16.12 :near 5.939
-               :pos (v! -2 8 -2)
-               :color (light-color 10)
-               :rot (q:point-at (v! 0 1 0) (v! -2 8 -2) (v! 0 0 0)))
-              s1)
+    (register (make-sky) s1);; !!!!
+    ;;(register (make-some-directional) s1)
+    (register (make-some-spot) s1)
     (dotimes (i 20)
       (register (make-instance 'untextured
                                :buf (box 1f0 5f0 1f0)
@@ -261,16 +250,38 @@
                                         (random-in-range -15f0 15f0)))
                 s1))
     (register (make-bunny) s1)
-    (register (make-textured-floor) s1)))
+    ;;(register (make-textured-floor) s1)
+    (register (make-untextured-floor) s1)
+    ))
+
+(defun make-some-spot ()
+  (make-spot
+   :cutoff 0.2 :outer-cutoff 0.8
+   :fov 100f0
+   :far 16.12 :near 5.939
+   :pos (v! -2 8 -2)
+   :color (light-color 10)
+   :rot (q:point-at (v! 0 1 0) (v! -2 8 -2) (v! 0 0 0))))
+
+(defun make-some-directional ()
+  (make-directional
+   :pos (v! -20 40 50)
+   :rot (q:point-at (v! 0 1 0) (v! -20 40 50) (v! 0 0 0))
+   :near 60f0
+   :far 80f0
+   :fs (v2! 30)
+   :color (light-color 5)))
 
 (defun make-untextured-floor ()
   (make-instance
    'untextured
-   :pos (v! 0 -.5 0)
-   :buf (box 50f0 1f0 50f0 t)))
+   :buf (lattice 100f0 100f0)))
 
 (defun make-textured-floor ()
-  (make-instance 'textured :buf (lattice 100f0 100f0 500 500 t)))
+  (make-instance
+   'textured
+   :material 1
+   :buf (lattice 100f0 100f0 500 500 t)))
 
 (defun make-bunny ()
   (make-instance
@@ -278,6 +289,7 @@
    :buf (assimp-load-mesh "static/bunny.obj")
    :pos (v! 0 0.85 0)))
 
+(defun make-sky () (make-instance 'sky :intensity 15f0))
 (defun make-clouds ()
   (make-envmap "static/ThickCloudsWater/left.png"
                "static/ThickCloudsWater/right.png"
@@ -285,3 +297,10 @@
                "static/ThickCloudsWater/down.png"
                "static/ThickCloudsWater/front.png"
                "static/ThickCloudsWater/back.png"))
+
+(in-package :%alut)
+(define-foreign-library alut
+  (:windows "alut.dll" :calling-convention :stdcall)
+  (:darwin (:or (:default "libalut") (:framework "alut")))
+  (:unix (:or "libalut.so" "libalut.so.0" "libalut.so.0.1.0"))
+  (t (:default "libalut")))
