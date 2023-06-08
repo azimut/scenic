@@ -102,6 +102,8 @@ jobs:
           ( cd cepl.fond/ ; git pull )
           (test -d classimp)  || git clone --depth=1 https://github.com/3b/classimp
           ( cd classimp/  ; git pull )
+          (test -d cm)        || git clone --depth=1 https://github.com/ormf/cm
+          ( cd cm/        ; git pull )
 
       - name: Build Binary
         run: |

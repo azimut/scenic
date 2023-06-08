@@ -97,6 +97,8 @@ jobs:
       - name: Get LISP deps
         run: |
           cd ~/quicklisp/local-projects/
+          (test -d nepal)     || git clone --depth=1 https://github.com/azimut/nepal
+          ( cd nepal/     ; git pull )
           (test -d rocketman) || git clone --depth=1 https://github.com/azimut/rocketman
           ( cd rocketman ; git pull )
           (test -d cepl)      || git clone --depth=1 https://github.com/azimut/cepl
@@ -105,8 +107,8 @@ jobs:
           ( cd glsl-spec ; git pull )
           (test -d cepl.fond) || git clone --depth=1 https://github.com/cbaggers/cepl.fond
           ( cd cepl.fond ; git pull )
-          (test -d nepal)     || git clone --depth=1 https://github.com/azimut/nepal
-          ( cd nepal/     ; git pull )
+          (test -d cm)        || git clone --depth=1 https://github.com/ormf/cm
+          ( cd cm/        ; git pull )
         shell: bash
 
       - name: Build Binary
