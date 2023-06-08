@@ -105,6 +105,8 @@ jobs:
           ( cd glsl-spec ; git pull )
           (test -d cepl.fond) || git clone --depth=1 https://github.com/cbaggers/cepl.fond
           ( cd cepl.fond ; git pull )
+          (test -d nepal)     || git clone --depth=1 https://github.com/azimut/nepal
+          ( cd nepal/     ; git pull )
         shell: bash
 
       - name: Build Binary
