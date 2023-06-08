@@ -250,99 +250,14 @@
   ;;   (setf (rot camera) (q:point-at (v! 0 1 0) pos (v! 0 0 0))))
   )
 
-
-(defun init-all-the-things ()
-  (init-state (list (make-material :roughness .8 :metallic .02 :specular .1)
-                    (make-material :roughness .8 :metallic .02 :specular .1)))
-  (let ((s1 (make-scene)))
-    (register (make-perspective :scale .25 :pos (v! 2 2 2) :rot (q:point-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0))) s1)
-    (register (make-point :pos (v! -2 2 -2) :color (v! .1 .1 .3) :linear 0.35 :quadratic 0.44) s1)
-    (register (make-box) s1)
-    (register s1 *state*)))
-
-(defmethod update ((obj directional) dt)
-  (let* ((new-pos (v3:*s (v! 20 10 -30) 1f0))
-         (new-dis (v3:distance new-pos (v! 0 0 0))))
-    ;; (setf (pos obj) new-pos)
-    ;; (setf (rot obj)  (q:point-at (v! 0 1 0) new-pos (v! 0 0 0)))
-    ;; (setf (far obj)  (+ new-dis (* new-dis .1)))
-    ;; (setf (near obj) (- new-dis (* new-dis .1)))
-    ;; (setf (fs obj) (v2! 10))
-    ))
-
-
 ;;------------------------------
 ;; AOC 18
-
-
-(defun aoc-positions 
-    (&aux (filename "/home/sendai/projects/aoc2022/data/day18.txt"))
-  (with-open-file (f filename)
-    (loop :for line := (read-line f nil nil)
-          :while line
-          :for (x y z) := (cl-ppcre:split "," line)
-          :collect (v! (parse-integer x)
-                       (parse-integer y)
-                       (parse-integer z)))))
-
-(defun take (n l)
-  (if (stringp l)
-      (loop for x across l repeat (the fixnum n) collect x)
-      (loop for x in l repeat (the fixnum n) collect x)))
-
-(defun drop (n l)
-  (nthcdr n l))
-
-(defun clear-actors ()
-  (loop :for actor := (pop (actors (current-scene)))
-        :while actor
-        :do (free actor))
-  T)
-
-;; SCENIC> (lights (current-scene))
-;; (#<POINT (20.0 17.0 0.0) L:0.07 Q:0.017 NEAR:0.1 FAR:20.0 {100372E533}>
-;;          #<POINT (0.0 20.0 10.0) L:0.022 Q:0.0019 NEAR:0.1 FAR:20.0 {100A6329B3}>
-;;          #<POINT (0.0 8.0 0.0) L:0.07 Q:0.017 NEAR:0.1 FAR:20.0 {100314ECE3}>)
-;; SCENIC> 
-
-(defun test-load ()
-  (dolist (_ (drop 1000 (aoc-positions)))
-    (register
-     (make-box :w 1f0 :d 1f0
-               ;; :color (v! (random-in-range 0.0 1.0)
-               ;;            (random-in-range 0.0 1.0)
-               ;;            (random-in-range 0.0 1.0))
-               :color (v! .4 .1 .4)
-               :pos _)
-     (current-scene))))
 
 
 (defun init-all-the-things ()
   (init-state
    (list (make-material :roughness .8 :metallic .02 :specular .1)
          (make-material :roughness .4 :metallic .4  :specular .1)))
-  ;;#+nil
-  (let ((s1 (make-scene-ode :color (v! .2 .2 .2 1) :post (list (make-defer-postprocess)))))
-    (register (make-defered :downscale .25 :pos (v! 2 2 2) :rot (q:point-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0))) s1)
-    (register (make-box :w 20f0 :d 20f0 :pos (v! 0 -.5 0)) s1)
-    (register (make-spot :far 20f0 :near 4f0 :pos (v! -2 8 -2) :color (v! .5 .1 .3) :rot (q:point-at (v! 0 1 0) (v! -2 8 -2) (v! 0 0 0))) s1)
-    ;;(register (make-directional :pos (v! 150 333 223)) s1)
-    (register s1 *state*))
-  #+nil
-  (let ((s1 (make-scene :color (v! 0 0 0 1))))
-    (register (make-perspective :downscale .7 :pos (v! 2 2 2) :rot (q:point-at (v! 0 1 0) (v! 2 2 2) (v! 0 0 0))) s1)
-    (register (make-point :pos (v! 0  8 0)
-                          :far 20f0 :fudge 0.2)
-              s1)
-    (register (make-point :pos (v! 0 20 10)
-                          :far 20f0 :fudge 0.2)
-              s1)
-    (register (make-point :pos (v! 20 8 0)
-                          :far 20f0 :fudge 0.2)
-              s1)
-    ;; (register (make-directional :pos (v! 150 333 223)) s1)
-    (register s1 *state*))
-  #+nio
   (let ((s1 (make-scene-ode :color (v! .2 .2 .2 1) :post (list (make-defer-postprocess)))))
     #+nil
     (register (make-defered :downscale .25 :pos (v! -14.65844 4.4909353 0.22071815)
@@ -357,9 +272,3 @@
     (register (make-point :pos (v! -10 5  0) :far 20f0 :fudge 0.2)  s1)
     (register (make-point :pos (v! -11 8 -5) :far 20f0 :fudge 0.08) s1)
     (register s1 *state*)))
-
-(defclass xxx (untextured physic-box) ())
-
-(defmethod update ((camera defered) dt)
-  (god-move 2f0 dt camera)
-  (full-rot 2f0 dt camera))
