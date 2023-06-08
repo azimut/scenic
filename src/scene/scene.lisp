@@ -61,7 +61,7 @@
   (check-type color rtg-math.types:vec4))
 
 (defmethod initialize-instance :after ((obj scene) &key post)
-  (mapc (lambda (p) (register p obj)) post)
+  (mapcar (lambda (p) (register p obj)) post)
   (with-slots (ubo) obj
     (setf ubo (make-ubo NIL 'scene-data))
     (with-gpu-array-as-c-array (c (ubo-data ubo))

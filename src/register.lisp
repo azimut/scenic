@@ -46,7 +46,8 @@
       (call-next-method))))
 
 (defmethod register ((post postprocess) (scene scene))
-  (push post (post scene)))
+  (when (not (find post (post scene)))
+    (push post (post scene))))
 
 (defmethod register ((scene scene) (state state))
   (add-listener state scene)
