@@ -171,8 +171,11 @@
 ;; Dirt - image loader into CEPL sampler
 
 (defun resolve-path (file)
-  (if (uiop:absolute-pathname-p file)
-      file
+  (or (uiop:absolute-pathname-p file)
+      (probe-file file)
+      (arrow-macros:some-> (uiop:getenv "APPDIR")
+        (uiop/pathname:subpathname* file)
+        (probe-file))
       (asdf:system-relative-pathname :scenic file)))
 
 (defun list-tex ()
