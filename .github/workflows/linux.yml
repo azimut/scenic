@@ -16,7 +16,7 @@ jobs:
 
       - name: mkdir
         run: |
-          mkdir -pv /tmp/binpkgs
+          mkdir -pv ~/binpkgs
           mkdir -pv ~/Downloads
           mkdir -pv ~/quicklisp
           mkdir -pv ~/.cache/common-lisp
@@ -30,8 +30,8 @@ jobs:
           cache-name: cache-gantoo-glibc
         with:
           path: |
-            /tmp/binpkgs/
             /var/db/repos/gentoo/
+            ~/binpkgs/
             ~/Downloads/
             ~/quicklisp
             ~/.cache/common-lisp/
@@ -39,10 +39,10 @@ jobs:
 
       - name: PORTAGE deps
         env:
-          PKGDIR: /tmp/binpkgs
+          PKGDIR: /github/home/binpkgs
         run: |
           emerge-webrsync
-          emerge --quiet-build=y -j2 -l2 -bk media-libs/libsdl2 media-libs/assimp media-libs/openal
+          emerge --quiet-build=y -j2 -l2 -bk media-libs/libsdl2 media-libs/assimp media-libs/openal media-libs/freealut
 
       - name: Install quicklisp
         run: |
@@ -84,7 +84,7 @@ jobs:
         run: |
           source /etc/profile
           cd bin/
-          make scenic.AppImage
+          make
 
       - name: Dev Release
         uses: marvinpinto/action-automatic-releases@latest
@@ -95,7 +95,7 @@ jobs:
           prerelease: true
           title: "Development Linux Build"
           files: |
-            bin/scenic.AppImage
+            bin/AppDir
             LICENSE
 
       - name: Stable Release
