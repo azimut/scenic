@@ -4,7 +4,7 @@ on: [push]
 
 jobs:
   build:
-    #if: ${{ false }}  # disable for now
+    if: ${{ false }}  # disable for now
     runs-on: windows-2019
     env:
       VCPKG_CONCURRENCY: 1

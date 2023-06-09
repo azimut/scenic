@@ -5,6 +5,8 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-20.04
+    container:
+      image: molochwalker/gantoo:glibc
     steps:
 
       - uses: actions/checkout@v2
@@ -12,72 +14,36 @@ jobs:
           fetch-depth: 0
           lfs: true
 
-      - name: APT deps
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libassimp5 libopenal-dev libopenal1 libalut-dev libalut0 sbcl
-
       - name: mkdir
         run: |
           mkdir -pv ~/Downloads
-          mkdir -pv ~/sbcl
           mkdir -pv ~/quicklisp
           mkdir -pv ~/.cache/common-lisp
         shell: bash
-
       - name: Get Current Month
         id: current-month
         run: echo "::set-output name=value::$(date -u '+%Y-%m')"
-      - name: Cache SBCL Setup
+      - uses: actions/cache@v2
         id: cache
-        uses: actions/cache@v2
         env:
-          cache-name: cache-sbcl-compressed-sdl
+          cache-name: cache-gantoo-glibc
         with:
           path: |
+            /var/cache/binpkgs/
+            /var/db/repos/gentoo/
             ~/Downloads/
             ~/quicklisp
             ~/.cache/common-lisp/
-            ~/sbcl
           key: "${{ steps.current-month.outputs.value }}-${{ env.cache-name }}-${{ runner.os }}"
-      - name: Restore Path To Cached Files
-        run: |
-          echo $HOME/sbcl/bin >> $GITHUB_PATH
-        if: steps.cache.outputs.cache-hit == 'true'
 
-      - name: Download SBCL 2.1.9
+      - name: PORTAGE deps
         run: |
-          cd ~/Downloads
-          wget http://downloads.sourceforge.net/project/sbcl/sbcl/2.1.9/sbcl-2.1.9-source.tar.bz2
-          tar xjf sbcl-2.1.9-source.tar.bz2
-        if: steps.cache.outputs.cache-hit != 'true'
-
-      - name: Install SBCL 2.1.9
-        run: |
-          cd ~/Downloads/sbcl-2.1.9
-          sh make.sh --with-sb-core-compression
-          unset SBCL_HOME
-          INSTALL_ROOT=~/sbcl ./install.sh
-        if: steps.cache.outputs.cache-hit != 'true'
-
-      - name: Build SDL 2.0.12
-        run: |
-          cd ~/Downloads
-          wget https://www.libsdl.org/release/SDL2-2.0.12.tar.gz
-          tar xzf SDL2-2.0.12.tar.gz
-          cd SDL2-2.0.12
-          ./configure
-          make
-        if: steps.cache.outputs.cache-hit != 'true'
-      - name: Install SDL 2.0.12
-        run: |
-          cd ~/Downloads/SDL2-2.0.12
-          sudo make install prefix=/usr
+          emerge-webrsync
+          emerge -bk media-libs/libsdl2 media-libs/assimp media-libs/openal
 
       - name: Install quicklisp
         run: |
           cd ~/Downloads
-          export PATH="$HOME/sbcl/bin:${PATH}"
           wget https://beta.quicklisp.org/quicklisp.lisp
           sbcl --non-interactive \
                --eval '(load "quicklisp.lisp")' \
@@ -107,7 +73,6 @@ jobs:
 
       - name: Build Binary
         run: |
-          export PATH="$HOME/sbcl/bin:${PATH}"
           cd bin/
           make scenic.AppImage
 
@@ -133,6 +98,6 @@ jobs:
             bin/scenic.AppImage
             LICENSE
 
-      # - name: DEBUG SHELL
-      #   uses: mxschmitt/action-tmate@v3
-      #   if: ${{ failure() }}
+      - name: DEBUG SHELL
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ failure() }}
