@@ -100,6 +100,7 @@
    (:file "actors/cube/envmap")
    (:file "actors/cube/hdri")
    (:file "actors/cube/sky")
+   (:file "actors/sprite")
    (:file "ode/ode")
    (:file "ode/derived")
    (:file "ode/scene")
