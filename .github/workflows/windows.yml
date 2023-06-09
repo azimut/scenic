@@ -94,6 +94,8 @@ jobs:
         shell: bash
         if: steps.cache.outputs.cache-hit != 'true'
 
+      # log4cl added due https://github.com/sharplispers/log4cl/issues/45#issuecomment-1493418045
+      # classimp added for assimp v5 support https://github.com/3b/classimp/issues/18
       - name: Get LISP deps
         run: |
           cd ~/quicklisp/local-projects/
@@ -109,6 +111,8 @@ jobs:
           ( cd cepl.fond ; git pull )
           (test -d cm)        || git clone --depth=1 https://github.com/ormf/cm
           ( cd cm/        ; git pull )
+          (test -d log4cl)    || git clone --depth=1 https://github.com/sharplispers/log4cl
+          ( cd log4cl/    ; git pull )
         shell: bash
 
       - name: Build Binary

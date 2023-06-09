@@ -16,6 +16,7 @@ jobs:
 
       - name: mkdir
         run: |
+          mkdir -pv /tmp/binpkgs
           mkdir -pv ~/Downloads
           mkdir -pv ~/quicklisp
           mkdir -pv ~/.cache/common-lisp
@@ -29,7 +30,7 @@ jobs:
           cache-name: cache-gantoo-glibc
         with:
           path: |
-            /var/cache/binpkgs/
+            /tmp/binpkgs/
             /var/db/repos/gentoo/
             ~/Downloads/
             ~/quicklisp
@@ -37,6 +38,8 @@ jobs:
           key: "${{ steps.current-month.outputs.value }}-${{ env.cache-name }}-${{ runner.os }}"
 
       - name: PORTAGE deps
+        env:
+          PKGDIR: /tmp/binpkgs
         run: |
           emerge-webrsync
           emerge --quiet-build=y -j2 -l2 -bk media-libs/libsdl2 media-libs/assimp media-libs/openal
@@ -54,6 +57,9 @@ jobs:
                --eval '(ql-dist:install-dist "http://bodge.borodust.org/dist/org.borodust.bodge.txt" :replace t :prompt nil)'
         if: steps.cache.outputs.cache-hit != 'true'
 
+      # both below due quicklisp is a couple of months old as of right now (june 23)
+      # log4cl added due https://github.com/sharplispers/log4cl/issues/45#issuecomment-1493418045
+      # classimp added for assimp v5 support https://github.com/3b/classimp/issues/18
       - name: Get LISP deps
         run: |
           cd ~/quicklisp/local-projects/
@@ -71,6 +77,8 @@ jobs:
           ( cd classimp/  ; git pull )
           (test -d cm)        || git clone --depth=1 https://github.com/ormf/cm
           ( cd cm/        ; git pull )
+          (test -d log4cl)    || git clone --depth=1 https://github.com/sharplispers/log4cl
+          ( cd log4cl/    ; git pull )
 
       - name: Build Binary
         run: |
