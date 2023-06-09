@@ -84,7 +84,7 @@ jobs:
         run: |
           source /etc/profile
           cd bin/
-          make
+          make tar
 
       - name: Dev Release
         uses: marvinpinto/action-automatic-releases@latest
@@ -95,7 +95,7 @@ jobs:
           prerelease: true
           title: "Development Linux Build"
           files: |
-            bin/AppDir
+            bin/scenic-Linux.tgz
             LICENSE
 
       - name: Stable Release

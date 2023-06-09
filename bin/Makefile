@@ -25,11 +25,12 @@ scenic.AppImage: AppDir/scenic AppRun iconfile.svg scenic.desktop appimagetool
 	install -D ../static/bunny.obj AppDir/static/bunny.obj
 	ARCH=x86_64 ./appimagetool -v AppDir scenic.AppImage
 
-.PHONY: tar
-tar: scenic-$(OS).tgz
 scenic-$(OS).tgz: AppDir/scenic
 	find . -name '*.so*' -exec strip {} \;
 	tar cvzf scenic-$(OS).tgz AppDir/
+
+.PHONY: tar
+tar: scenic-$(OS).tgz
 
 .PHONY: clean
 clean:
