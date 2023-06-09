@@ -39,11 +39,12 @@ jobs:
       - name: PORTAGE deps
         run: |
           emerge-webrsync
-          emerge -bk media-libs/libsdl2 media-libs/assimp media-libs/openal
+          emerge --quiet-build=y -j2 -l2 -bk media-libs/libsdl2 media-libs/assimp media-libs/openal
 
       - name: Install quicklisp
         run: |
           cd ~/Downloads
+          source /etc/profile
           wget https://beta.quicklisp.org/quicklisp.lisp
           sbcl --non-interactive \
                --eval '(load "quicklisp.lisp")' \
@@ -73,6 +74,7 @@ jobs:
 
       - name: Build Binary
         run: |
+          source /etc/profile
           cd bin/
           make scenic.AppImage
 
