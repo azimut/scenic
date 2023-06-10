@@ -298,11 +298,11 @@
                "static/ThickCloudsWater/front.png"
                "static/ThickCloudsWater/back.png"))
 
-(in-package :%alut)
-(define-foreign-library alut
-  (:windows "alut.dll" :calling-convention :stdcall)
-  (:darwin (:or (:default "libalut") (:framework "alut")))
-  (:unix "libalut.so.0.1.0")
-  ;;(:unix (:or  "libalut.so" "libalut.so.0"  "libalut.so.0.1.0"))
-  ;;(t (:default "libalut"))
-  )
+;; (in-package :%alut)
+;; (define-foreign-library alut
+;;   (:windows "alut.dll" :calling-convention :stdcall)
+;;   (:darwin (:or (:default "libalut") (:framework "alut")))
+;;   (:unix "libalut.so.0.1.0")
+;;   ;;(:unix (:or  "libalut.so" "libalut.so.0"  "libalut.so.0.1.0"))
+;;   ;;(t (:default "libalut"))
+;;   )

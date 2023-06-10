@@ -132,6 +132,8 @@ jobs:
       - name: Get LISP deps
         run: |
           cd ~/quicklisp/local-projects/
+          (test -d cl-openal) || git clone -b fixalut --depth=1 https://github.com/azimut/cl-openal
+          ( cd cl-openal/ ; git pull )
           (test -d nepal)     || git clone --depth=1 https://github.com/azimut/nepal
           ( cd nepal/     ; git pull )
           (test -d rocketman) || git clone --depth=1 https://github.com/azimut/rocketman
