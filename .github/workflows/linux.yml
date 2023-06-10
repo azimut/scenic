@@ -89,7 +89,7 @@ jobs:
           cd ~/Downloads
           wget http://deb.debian.org/debian/pool/main/f/freealut/freealut_${{ env.FREEALUT_VERSION }}.orig.tar.gz
           tar xzf freealut_${{ env.FREEALUT_VERSION }}.orig.tar.gz
-          cd freealut_${{ env.FREEALUT_VERSION }}
+          cd freealut-${{ env.FREEALUT_VERSION }}
           sh autogen.sh
           ./configure
           make
