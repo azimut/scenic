@@ -84,7 +84,7 @@ jobs:
           sudo make install prefix=/usr
 
       # Just building it because this builds against OpenAL
-      - name: Build OpenAL ${{ env.OPENAL_VERSION }}
+      - name: Build Freealut ${{ env.FREEALUT_VERSION }}
         run: |
           cd ~/Downloads
           wget http://deb.debian.org/debian/pool/main/f/freealut/freealut_${{ env.FREEALUT_VERSION }}.orig.tar.gz
@@ -94,9 +94,9 @@ jobs:
           ./configure
           make
         if: steps.cache.outputs.cache-hit != 'true'
-      - name: Install OpenAL ${{ env.OPENAL_VERSION }}
+      - name: Install Freealut ${{ env.FREEALUT_VERSION }}
         run: |
-          cd ~/Downloads/freealut_${{ env.FREEALUT_VERSION }}
+          cd ~/Downloads/freealut-${{ env.FREEALUT_VERSION }}
           sudo make install prefix=/usr
 
       - name: Download SBCL ${{ env.SBCL_VERSION }}
