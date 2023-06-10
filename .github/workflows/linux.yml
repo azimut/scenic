@@ -75,13 +75,13 @@ jobs:
           tar xjf openal-soft-${{ env.OPENAL_VERSION }}.tar.bz2
           cd openal-soft-${{ env.OPENAL_VERSION }}
           cd build
-          cmake -DALSOFT_EXAMPLES=OFF ..
+          cmake --install-prefix=/usr -DALSOFT_EXAMPLES=OFF ..
           make
         if: steps.cache.outputs.cache-hit != 'true'
       - name: Install OpenAL ${{ env.OPENAL_VERSION }}
         run: |
           cd ~/Downloads/openal-soft-${{ env.OPENAL_VERSION }}/build
-          sudo make install prefix=/usr
+          sudo make install
 
       # Just building it because this builds against OpenAL
       - name: Build Freealut ${{ env.FREEALUT_VERSION }}
