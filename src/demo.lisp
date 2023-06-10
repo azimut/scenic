@@ -302,5 +302,7 @@
 (define-foreign-library alut
   (:windows "alut.dll" :calling-convention :stdcall)
   (:darwin (:or (:default "libalut") (:framework "alut")))
-  (:unix (:or "libalut.so.0.1.0" "libalut.so.0" "libalut.so"))
-  (t (:default "libalut")))
+  (:unix "libalut.so.0.1.0")
+  ;;(:unix (:or  "libalut.so" "libalut.so.0"  "libalut.so.0.1.0"))
+  ;;(t (:default "libalut"))
+  )
