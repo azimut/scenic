@@ -2,6 +2,13 @@ name: Linux Build
 
 on: [push]
 
+env:
+
+  FREEALUT_VERSION: 1.1.0
+  OPENAL_VERSION: 1.23.1
+  SBCL_VERSION: 2.1.9
+  SDL_VERSION: 2.0.12
+
 jobs:
   build:
     runs-on: ubuntu-20.04 # 20.04 glibc 2.31 - 22.10 glibc 2.36
@@ -15,7 +22,7 @@ jobs:
       - name: APT deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y libassimp5 libopenal-dev libopenal1 libalut-dev libalut0 sbcl
+          sudo apt-get install -y libassimp5 sbcl
 
       - name: mkdir
         run: |
@@ -45,35 +52,66 @@ jobs:
           echo $HOME/sbcl/bin >> $GITHUB_PATH
         if: steps.cache.outputs.cache-hit == 'true'
 
-      - name: Download SBCL 2.1.9
+      # I believe I do this to have it less dynlink than ubuntu's default
+      - name: Build SDL ${{ env.SDL_VERSION }}
         run: |
           cd ~/Downloads
-          wget http://downloads.sourceforge.net/project/sbcl/sbcl/2.1.9/sbcl-2.1.9-source.tar.bz2
-          tar xjf sbcl-2.1.9-source.tar.bz2
+          wget https://www.libsdl.org/release/SDL2-${{ env.SDL_VERSION }}.tar.gz
+          tar xzf SDL2-${{ env.SDL_VERSION }}.tar.gz
+          cd SDL2-${{ env.SDL_VERSION }}
+          ./configure
+          make
         if: steps.cache.outputs.cache-hit != 'true'
-
-      - name: Install SBCL 2.1.9
+      - name: Install SDL ${{ env.SDL_VERSION }}
         run: |
-          cd ~/Downloads/sbcl-2.1.9
+          cd ~/Downloads/SDL2-${{ env.SDL_VERSION }}
+          sudo make install prefix=/usr
+
+      # Ubuntu's version links OpenAL with libsndio.so
+      - name: Build OpenAL ${{ env.OPENAL_VERSION }}
+        run: |
+          cd ~/Downloads
+          wget https://openal-soft.org/openal-releases/openal-soft-${{ env.OPENAL_VERSION }}.tar.bz2
+          tar xjf openal-soft-${{ env.OPENAL_VERSION }}.tar.bz2
+          cd openal-soft-${{ env.OPENAL_VERSION }}
+          cd build
+          cmake ..
+          make
+        if: steps.cache.outputs.cache-hit != 'true'
+      - name: Install OpenAL ${{ env.OPENAL_VERSION }}
+        run: |
+          cd ~/Downloads/openal-soft-${{ env.OPENAL_VERSION }}/build
+          sudo make install prefix=/usr
+
+      # Just building it because this builds against OpenAL
+      - name: Build OpenAL ${{ env.OPENAL_VERSION }}
+        run: |
+          cd ~/Downloads
+          wget http://deb.debian.org/debian/pool/main/f/freealut/freealut_${{ env.FREEALUT_VERSION }}.orig.tar.gz
+          tar xzf freealut_${{ env.FREEALUT_VERSION }}.orig.tar.gz
+          cd freealut_${{ env.FREEALUT_VERSION }}
+          sh autogen.sh
+          ./configure
+          make
+        if: steps.cache.outputs.cache-hit != 'true'
+      - name: Install OpenAL ${{ env.OPENAL_VERSION }}
+        run: |
+          cd ~/Downloads/freealut_${{ env.FREEALUT_VERSION }}
+          sudo make install prefix=/usr
+
+      - name: Download SBCL ${{ env.SBCL_VERSION }}
+        run: |
+          cd ~/Downloads
+          wget http://downloads.sourceforge.net/project/sbcl/sbcl/${{ env.SBCL_VERSION }}/sbcl-${{ env.SBCL_VERSION }}-source.tar.bz2
+          tar xjf sbcl-${{ env.SBCL_VERSION }}-source.tar.bz2
+        if: steps.cache.outputs.cache-hit != 'true'
+      - name: Install SBCL ${{ env.SBCL_VERSION }}
+        run: |
+          cd ~/Downloads/sbcl-${{ env.SBCL_VERSION }}
           sh make.sh --with-sb-core-compression
           unset SBCL_HOME
           INSTALL_ROOT=~/sbcl ./install.sh
         if: steps.cache.outputs.cache-hit != 'true'
-
-      # I believe I do this to have it less dynlink than ubuntu's default
-      - name: Build SDL 2.0.12
-        run: |
-          cd ~/Downloads
-          wget https://www.libsdl.org/release/SDL2-2.0.12.tar.gz
-          tar xzf SDL2-2.0.12.tar.gz
-          cd SDL2-2.0.12
-          ./configure
-          make
-        if: steps.cache.outputs.cache-hit != 'true'
-      - name: Install SDL 2.0.12
-        run: |
-          cd ~/Downloads/SDL2-2.0.12
-          sudo make install prefix=/usr
 
       - name: Install quicklisp
         run: |
