@@ -98,7 +98,8 @@
                                 (* (aref lightspace i) (v! frag-pos 1))
                                 (aref fudge i)
                                 i)))))
-    (v! (+ ambient final-color)
+    (v! (+ ambient
+           final-color)
         ;; TODO: this alpha is to blend the possible cubemap
         (- 1 (step (y color) 0f0)))))
 

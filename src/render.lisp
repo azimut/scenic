@@ -213,3 +213,43 @@
         (z normal))))
 
 
+;;--------------------------------------------------
+;; https://learnopengl.com/Advanced-Lighting/Parallax-Mapping
+;; vec3 viewDir   = normalize(fs_in.TangentViewPos - fs_in.TangentFragPos);
+(defun-g parallax-mapping ((uv           :vec2)
+                           (view-dir     :vec3)
+                           (depth-map    :sampler-2d)
+                           (height-scale :float))
+  (let* ((height (x (texture depth-map uv)))
+         (p      (* height height-scale (/ (s~ view-dir :xy)
+                                           (z view-dir)))))
+    (- uv p)))
+
+(defun-g parallax-mapping-flipped ((uv           :vec2)
+                                   (view-dir     :vec3)
+                                   (depth-map    :sampler-2d)
+                                   (height-scale :float))
+  (let* ((height (- 1 (x (texture depth-map uv))));; flipped
+         (p      (* height height-scale (/ (s~ view-dir :xy)
+                                           (z view-dir)))))
+    (- uv p)))
+
+;; https://catlikecoding.com/unity/tutorials/rendering/part-20/
+;; Limit lenght of 1
+(defun-g parallax-mapping-offset ((uv           :vec2)
+                                  (view-dir     :vec3)
+                                  (depth-map    :sampler-2d)
+                                  (height-scale :float))
+  (let* ((height (x (texture depth-map uv)))
+         (height (- height .5))
+         (p      (* height height-scale)))
+    (+ uv (* (s~ view-dir :xy) p))))
+
+(defun-g parallax-mapping-offset-flipped ((uv           :vec2)
+                                          (view-dir     :vec3)
+                                          (depth-map    :sampler-2d)
+                                          (height-scale :float))
+  (let* ((height (- 1 (x (texture depth-map uv)))) ;; flipped
+         (height (- height .5))
+         (p      (* height height-scale)))
+    (+ uv (* (s~ view-dir :xy) p))))

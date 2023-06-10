@@ -8,12 +8,19 @@
                         (tfrag-pos   :vec3)
                         &uniform
                         (color      :vec3)
+                        (dispscale  :float)
                         (aomap      :sampler-2d)
                         (albedo     :sampler-2d)
+                        (dispmap    :sampler-2d)
                         (specmap    :sampler-2d)
                         (roughmap   :sampler-2d)
                         (normal-map :sampler-2d))
   (let* (;;(color (* color (vec3 (x (pow (s~ (texture albedo uv) :xyz) (vec3 2.2))))))
+         (uv        (parallax-mapping
+                     uv
+                     (normalize (- tcam-pos tfrag-pos))
+                     dispmap
+                     dispscale))
          (color     (pow (s~ (texture albedo uv) :xyz) (vec3 2.2)))
          (roughness (x (texture roughmap uv)))
          (normal    (norm-from-map normal-map uv tbn))
@@ -34,16 +41,22 @@
   (textured-frag :vec2 :vec3 :vec3 :mat3 :vec3 :vec3))
 
 (defmethod paint (scene (camera defered) (actor textured) time)
-  (with-slots (buf scale uv-repeat specmap roughmap albedo normal aomap color) actor
+  (with-slots (buf scale uv-repeat color dispscale
+               specmap roughmap dispmap albedo normal aomap)
+      actor
     (map-g #'textured-pipe buf
            :color color
+           :dispscale dispscale
+           :uv-repeat uv-repeat
+           :scale scale
+           ;; Samplers
+           :dispmap dispmap
            :roughmap roughmap
            :specmap specmap
            :aomap aomap
            :albedo albedo
            :normal-map normal
+           ;; Matrices
            :model-world (model->world actor)
            :world-view (world->view camera)
-           :view-clip (projection camera)
-           :uv-repeat uv-repeat
-           :scale scale)))
+           :view-clip (projection camera))))
