@@ -21,25 +21,26 @@
                               (dirshadows   :sampler-2d-array)
                               (spotshadows  :sampler-2d-array)
                               (pointshadows :sampler-cube-array))
-  (let ((final-color (v! 0 0 0))
-        ;;#+nil
-        (ambient (ambient-ibl (normalize (- cam-pos frag-pos))
-                              frag-norm
-                              irradiance
-                              (aref (pbr-material-roughness materials) material)
-                              (aref (pbr-material-metallic materials) material)
-                              color
-                              .1f0))
-        #+nil
-        (ambient (ambient-ibl (normalize (- cam-pos frag-pos))
-                              frag-norm
-                              brdf
-                              prefilter
-                              irradiance
-                              (aref (pbr-material-roughness materials) material)
-                              (aref (pbr-material-metallic materials) material)
-                              color
-                              1f0)))
+  (let* ((ao .1f0)
+         (final-color (v! 0 0 0))
+         #+nil
+         (ambient (ambient-ibl (normalize (- cam-pos frag-pos))
+                               frag-norm
+                               irradiance
+                               (aref (pbr-material-roughness materials) material)
+                               (aref (pbr-material-metallic materials) material)
+                               color
+                               ao))
+         ;;#+nil
+         (ambient (ambient-ibl (normalize (- cam-pos frag-pos))
+                               frag-norm
+                               brdf
+                               prefilter
+                               irradiance
+                               (aref (pbr-material-roughness materials) material)
+                               (aref (pbr-material-metallic materials) material)
+                               color
+                               ao)))
     (dotimes (i (scene-data-ndir scene))
       (with-slots (colors positions fudge)
           dirlights

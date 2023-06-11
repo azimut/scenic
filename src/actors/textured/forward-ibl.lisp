@@ -19,6 +19,10 @@
                                 (cam-pos      :vec3)
                                 (time         :float)
                                 (dispscale    :float)
+                                ;; IBL
+                                (brdf         :sampler-2d)
+                                (prefilter    :sampler-cube)
+                                (irradiance   :sampler-cube)
                                 ;; Samplers
                                 (albedo    :sampler-2d)
                                 (roughmap  :sampler-2d)
@@ -48,6 +52,24 @@
          (normal      (norm-from-map normalmap uv tbn))
          ;;(normal      (norm-from-map normalmap uv frag-pos frag-norm))
          ;;(normal      frag-norm)
+         #+nil
+         (ambient (ambient-ibl (normalize (- cam-pos frag-pos))
+                               frag-norm
+                               irradiance
+                               (aref (pbr-material-roughness materials) material)
+                               (aref (pbr-material-metallic materials) material)
+                               color
+                               ao))
+         ;;#+nil
+         (ambient (ambient-ibl (normalize (- cam-pos frag-pos))
+                               frag-norm
+                               brdf
+                               prefilter
+                               irradiance
+                               (aref (pbr-material-roughness materials) material)
+                               (aref (pbr-material-metallic materials) material)
+                               color
+                               ao))
          (final-color (v! 0 0 0)))
     (dotimes (i (scene-data-ndir scene))
       (with-slots (colors positions fudge)
@@ -110,7 +132,9 @@
                                    (aref spot-pos i)
                                    (aref fudge    i)
                                    i))))))
-    (v! final-color 1)))
+    (v! (+ final-color
+           ambient)
+        1)))
 
 (defpipeline-g textured-forward-pipe ()
   (vert-with-tbdata g-pnt tb-data)
@@ -121,7 +145,7 @@
    (:vec3 2) (:vec3 2) (:vec3 4)
    :vec3 :vec3))
 
-(defmethod paint (scene (camera renderable) (actor textured) time)
+(defmethod paint ((scene scene-ibl) (camera renderable) (actor textured) time)
   (with-slots (buf material scale uv-repeat dispscale
                albedo normal aomap roughmap specmap dispmap)
       actor
@@ -131,6 +155,10 @@
            :scale scale
            :scene (ubo scene)
            :cam-pos (pos camera)
+           ;; IBL
+           :brdf (brdf-sam *state*)
+           :prefilter (first (sam (prefilter scene)))
+           :irradiance (first (sam (irradiance scene)))
            ;; Material
            :material material
            :materials (materials-ubo *state*)
