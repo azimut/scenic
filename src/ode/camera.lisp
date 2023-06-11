@@ -62,6 +62,10 @@
                              (floor-contact camera)
                              (cffi:foreign-type-size '%ode:contact)))))
 
+(defmethod update ((camera physic-camera) dt)
+  (human-move-ode camera 1f0)
+  (human-rot .5 dt camera))
+
 #+nil
 (defmethod (setf pos) :after (new-pos (obj physic-camera))
   ;;(%ode:body-enable (body obj))
