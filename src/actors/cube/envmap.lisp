@@ -26,8 +26,9 @@
     (apply #'make-instance 'envmap :sam sam args)))
 
 (defmethod paint (scene camera (obj envmap) time)
-  (with-slots (buf sam color) obj
-    (map-g #'cube-hdr-pipe buf
+  (with-slots (buf sam color gamma) obj
+    (map-g #'cube-pipe buf
+           :gamma gamma
            :sam sam
            :color color
            :view (q:to-mat4 (q:inverse (rot camera)))

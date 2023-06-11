@@ -21,6 +21,9 @@
 (defmethod (setf sky-intensity) :after (new-value (obj sky))
   (setf (paintp obj) T))
 
+(defmethod (setf gamma) :after (new-value (obj sky))
+  (setf (paintp obj) T))
+
 ;; RSI
 ;; ray-sphere intersection that assumes
 ;; the sphere is centered at the origin.
@@ -198,8 +201,9 @@
                                       (q:inverse (rot actor)))
                                :proj (projection actor))))))
         (issue scene 'environment-changed))
-      (with-slots (buf color sam) actor
+      (with-slots (buf color sam gamma) actor
         (map-g #'cube-pipe buf
+               :gamma gamma
                :color color
                :view (q:to-mat4 (q:inverse (rot camera)))
                :proj (projection camera)
