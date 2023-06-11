@@ -14,7 +14,7 @@
    :buf (box)
    :shadowp NIL
    :delta 0.5
-   :gamma 0.5)
+   :gamma 0.45)
   (:documentation
    "abstract class, texture and sampler is generated elsewhere"))
 
