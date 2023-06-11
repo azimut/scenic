@@ -7,6 +7,7 @@
                         (tcam-pos    :vec3)
                         (tfrag-pos   :vec3)
                         &uniform
+                        (cam-pos    :vec3)
                         (color      :vec3)
                         (dispscale  :float)
                         (aomap      :sampler-2d)
@@ -49,6 +50,7 @@
            :dispscale dispscale
            :uv-repeat uv-repeat
            :scale scale
+           :cam-pos (pos camera)
            ;; Samplers
            :dispmap dispmap
            :roughmap roughmap
