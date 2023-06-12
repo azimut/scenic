@@ -121,7 +121,7 @@
    (:vec3 2) (:vec3 2) (:vec3 4)
    :vec3 :vec3))
 
-(defmethod paint (scene (camera renderable) (actor textured) time)
+(defmethod paint (scene (camera renderable) (actor textured-pbr) time)
   (with-slots (buf material scale uv-repeat dispscale
                albedo normal aomap roughmap specmap dispmap)
       actor

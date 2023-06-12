@@ -180,8 +180,8 @@
 
 (defun make-textured-floor ()
   (make-instance
-   'textured
-   :material 1
+   'textured-pbr
+   :material 1 ; for fake ambient
    :uv-repeat (v2! 4)
    :buf (lattice 100f0 100f0 500 500 t)))
 
