@@ -233,9 +233,9 @@
   "only textured assimp thing"
   (declare (ai:mesh mesh)
            (ai:scene scene))
-  (with-slots ((vertices       ai:vertices)
-               (faces          ai:faces)
-               (normals        ai:normals))
+  (with-slots ((vertices ai:vertices)
+               (normals  ai:normals)
+               (faces    ai:faces))
       mesh
     (let ((mesh-index (position mesh (ai:meshes scene))))
       (assert (length= normals vertices))
@@ -389,7 +389,6 @@
          (scene  (assimp-safe-import-into-lisp path))
          (meshes (ai:meshes scene)))
     (loop :for mesh :across meshes
-          :for node :across (ai:children (ai:root-node scene))
           ;; NOTE: Drop meshes with not UVs, afaik they are placeholders
           ;;       and can ruin the load or rendering
           ;;:when (not (emptyp (ai:texture-coords mesh)))
@@ -401,7 +400,11 @@
                 (assimp-mesh-to-stream mesh scene path type)
               (remove-nil-plist
                (list
-                :name (ai:name node)
+                :name (or (and (string/= "" (ai:name mesh))
+                               (ai:name mesh))
+                          (and (plusp (length (ai:bones mesh)))
+                               (ai:name (aref (ai:bones mesh) 0)))
+                          "")
                 :type type
                 :scene scene
                 :buf buf
