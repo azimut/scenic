@@ -7,11 +7,11 @@
 ;; TODO: fix the animation loop so it does it automatically...might be with a helper, is really manual now
 ;; TODO: scale bone transform
 
-(defvar *default-albedo* "static/37.Paint01-1k/paint01_albedo.jpg"
+(defvar *default-albedo* "static/null/37.Paint01-1k/paint01_albedo.jpg"
   "override this locally to change the albedo")
-(defvar *default-normal* "static/37.Paint01-1k/paint01_normal.jpg"
+(defvar *default-normal* "static/null/37.Paint01-1k/paint01_normal.jpg"
   "override this locally to change the normal map")
-(defvar *default-specular* "static/37.Paint01-1k/paint01_height.jpg"
+(defvar *default-specular* "static/null/37.Paint01-1k/paint01_height.jpg"
   "override this locally to change the normal map")
 (defvar *assimp-buffers* (make-hash-table :test #'equal))
 
@@ -35,11 +35,12 @@
 ;; - aiProcess_SortByPType
 ;; - aiProcess_FindDegenerates
 ;; - aiProcess_FindInvalidData
-(defparameter *processing-flags* '(:ai-process-triangulate
-                                   :ai-process-flip-u-vs
-                                   ;;:ai-process-preset-target-realtime-max-quality
-                                   ;;:ai-process-calc-tangent-space
-                                   ))
+(defparameter *processing-flags*
+  '(:ai-process-triangulate
+    :ai-process-flip-u-vs
+    ;;:ai-process-preset-target-realtime-max-quality
+    ;;:ai-process-calc-tangent-space
+    ))
 
 #+nil
 (defparameter *processing-flags* '(:ai-process-triangulate
@@ -304,10 +305,10 @@
     (let* ((mesh-index (position mesh (ai:meshes scene)))
            (uvs        (elt texture-coords 0))
            (material   (aref (slot-value scene 'ai:materials) mat-index))
-           (tex-file   (get-texture-path material :ai-texture-type-diffuse))
+           (tex-file   (get-texture-path material     :ai-texture-type-diffuse))
            (norm-file  (or (get-texture-path material :ai-texture-type-height)
                            (get-texture-path material :ai-texture-type-normals)))
-           (spec-file  (get-texture-path material :ai-texture-type-specular))
+           (spec-file  (get-texture-path material     :ai-texture-type-specular))
            (file-path  (uiop:pathname-directory-pathname file))
            (albedo     (if tex-file
                            (get-tex (merge-pathnames tex-file file-path))
@@ -335,20 +336,23 @@
               :specular specular)))))
 
 (defun assimp-safe-import-into-lisp (file)
-  "wrapper around ai:import-into-lisp that ensures the proper thing is loaded"
+  "wrapper around ai:import-into-lisp, attempts to return a valid scene"
   (let* ((scene (or (ai:import-into-lisp file)
                     (error "cannot simple load the file")))
-         ;; add normals if missing
-         (processing-flags
+         (processing-flags ;; try to ensure normals
            (if (emptyp (ai:normals (aref (ai:meshes scene) 0)))
                (cons :ai-process-gen-smooth-normals *processing-flags*)
                *processing-flags*))
-         (scene (ai:import-into-lisp file :processing-flags (print
-                                                             processing-flags)
-                                          :properties
-                                          '(:pp-slm-triangle-limit 25000)
-                                          ;;'(:pp-slm-vertex-limit 20000)
-                                          )))
+         (processing-flags ;; try to ensure tangents/bitangents
+           (if (emptyp (ai:tangents (aref (ai:meshes scene) 0)))
+               (cons :ai-process-calc-tangent-space processing-flags)
+               processing-flags))
+         (scene
+           (ai:import-into-lisp file :processing-flags (print processing-flags)
+                                     :properties
+                                     '(:pp-slm-triangle-limit 25000)
+                                     ;;'(:pp-slm-vertex-limit 20000)
+                                     )))
     ;; TODO: error instead if there is an untextured among textured
     ;; Error if all texture coords are missing :(
     #+nil
