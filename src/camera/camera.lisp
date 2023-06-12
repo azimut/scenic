@@ -21,8 +21,12 @@
 (defun make-orth (&rest args) (apply #'make-instance 'orth args))
 (defun make-pers (&rest args) (apply #'make-instance 'pers args))
 
-(defclass orthogonal (renderable orth) ())
-(defclass perspective (renderable pers) ())
+(defclass forward ()
+  ()
+  (:documentation "forward rending"))
+
+(defclass orthogonal (renderable orth forward) ())
+(defclass perspective (renderable pers forward) ())
 (defun make-orthogonal (&rest args) (apply #'make-instance 'orthogonal args))
 (defun make-perspective (&rest args) (apply #'make-instance 'perspective args))
 

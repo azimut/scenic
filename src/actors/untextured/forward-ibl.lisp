@@ -92,7 +92,7 @@
   :vertex (untextured-vert g-pnt)
   :fragment (untextured-ibl-frag :vec2 :vec3 :vec3 (:vec4 2) (:vec4 2)))
 
-(defmethod paint ((scene scene-ibl) (camera renderable) (actor untextured) time)
+(defmethod paint ((scene scene-ibl) (camera forward) (actor untextured) time)
   (with-slots (buf scale color material) actor
     (map-g #'untextured-ibl-pipe buf
            :time time

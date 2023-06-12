@@ -16,20 +16,21 @@
                         (specmap    :sampler-2d)
                         (roughmap   :sampler-2d)
                         (normal-map :sampler-2d))
-  (let* (;;(color (* color (vec3 (x (pow (s~ (texture albedo uv) :xyz) (vec3 2.2))))))
+  (let* ((metallic  .04f0)
+         ;; (metallic  0f0)
+         (emissive  0f0)
+         ;;#+nil
          (uv        (parallax-mapping
                      uv
                      (normalize (- tcam-pos tfrag-pos))
                      dispmap
                      dispscale))
+         ;;(color (* color (vec3 (x (pow (s~ (texture albedo uv) :xyz) (vec3 2.2))))))
          (color     (pow (s~ (texture albedo uv) :xyz) (vec3 2.2)))
-         (roughness (x (texture roughmap uv)))
-         (normal    (norm-from-map normal-map uv tbn))
          ;;(normal    (norm-from-map normal-map uv frag-pos frag-normal))
          ;;(normal frag-normal)
-         (metallic  .04f0)
-         ;; (metallic  0f0)
-         (emissive  0f0)
+         (normal    (norm-from-map normal-map uv tbn))
+         (roughness (x (texture roughmap uv)))
          (ao        (x (texture aomap    uv)))
          (spec      (x (texture specmap  uv))))
     (values (v! color     roughness)
@@ -43,21 +44,21 @@
 
 (defmethod paint (scene (camera defered) (actor textured-pbr) time)
   (with-slots (buf scale uv-repeat color dispscale
-               specmap roughmap dispmap albedo normal aomap)
+               albedo aomap dispmap normal roughmap specmap)
       actor
     (map-g #'textured-pipe buf
            :color color
-           :dispscale dispscale
            :uv-repeat uv-repeat
            :scale scale
            :cam-pos (pos camera)
+           :dispscale dispscale
            ;; Samplers
+           :albedo albedo
+           :aomap aomap
            :dispmap dispmap
+           :normal-map normal
            :roughmap roughmap
            :specmap specmap
-           :aomap aomap
-           :albedo albedo
-           :normal-map normal
            ;; Matrices
            :model-world (model->world actor)
            :world-view (world->view camera)
