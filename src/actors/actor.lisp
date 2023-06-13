@@ -74,4 +74,12 @@
   (when (not (v3:= (slot-value obj 'pos) new-value))
     (issue (current-scene) 'movement)))
 
+(defmethod (setf rot) :before (new-value (obj actor))
+  (when (not (q:= (slot-value obj 'rot) new-value))
+    (issue (current-scene) 'movement)))
+
+(defmethod (setf scale) :before (new-value (obj actor))
+  (when (not (= (slot-value obj 'scale) new-value))
+    (issue (current-scene) 'movement)))
+
 (defmethod update ((obj actor) dt))
