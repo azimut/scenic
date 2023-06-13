@@ -12,13 +12,6 @@
 (defmethod free :after ((obj emitter))
   (setf *emitters* (remove obj *emitters*)))
 
-(defmethod update ((camera camera-audio-defered) dt)
-  ;; (god-move .2 dt camera)
-  ;; (full-rot .2 dt camera)
-  (human-move .25 dt camera)
-  (human-rot  .15 dt camera)
-  )
-
 (defmethod handle ((e tick) (camera camera-audio))
   (setf (from camera) (copy-seq (pos camera)))
   (dolist (emitter *emitters*)
