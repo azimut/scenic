@@ -1,9 +1,9 @@
 (in-package #:scenic)
 
 (defclass physic-camera (defered)
-  ((hit-floor-p   :reader hit-floor-p   :initform nil)
-   (floor-geom    :reader floor-geom)
-   (floor-contact :reader floor-contact)
+  ((hit-floor-p   :accessor hit-floor-p :initform nil)
+   (floor-geom    :reader   floor-geom)
+   (floor-contact :reader   floor-contact)
    (running-p     :accessor running-p   :initform nil)
    (body          :reader body)
    (geom          :reader geom)
@@ -55,7 +55,7 @@
     (%ode:body-set-max-angular-speed body 0f0)))
 
 (defmethod handle :after ((e tick) (camera physic-camera))
-  (setf (slot-value camera 'hit-floor-p)
+  (setf (hit-floor-p camera)
         (plusp (%ode:collide (geom camera)
                              (floor-geom camera); or (space camera)
                              1
