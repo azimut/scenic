@@ -1,6 +1,12 @@
 name: Linux Build
 
-on: [push]
+on:
+
+  push:
+    paths-ignore:
+      - 'LICENSE'
+      - 'README.md'
+      - '.github/workflows/windows.yml'
 
 env:
 
@@ -11,6 +17,7 @@ env:
 
 jobs:
   build:
+    #if: ${{ false }}  # disable for now
     runs-on: ubuntu-20.04 # 20.04 glibc 2.31 - 22.10 glibc 2.36
     steps:
 

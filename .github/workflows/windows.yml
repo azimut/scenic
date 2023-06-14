@@ -1,10 +1,16 @@
 name: Windows Build
 
-on: [push]
+on:
+
+  push:
+    paths-ignore:
+      - 'LICENSE'
+      - 'README.md'
+      - '.github/workflows/linux.yml'
 
 jobs:
   build:
-    if: ${{ false }}  # disable for now
+    #if: ${{ false }}  # disable for now
     runs-on: windows-2019
     env:
       VCPKG_CONCURRENCY: 1
@@ -48,11 +54,11 @@ jobs:
         if: steps.cache.outputs.cache-hit == 'true'
 
       - run: choco install lessmsi make 7zip wget
-      - uses: lukka/run-vcpkg@v10
+      - uses: lukka/run-vcpkg@v11
         id: runvcpkg
         with:
           runVcpkgFormatString: '[`install`, `--recurse`, `--x-install-root`, `$[env.VCPKG_INSTALLED_DIR]`, `--triplet`, `$[env.VCPKG_DEFAULT_TRIPLET]`]'
-          vcpkgGitCommitId: 843e0ba0d8f9c9c572e45564263eedfc7745e74f
+          vcpkgGitCommitId: 5b1214315250939257ef5d62ecdcbca18cf4fb1c
           runVcpkgInstall: true
       - run: cp -v vcpkg/packages/*/bin/*.dll C:/windows/system32/
 
@@ -96,9 +102,13 @@ jobs:
 
       # log4cl added due https://github.com/sharplispers/log4cl/issues/45#issuecomment-1493418045
       # classimp added for assimp v5 support https://github.com/3b/classimp/issues/18
+      # git config due SBCL does not support windows new lines https://bugs.launchpad.net/sbcl/+bug/310185
       - name: Get LISP deps
         run: |
           cd ~/quicklisp/local-projects/
+          git config --global core.autocrlf false
+          (test -d cl-openal) || git clone -b fixalut --depth=1 https://github.com/azimut/cl-openal
+          ( cd cl-openal/ ; git pull )
           (test -d nepal)     || git clone --depth=1 https://github.com/azimut/nepal
           ( cd nepal/     ; git pull )
           (test -d rocketman) || git clone --depth=1 https://github.com/azimut/rocketman
@@ -136,7 +146,7 @@ jobs:
 
       - name: Stable Release
         uses: marvinpinto/action-automatic-releases@latest
-        if: "startsWith(github.ref, 'refs/tags/')"
+        if: "startsWith(github.ref, 'refnns/tags/')"
         with:
           prerelease: false
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
@@ -145,6 +155,5 @@ jobs:
             LICENSE
 
       # - name: DEBUG SHELL
-      #   uses: mxschmitt/action-tmate@v3
+      #   uses: mxschmitt/action-tmate@v3n
       #   if: ${{ failure() }}
-
