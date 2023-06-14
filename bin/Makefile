@@ -26,7 +26,7 @@ scenic.AppImage: AppDir/scenic AppDir/static AppRun iconfile.svg scenic.desktop 
 	ARCH=x86_64 ./appimagetool -v AppDir scenic.AppImage
 
 scenic-$(OS).tgz: AppDir/scenic AppDir/static
-	tar cvzf scenic-$(OS).tgz AppDir/ --transform s/AppDir/scenic/
+	tar cvzf scenic-$(OS).tgz AppDir/ --transform s/AppDir/scenic-$(OS)/
 
 .PHONY: tar
 tar: scenic-$(OS).tgz
