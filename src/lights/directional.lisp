@@ -58,24 +58,28 @@
            :model->clip (model->clip actor camera)
            :scale scale)))
 
-(defun-g vert-bones ((vert g-pnt) (tb tb-data) (bones assimp-bones) &uniform
-                     (offsets     (:mat4 41)) ;; FIXME
+(defun-g vert-bones ((vert  g-pnt)
+                     (tb    tb-data)
+                     (bones assimp-bones)
+                     &uniform
+                     (offsets    (:mat4 41)) ;; FIXME
                      (model-world :mat4)
                      (world-view  :mat4)
                      (view-clip   :mat4)
                      (scale       :float))
   (let* ((pos       (pos vert))
-         (world-pos (* (m4:scale (v3! scale)) ;; FIXME
-                       model-world
-                       (+ (* (aref (assimp-bones-weights bones) 0)
-                             (aref offsets (int (aref (assimp-bones-ids bones) 0))))
-                          (* (aref (assimp-bones-weights bones) 1)
-                             (aref offsets (int (aref (assimp-bones-ids bones) 1))))
-                          (* (aref (assimp-bones-weights bones) 2)
-                             (aref offsets (int (aref (assimp-bones-ids bones) 2))))
-                          (* (aref (assimp-bones-weights bones) 3)
-                             (aref offsets (int (aref (assimp-bones-ids bones) 3)))))
-                       (v! pos 1)))
+         (world-pos
+           (* (m4:scale (v3! scale)) ;; FIXME
+              model-world
+              (+ (* (aref (assimp-bones-weights bones) 0)
+                    (aref offsets (int (aref (assimp-bones-ids bones) 0))))
+                 (* (aref (assimp-bones-weights bones) 1)
+                    (aref offsets (int (aref (assimp-bones-ids bones) 1))))
+                 (* (aref (assimp-bones-weights bones) 2)
+                    (aref offsets (int (aref (assimp-bones-ids bones) 2))))
+                 (* (aref (assimp-bones-weights bones) 3)
+                    (aref offsets (int (aref (assimp-bones-ids bones) 3)))))
+              (v! pos 1)))
          (view-pos   (* world-view  world-pos))
          (clip-pos   (* view-clip   view-pos))
          (tex        (tex vert))
@@ -83,7 +87,9 @@
          (world-norm (* (m4:to-mat3 model-world) norm)))
     (values clip-pos tex world-norm (s~ world-pos :xyz))))
 
-(defun-g simplest-3d-frag ((uv :vec2) (frag-norm :vec3) (frag-pos :vec3))
+(defun-g simplest-3d-frag ((uv        :vec2)
+                           (frag-norm :vec3)
+                           (frag-pos  :vec3))
   (values))
 
 (defpipeline-g simplest-3d-bones-pipe ()

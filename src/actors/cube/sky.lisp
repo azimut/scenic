@@ -176,6 +176,7 @@
 
 (let ((doit t))
   (defmethod paint (scene camera (actor sky) time)
+    ;;#+nil
     (with-slots (paintp rotations fbo) actor
       (when (or doit paintp)
         (log4cl:log-info "SKYING" paintp doit)

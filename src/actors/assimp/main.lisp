@@ -349,10 +349,10 @@
                processing-flags))
          (scene
            (ai:import-into-lisp file :processing-flags (print processing-flags)
-                                     :properties
-                                     '(:pp-slm-triangle-limit 25000)
-                                     ;;'(:pp-slm-vertex-limit 20000)
-                                     )))
+                                ;; :properties
+                                ;; '(:pp-slm-triangle-limit 25000)
+                                ;;'(:pp-slm-vertex-limit 20000)
+                                )))
     ;; TODO: error instead if there is an untextured among textured
     ;; Error if all texture coords are missing :(
     #+nil
@@ -400,6 +400,7 @@
                 (assimp-mesh-to-stream mesh scene path type)
               (remove-nil-plist
                (list
+                ;; TODO: concat name of all bones
                 :name (or (and (string/= "" (ai:name mesh))
                                (ai:name mesh))
                           (and (plusp (length (ai:bones mesh)))

@@ -71,11 +71,12 @@
 (defmethod initialize-instance :before ((obj speced) &key specmap)
   (check-type specmap %cepl.types:sampler))
 
-(defclass textured (actor albedoed normaled displaced roughed aoded speced)
+;;----------------------------------------
+
+(defclass textured ()
   ((uv-repeat :accessor uv-repeat
               :initarg :uv-repeat))
   (:default-initargs
-   :buf (box 1f0 1f0 1f0 t) ; It needs tangents for PBR
    :uv-repeat (v! 1 1)))
 
 (defmethod initialize-instance :before ((obj textured) &key uv-repeat)
@@ -84,5 +85,9 @@
 (defmethod (setf uv-repeat) :before (new-value (obj textured))
   (check-type new-value rtg-math.types:vec2))
 
-(defun make-textured (&rest args)
-  (apply #'make-instance 'textured args))
+;;----------------------------------------
+
+(defclass textured-pbr (textured actor albedoed normaled displaced roughed aoded speced)
+  ()
+  (:default-initargs
+   :buf (box 1f0 1f0 1f0 t))) ; It needs tangents for PBR
