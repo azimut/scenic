@@ -23,6 +23,8 @@ scenic.AppImage: AppDir/scenic AppRun iconfile.svg scenic.desktop appimagetool
 	install -D iconfile.svg   AppDir/iconfile.svg
 	mkdir -p AppDir/static
 	install -D ../static/bunny.obj AppDir/static/bunny.obj
+	install -d AppDir/static/SFX/Step
+	install -D ../static/SFX/Step/Step*.wav AppDir/static/SFX/Step
 	ARCH=x86_64 ./appimagetool -v AppDir scenic.AppImage
 
 scenic-$(OS).tgz: AppDir/scenic

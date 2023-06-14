@@ -98,14 +98,14 @@
          :overlap-p T
          :gain .5
          :paths (resolve-paths
-                 "static/null/scp/Step/Step1.wav"
-                 "static/null/scp/Step/Step2.wav"
-                 "static/null/scp/Step/Step3.wav"
-                 "static/null/scp/Step/Step4.wav"
-                 "static/null/scp/Step/Step5.wav"
-                 "static/null/scp/Step/Step6.wav"
-                 "static/null/scp/Step/Step7.wav"
-                 "static/null/scp/Step/Step8.wav"))))
+                 "static/SFX/Step/Step1.wav"
+                 "static/SFX/Step/Step2.wav"
+                 "static/SFX/Step/Step3.wav"
+                 "static/SFX/Step/Step4.wav"
+                 "static/SFX/Step/Step5.wav"
+                 "static/SFX/Step/Step6.wav"
+                 "static/SFX/Step/Step7.wav"
+                 "static/SFX/Step/Step8.wav"))))
 
 (defun ode-human ()
   (let* ((s1  (make-scene-ode-ibl :name "defered ibl audio ode")))

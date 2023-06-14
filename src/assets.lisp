@@ -187,7 +187,8 @@
         (probe-file))
       (arrow-macros:some-> *system-path*
         (uiop/pathname:subpathname* file)
-        (probe-file))))
+        (probe-file))
+      (error "Could not resolve-path of: ~a" file)))
 
 (defun resolve-paths (&rest args)
   (mapcar #'resolve-path args))
