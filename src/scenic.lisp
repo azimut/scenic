@@ -45,7 +45,7 @@
            (camera (active-camera scene)))
       (when (zerop (mod fc 1));; TODO: proper 60 FPS tick
         (setf current-time (current-time))
-        (setf dt (- tt current-time .001d0))
+        (setf dt (- current-time tt .001d0))
         (setf dt (if (> dt .16d0) .00001d0 dt))
         (setf tt current-time)
         ;;#+nil
