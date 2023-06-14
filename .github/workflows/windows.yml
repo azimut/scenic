@@ -70,14 +70,14 @@ jobs:
           mv "sbcl-1.4.14-x86-64-windows-binary/SourceDir/PFiles/Steel Bank Common Lisp/1.4.14" sbcl_bin
         if: steps.cache.outputs.cache-hit != 'true'
 
-      - name: Install SBCL 2.3.5
+      - name: Install SBCL 2.1.9
         run: |
           cd ~/Downloads
           export SBCL_HOME="$PWD/sbcl_bin";
           export PATH="$PWD/sbcl_bin:${PATH}";
-          wget http://downloads.sourceforge.net/project/sbcl/sbcl/2.3.5/sbcl-2.3.5-source.tar.bz2
-          tar xjf sbcl-2.3.5-source.tar.bz2
-          cd sbcl-2.3.5
+          wget http://downloads.sourceforge.net/project/sbcl/sbcl/2.1.9/sbcl-2.1.9-source.tar.bz2
+          tar xjf sbcl-2.1.9-source.tar.bz2
+          cd sbcl-2.1.9
           sh make.sh --with-sb-core-compression
           unset SBCL_HOME
           INSTALL_ROOT=~/sbcl ./install.sh
@@ -102,9 +102,11 @@ jobs:
 
       # log4cl added due https://github.com/sharplispers/log4cl/issues/45#issuecomment-1493418045
       # classimp added for assimp v5 support https://github.com/3b/classimp/issues/18
+      # git config due SBCL does not support windows new lines https://bugs.launchpad.net/sbcl/+bug/310185
       - name: Get LISP deps
         run: |
           cd ~/quicklisp/local-projects/
+          git config --global core.autocrlf false
           (test -d nepal)     || git clone --depth=1 https://github.com/azimut/nepal
           ( cd nepal/     ; git pull )
           (test -d rocketman) || git clone --depth=1 https://github.com/azimut/rocketman
