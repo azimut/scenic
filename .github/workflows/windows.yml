@@ -53,7 +53,7 @@ jobs:
           echo $HOME/sbcl/bin >> $GITHUB_PATH
         if: steps.cache.outputs.cache-hit == 'true'
 
-      - run: choco install lessmsi make 7zip wget
+      - run: choco install lessmsi make 7zip wget openal
       - uses: lukka/run-vcpkg@v11
         id: runvcpkg
         with:

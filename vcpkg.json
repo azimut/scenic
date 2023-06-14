@@ -2,7 +2,7 @@
   "name": "example",
   "version-string": "0.0.1",
   "builtin-baseline": "5b1214315250939257ef5d62ecdcbca18cf4fb1c",
-  "dependencies": ["zlib", "sdl2", "assimp", "openal"],
+  "dependencies": ["zlib", "sdl2", "assimp"],
   "overrides": [
     { "name": "assimp", "version-string": "4.0.1-3" },
     { "name": "sdl2", "version-string": "2.0.7-4" }
