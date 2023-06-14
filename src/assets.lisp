@@ -74,8 +74,8 @@
                    :element-type 'tb-data)))
     (with-gpu-array-as-c-array (data result)
       (loop :for (i0 i1 i2)
-            :on indices
-            :by #'cdddr
+              :on indices
+                :by #'cdddr
             :do (let ((pair (calc verts i0 i1 i2)))
                   (setf (aref-c data i0) pair)
                   (setf (aref-c data i1) pair)
@@ -170,13 +170,27 @@
 ;;----------------------------------------
 ;; Dirt - image loader into CEPL sampler
 
+(defvar *system-path* nil)
+(defvar *system-resolved* nil)
+
 (defun resolve-path (file)
+  ;; Cache :scenic asdf location, it takes 3sec otherwise
+  (when (not *system-resolved*)
+    (setf *system-resolved* T)
+    (when (asdf:find-system :scenic)
+      (setf *system-path* (asdf:system-source-directory :scenic))))
+  ;; Try different locations
   (or (uiop:absolute-pathname-p file)
       (probe-file file)
       (arrow-macros:some-> (uiop:getenv "APPDIR")
         (uiop/pathname:subpathname* file)
         (probe-file))
-      (asdf:system-relative-pathname :scenic file)))
+      (arrow-macros:some-> *system-path*
+        (uiop/pathname:subpathname* file)
+        (probe-file))))
+
+(defun resolve-paths (&rest args)
+  (mapcar #'resolve-path args))
 
 (defun list-tex ()
   (alexandria:maphash-keys #'print *samplers*))
