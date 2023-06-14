@@ -37,13 +37,13 @@
 
 (defmethod update ((obj directional) dt)
   #+nil
-  (let* ((new-pos (v3:*s (v! -10 40 30) 1f0))
+  (let* ((new-pos (v3:*s (v! -20 10 -30) 1f0))
          (new-dis (v3:distance new-pos (v! 0 0 0))))
     (setf (pos obj) new-pos)
     (setf (rot obj)  (q:point-at (v! 0 1 0) new-pos (v! 0 0 0)))
-    (setf (far obj)  (+ new-dis (* new-dis .3)))
-    (setf (near obj) (- new-dis (* new-dis .3)))
-    (setf (fs obj) (v2! 40))
+    (setf (far obj)  (+ new-dis (* new-dis .4)))
+    (setf (near obj) (- new-dis (* new-dis .4)))
+    (setf (fs obj) (v2! 20))
     ))
 
 (defmethod update ((obj spot) dt)
@@ -69,15 +69,49 @@
 ;;----------------------------------------
 ;; Scenes
 
+(defclass fps (camera-audio-ode)
+  ((footsteps :reader footsteps)))
+
+(defmethod (setf pos) :around (new-value (obj fps))
+  (when
+      (and (hit-floor-p obj)
+           ;;(not (v3:= new-value (slot-value obj 'pos)))
+           (or (key-down-p key.w)
+               (key-down-p key.a)
+               (key-down-p key.s)
+               (key-down-p key.d)))
+    (nepal::play (footsteps obj)))
+  (call-next-method))
+
+(defmethod (setf hit-floor-p) :before (new-value (obj fps))
+  (alexandria:when-let ((landing-p (and new-value (not (hit-floor-p obj)))))
+    (nepal::stop (footsteps obj))
+    (nepal::play (footsteps obj))))
+
+(defmethod initialize-instance :after ((obj fps) &key)
+  (setf (slot-value obj 'footsteps)
+        (make-instance
+         'nepal:event
+         :name :steps
+         :pos (v! 0 -2 0)
+         :step-size 0.25
+         :overlap-p T
+         :gain .5
+         :paths (resolve-paths
+                 "static/null/scp/Step/Step1.wav"
+                 "static/null/scp/Step/Step2.wav"
+                 "static/null/scp/Step/Step3.wav"
+                 "static/null/scp/Step/Step4.wav"
+                 "static/null/scp/Step/Step5.wav"
+                 "static/null/scp/Step/Step6.wav"
+                 "static/null/scp/Step/Step7.wav"
+                 "static/null/scp/Step/Step8.wav"))))
+
 (defun ode-human ()
-  (let* ((s1  (make-scene-ode :name "forward ode")))
+  (let* ((s1  (make-scene-ode-ibl :name "defered ibl audio ode")))
     (register s1 *state*) ;; first registered, needed for ODE scenes
-    (register (make-physic-camera :pos (v! 2 1 2)) s1)
-    #+nil
-    (register (make-instance
-               'camera-audio-ode
-               :pos (v! 2 .3 2))
-              s1)
+    ;;(register (make-physic-camera :pos (v! 2 1 2) :fakeambient .01) s1)
+    (register (make-instance 'fps :pos (v! 2 1 2)) s1)
     #+nil
     (register (make-instance
                'audio-sfx
@@ -88,23 +122,25 @@
                :ref-distance 1.5f0
                :paths '("/home/sendai/bc.wav"))
               s1)
-    ;;(register (make-untextured-floor) s1)
-    (register (make-textured-floor) s1)
+    (register (make-sky) s1)
+    (register (make-untextured-floor) s1)
+    ;;(register (make-textured-floor) s1)
     (register (make-some-point) s1)
+    ;;(register (make-some-directional) s1)
     (register (make-instance
                'physic-box
                :pos (v! 0 4 0)
-               :rot (q:from-axis-angle (v! 0 1 0) (radians (random 360f0))))
+               :rot (q:from-axis-angle (v! 0 0 1) (radians (random 360f0))))
               s1)
     (register (make-instance
                'physic-box
                :pos (v! 3 10 3)
-               :rot (q:from-axis-angle (v! 0 1 0) (radians (random 360f0))))
+               :rot (q:from-axis-angle (v! 1 0 0) (radians (random 360f0))))
               s1)))
 
 (defun defered-spot-bunny-floor-textured ()
   (let ((s1 (make-scene-ibl
-             :name "ibl defered bunny spotlight")))
+             :name "defered bunny spotlight")))
     (register s1 *state*)
     (register (make-defered
                :pos (v! -2 2 -2)
@@ -115,7 +151,7 @@
     ;;(register (make-some-spot) s1)
     (register (make-some-directional) s1)
     (register-untextured-random-columns s1)
-    (register (make-bunny) s1)
+    ;;(register (make-bunny) s1)
     ;;(register (make-untextured-floor) s1)
     (register (make-textured-floor) s1)))
 
@@ -181,10 +217,12 @@
 (defun make-textured-floor ()
   (make-instance
    'textured-pbr
-   :material 1 ; for fake ambient
+   ;;:material 1 ; for fake ambient
    :uv-repeat (v2! 4)
    :buf (lattice 100f0 100f0 500 500 t)))
 
+;; bunny.obj            - has no UVs/TEXTURE-COORDS
+;; boblampclean.md5mesh - has no NORMALS by default, has only albedo textures
 (defun make-bunny ()
   (make-instance
    'untextured
