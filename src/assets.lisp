@@ -208,17 +208,14 @@
       (when s
         (free (sampler-texture s)))
       (remhash path *samplers*)))
-  (let ((absolutep (uiop:absolute-pathname-p path)))
-    (or (gethash path *samplers*)
-        (setf (gethash path *samplers*)
-              (cepl:sample
-               (dirt:load-image-to-texture
-                (if absolutep
-                    path
-                    (asdf:system-relative-pathname :scenic path))
-                image-format
-                mipmap
-                t))))))
+  (or (gethash path *samplers*)
+      (setf (gethash path *samplers*)
+            (cepl:sample
+             (dirt:load-image-to-texture
+              (resolve-path path)
+              image-format
+              mipmap
+              t)))))
 
 ;;--------------------------------------------------
 
@@ -235,13 +232,10 @@
       (when s
         (free s))
       (remhash path *c-samplers*)))
-  (let ((absolutep (uiop:absolute-pathname-p path)))
-    (or (gethash path *c-samplers*)
-        (setf (gethash path *c-samplers*)
-              (apply
-               #'dirt:load-image-to-c-array
-               (if absolutep
-                   path
-                   (asdf:system-relative-pathname :scenic path))
-               image-format
-               args)))))
+  (or (gethash path *c-samplers*)
+      (setf (gethash path *c-samplers*)
+            (apply
+             #'dirt:load-image-to-c-array
+             (resolve-path path)
+             image-format
+             args))))

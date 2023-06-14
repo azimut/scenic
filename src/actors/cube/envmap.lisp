@@ -12,7 +12,7 @@
       (ca (mapcar
            (lambda (p)
              (dirt:load-image-to-c-array
-              (asdf:system-relative-pathname :scenic p)))
+              (resolve-path p)))
            paths))
     (serapeum:~> (make-texture ca :element-type :rgb8 :cubes t)
                  (sample :wrap :clamp-to-edge :magnify-filter :linear))))
