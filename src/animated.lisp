@@ -1,9 +1,18 @@
 (in-package #:scenic)
 
 (defclass animated ()
-  ((animations :reader   animations :initarg :animations)
-   (current    :accessor current    :initarg :current)
-   (clock      :accessor clock      :initform 1f0) ;; DOUBLE?
+  (#+nil
+   (bones      :reader   bones
+               :initarg :bones
+               :documentation "gpu array of bone transformations")
+   (animations :reader   animations
+               :initarg :animations
+               :documentation "list of possible animations")
+   (current    :accessor current
+               :initarg :current
+               :documentation "name of the current animation")
+   (clock      :accessor clock
+               :initform 1f0) ;; DOUBLE?
    start
    end
    (inc        :reader inc)
@@ -12,7 +21,7 @@
   (:default-initargs
    :current :idle
    :animations '((:idle)))
-  (:documentation "inherith to have a CLOCK tick by INC and select CURRENT between different ANIMATIONS"))
+  (:documentation "inherith to have a CLOCK tick by INC, and select the CURRENT animation between different ANIMATIONS"))
 
 (defmethod initialize-instance :after ((obj animated) &key current)
   (setf (current obj) current))
@@ -43,4 +52,3 @@
 (defmethod update :after ((obj animated) dt)
   (when-let ((inc (inc obj)))
     (incf (clock obj) inc)))
-

@@ -9,17 +9,18 @@
    :immovablep T))
 
 (defun make-building-physics (space)
-  (mapcar (lambda (plist)
-            (destructuring-bind (&key name buf scene &allow-other-keys) plist
-              (make-instance 'building-physics
-                             :space space
-                             :rot (q:*(q:from-axis-angle (v! 0 0 1) (radians 90))
-                                      (q:from-axis-angle (v! 0 1 0) (radians 90)))
-                             :buf buf
-                             :name name
-                             :scene scene
-                             :scale 1f0)))
-          (assimp-load-meshes "/home/sendai/hotel.fbx_Physics_001/hotel.fbx_Physics_001.fbx")))
+  (mapcar
+   (lambda (plist)
+     (destructuring-bind (&key name buf scene &allow-other-keys) plist
+       (make-instance
+        'building-physics
+        :space space
+        :rot (q:* (q:from-axis-angle (v! 0 0 1) (radians 90))
+                  (q:from-axis-angle (v! 0 1 0) (radians 90)))
+        :buf buf
+        :name name
+        :scene scene)))
+   (assimp-load-meshes "/home/sendai/hotel.fbx_Physics_001/hotel.fbx_Physics_001.fbx")))
 
 (defclass building (assimp-thing textured)
   ())
@@ -60,35 +61,39 @@
     (setf *tmp1-update-index* (pull-g (second (buffer-stream-gpu-arrays buf))))
     (setf *tmp1-update-array* (pull-g (car (first (buffer-stream-gpu-arrays buf)))))))
 
-
-
-
 (defclass monster (assimp-thing-with-bones textured animated)
   ())
 
 (defun make-monster ()
   (mapcar
    (lambda (obj)
-     (destructuring-bind (&key buf albedo normals specular bones scene duration &allow-other-keys) obj
+     (destructuring-bind
+         (&key buf albedo normals specular bones scene duration &allow-other-keys) obj
        (make-instance 'monster
                       :current :walking
-                      :animations '((:idle)
-                                    (:walking :start 24.8 :end 28.5 :inc 0.02 :loop-p T :index 0))
+                      :animations
+                      '((:idle)
+                        (:walking :start 24.8 :end 28.5 :inc 0.02 :loop-p T :index 0))
                       :buf buf
                       :albedo albedo
                       :normal normals
                       :specular specular
                       :bones bones
                       :duration duration
-                      :rot (q:from-axis-angle (v! 1 0 0) (radians 90))
-                      :scale .1
+                      :rot (q:from-axis-angle
+                            (v! 1 0 0)
+                            (radians 270))
+                      ;;:rot (q:from-axis-angle (v! 1 0 0) (radians 90))
+                      ;;:scale .1
+                      :scale 0.05
                       :scene scene)))
    (assimp-load-meshes "static/monster/forestmonster.b3d")))
 
 (defun make-monster ()
   (mapcar
    (lambda (obj)
-     (destructuring-bind (&key buf albedo normals specular bones scene duration &allow-other-keys) obj
+     (destructuring-bind
+         (&key buf albedo normals specular bones scene duration &allow-other-keys) obj
        (make-instance 'monster
                       :buf buf
                       :albedo albedo
@@ -100,8 +105,6 @@
                       :scale .4
                       :scene scene)))
    (assimp-load-meshes "static/guard/boblampclean.md5mesh")))
-
-
 
 (defmethod handle ((e tick) (actor monster))
   (with-slots (scene bones clock index) actor
@@ -162,13 +165,6 @@
         (v3:+ (ode-geom-get-position (slot-value obj 'geom))
               (v! 0 .4 0))))
 
-(defmethod update ((camera perspective) dt)
-  (god-move .1 dt camera)
-  (full-rot .1 dt camera)
-  ;; (let ((pos (v! 2 4 4)))
-  ;;   (setf (pos camera) pos)
-  ;;   (setf (rot camera) (q:point-at (v! 0 1 0) pos (v! 0 0 0))))
-  )
 
 ;; https://github.com/rafaeldelboni/raylib-pixelated-fps/blob/c9b04f9013f74a4fde9b6df244581e7b0d2df3e0/app/ode_app.c
 (let ((mouse-pos-previous (v! 0 0))
@@ -253,12 +249,11 @@
 ;;------------------------------
 ;; AOC 18
 
-
 (defun init-all-the-things ()
   (init-state
    (list (make-material :roughness .8 :metallic .02 :specular .1)
          (make-material :roughness .4 :metallic .4  :specular .1)))
-  (let ((s1 (make-scene-ode :color (v! .2 .2 .2 1) :post (list (make-defer-postprocess)))))
+  (let ((s1 (make-scene-ode :color (v! .2 .2 .2 1))))
     #+nil
     (register (make-defered :downscale .25 :pos (v! -14.65844 4.4909353 0.22071815)
                             :rot (q! 0.95456934 -0.0030270235 -0.297679 0.013245501))
