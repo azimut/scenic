@@ -70,14 +70,14 @@ jobs:
           mv "sbcl-1.4.14-x86-64-windows-binary/SourceDir/PFiles/Steel Bank Common Lisp/1.4.14" sbcl_bin
         if: steps.cache.outputs.cache-hit != 'true'
 
-      - name: Install SBCL 2.1.9
+      - name: Install SBCL 2.3.1
         run: |
           cd ~/Downloads
           export SBCL_HOME="$PWD/sbcl_bin";
           export PATH="$PWD/sbcl_bin:${PATH}";
-          wget http://downloads.sourceforge.net/project/sbcl/sbcl/2.1.9/sbcl-2.1.9-source.tar.bz2
-          tar xjf sbcl-2.1.9-source.tar.bz2
-          cd sbcl-2.1.9
+          wget http://downloads.sourceforge.net/project/sbcl/sbcl/2.3.1/sbcl-2.3.1-source.tar.bz2
+          tar xjf sbcl-2.3.1-source.tar.bz2
+          cd sbcl-2.3.1
           sh make.sh --with-sb-core-compression
           unset SBCL_HOME
           INSTALL_ROOT=~/sbcl ./install.sh
