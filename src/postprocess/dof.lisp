@@ -79,10 +79,10 @@
   (k (:vec2 16)))
 
 (defmethod free :after ((obj dof))
-  (free (dof-kernel obj))
-  (free (dof-render-bokeh obj))
   (free (dof-render-coc-half obj))
-  (free (dof-render-coc obj)))
+  (free (dof-render-bokeh obj))
+  (free (dof-render-coc obj))
+  (free (dof-kernel obj)))
 
 (defmethod (setf dof-radius) :before (new-value (obj dof))
   (check-type new-value single-float))
@@ -96,21 +96,21 @@
 ;; "determines the strength of the bokeh effect per point"
 
 ;; http://www.voidcn.com/article/p-nvhpdsyj-yy.html
-(defun-g linear-eye-depth ((d :float))
-  (let* ((n .1)
-         (f 400f0)
-         (zz (/ (/ (- 1 (/ f n)) 2) f))
-         (zw (/ (/ (+ 1 (/ f n)) 2) f)))
+(defun-g linear-eye-depth ((d :float) (n :float) (f :float))
+  (let ((zz (/ (/ (- 1 (/ f n)) 2) f))
+        (zw (/ (/ (+ 1 (/ f n)) 2) f)))
     (/ 1 (+ (* zz d) zw))))
 
 (defun-g coc-frag ((uv :vec2)
                    &uniform
+                   (near           :float)
+                   (far            :float)
                    (samd           :sampler-2d)
                    (bokeh-radius   :float)
                    (focus-distance :float)
                    (focus-range    :float))
   (let* ((depth (x (texture samd uv)))
-         (depth (linear-eye-depth depth))
+         (depth (linear-eye-depth depth near far))
          (coc   (/ (- depth focus-distance)
                    focus-range))
          (coc   (* (clamp coc -1 1)
@@ -250,6 +250,8 @@
                  (cull-face)  nil
                  (depth-mask) nil)
       (map-g-into (fbo render-coc) #'coc-pipe bs
+                  :near (near camera)
+                  :far (far camera)
                   :samd (fifth (sam camera))
                   :bokeh-radius   radius
                   :focus-distance distance
