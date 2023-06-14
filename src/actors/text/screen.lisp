@@ -22,21 +22,26 @@
   (setf (msg obj) msg))
 
 (defstruct-g fond-vertex
-  (position :vec2)
+  (position     :vec2)
   (in-tex-coord :vec2))
+
 (defun-g calc-text-uvs ((pos :vec2) (extent :vec4) (scale :float))
-  (vec4 (* scale (/ (+ (x pos) (x extent)) (- (z extent) 1.0)))
-        (* scale (/ (- (y pos) (y extent)) (+ (w extent) 1.0)))
+  (vec4 (* scale (/ (+ (x pos) (x extent))
+                    (- (z extent) 1.0)))
+        (* scale (/ (- (y pos) (y extent))
+                    (+ (w extent) 1.0)))
         0.0
         1.0))
+
 (defun-g tvert ((text-info fond-vertex) &uniform (extent :vec4) (scale :float))
   (with-slots (position in-tex-coord) text-info
-    (values
-     (calc-text-uvs position extent scale)
-     in-tex-coord)))
+    (values (calc-text-uvs position extent scale)
+            in-tex-coord)))
+
 (defun-g tfrag ((tex-coord :vec2) &uniform (tex-image :sampler-2d) (color :vec4))
   (let ((intensity (x (texture tex-image tex-coord))))
     (* (vec4 intensity) color)))
+
 (defpipeline-g fond-pipeline ()
   (tvert fond-vertex)
   (tfrag :vec2))
