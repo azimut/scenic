@@ -77,12 +77,12 @@
                 ;;(contact i :surface :slip1) .7f0
                 ;; (contact i :surface :slip2) .7f0
                 ;; error reduction - spippery/cartoonish
-                (contact i :surface :soft-erp) 0.3;; 0.1-0.6
+                (contact i :surface :soft-erp) 0.4;; 0.1-0.6
                 ;; friction parameter
                 (contact i :surface :mu) ode:+infinity+
                 ;;(contact i :surface :mu2) 0f0
                 ;; bounce is the amount of "bouncyness"
-                (contact i :surface :bounce) 0f0;; .1f0
+                (contact i :surface :bounce) .1f0;; .1f0
                 ;; bounce_vel is the minimum incoming velocity to cause a bounce
                 (contact i :surface :bounce-vel) 0.1;;.1f0
                 ;; constraint force mixing parameter, soft/bouncy
