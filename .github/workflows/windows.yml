@@ -53,7 +53,7 @@ jobs:
           echo $HOME/sbcl/bin >> $GITHUB_PATH
         if: steps.cache.outputs.cache-hit == 'true'
 
-      - run: choco install lessmsi make 7zip wget openal
+      - run: choco install lessmsi make 7zip wget openal sbcl
       - uses: lukka/run-vcpkg@v11
         id: runvcpkg
         with:
@@ -61,28 +61,6 @@ jobs:
           vcpkgGitCommitId: 5b1214315250939257ef5d62ecdcbca18cf4fb1c
           runVcpkgInstall: true
       - run: cp -v vcpkg/packages/*/bin/*.dll C:/windows/system32/
-
-      - name: Install Bootstraping SBCL 1.4.14
-        run: |
-          cd ~/Downloads
-          wget http://prdownloads.sourceforge.net/sbcl/sbcl-1.4.14-x86-64-windows-binary.msi
-          lessmsi x sbcl-1.4.14-x86-64-windows-binary.msi
-          mv "sbcl-1.4.14-x86-64-windows-binary/SourceDir/PFiles/Steel Bank Common Lisp/1.4.14" sbcl_bin
-        if: steps.cache.outputs.cache-hit != 'true'
-
-      - name: Install SBCL 2.1.9
-        run: |
-          cd ~/Downloads
-          export SBCL_HOME="$PWD/sbcl_bin";
-          export PATH="$PWD/sbcl_bin:${PATH}";
-          wget http://downloads.sourceforge.net/project/sbcl/sbcl/2.1.9/sbcl-2.1.9-source.tar.bz2
-          tar xjf sbcl-2.1.9-source.tar.bz2
-          cd sbcl-2.1.9
-          sh make.sh --with-sb-core-compression
-          unset SBCL_HOME
-          INSTALL_ROOT=~/sbcl ./install.sh
-        shell: bash
-        if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Install quicklisp
         run: |
