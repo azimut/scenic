@@ -13,9 +13,9 @@
   (:default-initargs
    :uploadp   T
    :specular    0.2
-   :metallic    0.3
+   :metallic    0.04
    :emissive    0.0
-   :roughness   0.3
+   :roughness   0.7
    :fakeambient 0.0)
   (:metaclass counted-class)
   (:documentation "pbr material"))
