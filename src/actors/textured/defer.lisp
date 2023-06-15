@@ -19,8 +19,7 @@
                         (roughmap   :sampler-2d)
                         (normal-map :sampler-2d))
   (let* ((metallic  (aref (pbr-material-metallic materials) material))
-         (emissive  0f0)
-         ;;#+nil
+         (emissive  (aref (pbr-material-emissive materials) material))
          (uv        (parallax-mapping
                      uv
                      (normalize (- tcam-pos tfrag-pos))
