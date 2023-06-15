@@ -1,19 +1,49 @@
 (in-package #:scenic)
 
-(defpipeline-g textured-bone-pipe ()
-  (vert-with-tbdata-defer-bones g-pnt tb-data assimp-bones)
-  (textured-frag :vec2 :vec3 :vec3 :mat3 :vec3 :vec3))
+(defclass textured-albedo-only (textured assimp-thing-with-bones albedoed)
+  ())
 
-(defmethod paint (scene (camera defered) (actor assimp-thing-with-bones) time)
-  (with-slots (buf scale albedo normal specmap aomap color bones) actor
-    (map-g #'textured-bone-pipe buf
-           :specmap specmap
+(defun-g textured-albedo-only-frag ((uv          :vec2)
+                                    (frag-normal :vec3)
+                                    (frag-pos    :vec3)
+                                    (tbn         :mat3)
+                                    (tcam-pos    :vec3)
+                                    (tfrag-pos   :vec3)
+                                    &uniform
+                                    (cam-pos    :vec3)
+                                    (color      :vec3)
+                                    (material   :int)
+                                    (materials  pbr-material :ubo)
+                                    (albedo     :sampler-2d))
+  (let* ((metallic  (aref (pbr-material-metallic materials) material))
+         (emissive  (aref (pbr-material-emissive materials) material))
+         ;;(color (* color (vec3 (x (pow (s~ (texture albedo uv) :xyz) (vec3 2.2))))))
+         (color     (pow (s~ (texture albedo uv) :xyz) (vec3 2.2)))
+         (normal frag-normal)
+         (roughness (aref (pbr-material-roughness materials) material))
+         (ao        (aref (pbr-material-fakeambient materials) material))
+         (spec      (aref (pbr-material-specular materials) material)))
+    (values (v! color     roughness)
+            (v! frag-pos  ao)
+            (v! normal    spec)
+            (v! metallic  emissive))))
+
+(defpipeline-g textured-albedo-only-bone-pipe ()
+  (vert-with-tbdata-defer-bones g-pnt tb-data assimp-bones)
+  (textured-albedo-only-frag :vec2 :vec3 :vec3 :mat3 :vec3 :vec3))
+
+(defmethod paint (scene (camera defered) (actor textured-albedo-only) time)
+  (with-slots (buf scale albedo color bones material) actor
+    (map-g #'textured-albedo-only-bone-pipe buf
            :color color
-           :aomap aomap
-           :albedo albedo
            :offsets bones
-           :normal-map normal
+           :scale scale
+           ;; Sampler
+           :albedo albedo
+           ;; Matrices
            :model-world (model->world actor)
            :world-view (world->view camera)
            :view-clip (projection camera)
-           :scale scale)))
+           ;; Material
+           :material material
+           :materials (materials-ubo *state*))))
