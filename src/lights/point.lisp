@@ -39,7 +39,7 @@
 (defmethod print-object ((obj point) stream)
   (print-unreadable-object (obj stream :type T :identity T)
     (with-slots (pos near far linear quadratic) obj
-      (format stream "(~a ~a ~a) L:~a Q:~a NEAR:~a FAR:~a"
+      (format stream "(~$ ~$ ~$) L:~a Q:~a NEAR:~a FAR:~a"
               (x pos) (y pos) (z pos) linear quadratic near far))))
 
 (defmethod upload ((obj point))

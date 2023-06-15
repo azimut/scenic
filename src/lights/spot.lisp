@@ -43,7 +43,7 @@
 (defmethod print-object ((obj spot) stream)
   (print-unreadable-object (obj stream :type T :identity T)
     (with-slots (pos near far) obj
-      (format stream "(~a ~a ~a) NEAR:~a FAR:~a" (x pos) (y pos) (z pos) near far))))
+      (format stream "(~$ ~$ ~$) NEAR:~a FAR:~a" (x pos) (y pos) (z pos) near far))))
 
 (defmethod upload ((obj spot))
   (with-slots (pos rot color ubo idx linear quadratic cutoff outer-cutoff fudge) obj

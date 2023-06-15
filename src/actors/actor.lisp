@@ -17,8 +17,8 @@
   (:documentation "base object, with tangents"))
 
 (defclass assimp-thing (actor)
-  ((name     :initarg :name :reader name)
-   (scene    :initarg :scene)))
+  ((name  :initarg :name :reader name)
+   (scene :initarg :scene)))
 
 (defclass assimp-thing-with-bones (assimp-thing)
   ((bones            :initarg :bones
@@ -32,31 +32,34 @@
 (defmethod print-object ((obj actor) stream)
   (print-unreadable-object (obj stream :type T :identity T)
     (with-slots (pos) obj
-      (format stream "(~a ~a ~a)" (x pos) (y pos) (z pos)))))
+      (format stream "(~$ ~$ ~$)" (x pos) (y pos) (z pos)))))
 
 (defmethod print-object ((obj assimp-thing) stream)
   (print-unreadable-object (obj stream :type T :identity T)
     (with-slots (pos name) obj
-      (format stream " (~a ~a ~a) ~s"
+      (format stream "(~$ ~$ ~$) ~s"
               (x pos) (y pos) (z pos)
               name))))
 
-(defmethod print-object ((obj assimp-thing-with-bones) stream)
-  (print-unreadable-object (obj stream :type T :identity T)
-    (with-slots (pos name) obj
-      (format stream " (~a ~a ~a) ~s"
-              (x pos) (y pos) (z pos)
-              name))))
+;; Accessors
+(defmethod specular  ((obj actor))
+  (specular  (nth (material obj) (materials *state*))))
+(defmethod metallic  ((obj actor))
+  (metallic  (nth (material obj) (materials *state*))))
+(defmethod emissive  ((obj actor))
+  (emissive  (nth (material obj) (materials *state*))))
+(defmethod roughness ((obj actor))
+  (roughness (nth (material obj) (materials *state*))))
 
-(defmethod specular  ((obj actor)) (specular  (nth (material obj) (materials *state*))))
-(defmethod metallic  ((obj actor)) (metallic  (nth (material obj) (materials *state*))))
-(defmethod emissive  ((obj actor)) (emissive  (nth (material obj) (materials *state*))))
-(defmethod roughness ((obj actor)) (roughness (nth (material obj) (materials *state*))))
-
-(defmethod (setf specular)  (new-value (obj actor)) (setf (specular  (nth (material obj) (materials *state*))) new-value))
-(defmethod (setf metallic)  (new-value (obj actor)) (setf (metallic  (nth (material obj) (materials *state*))) new-value))
-(defmethod (setf emissive)  (new-value (obj actor)) (setf (emissive  (nth (material obj) (materials *state*))) new-value))
-(defmethod (setf roughness) (new-value (obj actor)) (setf (roughness (nth (material obj) (materials *state*))) new-value))
+;; Setters
+(defmethod (setf specular) (new-value (obj actor))
+  (setf (specular  (nth (material obj) (materials *state*))) new-value))
+(defmethod (setf metallic) (new-value (obj actor))
+  (setf (metallic  (nth (material obj) (materials *state*))) new-value))
+(defmethod (setf emissive) (new-value (obj actor))
+  (setf (emissive  (nth (material obj) (materials *state*))) new-value))
+(defmethod (setf roughness) (new-value (obj actor))
+  (setf (roughness (nth (material obj) (materials *state*))) new-value))
 
 (defun model->world (actor)
   (with-slots (pos rot) actor

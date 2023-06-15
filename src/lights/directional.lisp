@@ -22,7 +22,7 @@
 (defmethod print-object ((obj directional) stream)
   (print-unreadable-object (obj stream :type T :identity T)
     (with-slots (pos near far) obj
-      (format stream "(~a ~a ~a) NEAR:~a FAR:~a" (x pos) (y pos) (z pos) near far))))
+      (format stream "(~$ ~$ ~$) NEAR:~a FAR:~a" (x pos) (y pos) (z pos) near far))))
 
 (defmethod upload ((obj directional))
   (with-slots (pos color ubo idx fudge) obj
