@@ -48,7 +48,7 @@
          (ao          (x (texture aomap    uv)))
          (spec        (x (texture specmap  uv)))
          (fakeambient (aref (pbr-material-fakeambient materials) material))
-         (metallic     0.04)
+         (metallic    (aref (pbr-material-metallic materials) material))
          (normal      (norm-from-map normalmap uv tbn))
          ;;(normal      (norm-from-map normalmap uv frag-pos frag-norm))
          ;;(normal      frag-norm)

@@ -10,14 +10,15 @@
                         (cam-pos    :vec3)
                         (color      :vec3)
                         (dispscale  :float)
+                        (material   :int)
+                        (materials  pbr-material :ubo)
                         (aomap      :sampler-2d)
                         (albedo     :sampler-2d)
                         (dispmap    :sampler-2d)
                         (specmap    :sampler-2d)
                         (roughmap   :sampler-2d)
                         (normal-map :sampler-2d))
-  (let* ((metallic  .04f0)
-         ;; (metallic  0f0)
+  (let* ((metallic  (aref (pbr-material-metallic materials) material))
          (emissive  0f0)
          ;;#+nil
          (uv        (parallax-mapping
@@ -43,7 +44,7 @@
   (textured-frag :vec2 :vec3 :vec3 :mat3 :vec3 :vec3))
 
 (defmethod paint (scene (camera defered) (actor textured-pbr) time)
-  (with-slots (buf scale uv-repeat color dispscale
+  (with-slots (buf scale uv-repeat color dispscale material
                albedo aomap dispmap normal roughmap specmap)
       actor
     (map-g #'textured-pipe buf
@@ -52,6 +53,9 @@
            :scale scale
            :cam-pos (pos camera)
            :dispscale dispscale
+           ;; Material
+           :material material
+           :materials (materials-ubo *state*)
            ;; Samplers
            :albedo albedo
            :aomap aomap
