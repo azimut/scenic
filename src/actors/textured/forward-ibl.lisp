@@ -1,43 +1,43 @@
 (in-package #:scenic)
 
-(defun-g textured-forward-frag ((uv        :vec2)
-                                (frag-norm :vec3)
-                                (frag-pos  :vec3)
-                                (tbn       :mat3)
-                                (dir-pos   (:vec4 2))
-                                (spot-pos  (:vec4 2))
-                                ;; Unused...
-                                (tan-dir-pos (:vec3 2))
-                                (tan-spot-pos (:vec3 2))
-                                (tan-point-pos (:vec3 4))
-                                (tan-cam-pos :vec3)
-                                (tan-frag-pos :vec3)
-                                &uniform
-                                (material     :int)
-                                (materials    pbr-material        :ubo)
-                                (scene        scene-data          :ubo)
-                                (cam-pos      :vec3)
-                                (time         :float)
-                                (dispscale    :float)
-                                ;; IBL
-                                (brdf         :sampler-2d)
-                                (prefilter    :sampler-cube)
-                                (irradiance   :sampler-cube)
-                                ;; Samplers
-                                (albedo    :sampler-2d)
-                                (roughmap  :sampler-2d)
-                                (normalmap :sampler-2d)
-                                (specmap   :sampler-2d)
-                                (aomap     :sampler-2d)
-                                (dispmap   :sampler-2d)
-                                ;; Lights
-                                (dirlights    dir-light-data      :ubo)
-                                (pointlights  point-light-data    :ubo)
-                                (spotlights   spot-light-data     :ubo)
-                                ;; Shadows
-                                (dirshadows   :sampler-2d-array)
-                                (spotshadows  :sampler-2d-array)
-                                (pointshadows :sampler-cube-array))
+(defun-g textured-forward-ibl-frag ((uv        :vec2)
+                                    (frag-norm :vec3)
+                                    (frag-pos  :vec3)
+                                    (tbn       :mat3)
+                                    (dir-pos   (:vec4 2))
+                                    (spot-pos  (:vec4 2))
+                                    ;; Unused...
+                                    (tan-dir-pos (:vec3 2))
+                                    (tan-spot-pos (:vec3 2))
+                                    (tan-point-pos (:vec3 4))
+                                    (tan-cam-pos :vec3)
+                                    (tan-frag-pos :vec3)
+                                    &uniform
+                                    (material     :int)
+                                    (materials    pbr-material        :ubo)
+                                    (scene        scene-data          :ubo)
+                                    (cam-pos      :vec3)
+                                    (time         :float)
+                                    (dispscale    :float)
+                                    ;; IBL
+                                    (brdf         :sampler-2d)
+                                    (prefilter    :sampler-cube)
+                                    (irradiance   :sampler-cube)
+                                    ;; Samplers
+                                    (albedo    :sampler-2d)
+                                    (roughmap  :sampler-2d)
+                                    (normalmap :sampler-2d)
+                                    (specmap   :sampler-2d)
+                                    (aomap     :sampler-2d)
+                                    (dispmap   :sampler-2d)
+                                    ;; Lights
+                                    (dirlights    dir-light-data      :ubo)
+                                    (pointlights  point-light-data    :ubo)
+                                    (spotlights   spot-light-data     :ubo)
+                                    ;; Shadows
+                                    (dirshadows   :sampler-2d-array)
+                                    (spotshadows  :sampler-2d-array)
+                                    (pointshadows :sampler-cube-array))
   (let* ((uv          (parallax-mapping
                        uv
                        (normalize (- tan-cam-pos tan-frag-pos))
@@ -136,9 +136,9 @@
            ambient)
         1)))
 
-(defpipeline-g textured-forward-pipe ()
+(defpipeline-g textured-forward-ibl-pipe ()
   (vert-with-tbdata g-pnt tb-data)
-  (textured-forward-frag
+  (textured-forward-ibl-frag
    :vec2 :vec3 :vec3
    :mat3
    (:vec4 2) (:vec4 2)
@@ -149,7 +149,7 @@
   (with-slots (buf material scale uv-repeat dispscale
                albedo normal aomap roughmap specmap dispmap)
       actor
-    (map-g #'textured-forward-pipe buf
+    (map-g #'textured-forward-ibl-pipe buf
            :dispscale dispscale
            :uv-repeat uv-repeat
            :scale scale
