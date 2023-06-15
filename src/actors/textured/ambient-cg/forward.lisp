@@ -1,6 +1,6 @@
 (in-package #:scenic)
 
-(defun-g textured-forward-frag
+(defun-g textured-ambient-cg-forward-frag
     ((uv              :vec2)
      (frag-norm       :vec3)
      (frag-pos        :vec3)
@@ -23,8 +23,6 @@
      (albedo    :sampler-2d)
      (roughmap  :sampler-2d)
      (normalmap :sampler-2d)
-     (specmap   :sampler-2d)
-     (aomap     :sampler-2d)
      (dispmap   :sampler-2d)
      ;; Lights
      (dirlights    dir-light-data      :ubo)
@@ -41,19 +39,18 @@
                        dispscale))
          (color       (pow (s~ (texture albedo uv) :xyz) (vec3 2.2)))
          (roughness   (x (texture roughmap uv)))
-         (ao          (x (texture aomap    uv)))
-         (spec        (x (texture specmap  uv)))
-         (fakeambient (aref (pbr-material-fakeambient materials) material))
-         (metallic     0.04)
          (normal      (norm-from-map normalmap uv tbn))
          ;;(normal      (norm-from-map normalmap uv frag-pos frag-norm))
          ;;(normal      frag-norm)
+         (spec        (aref (pbr-material-specular materials) material))
+         (fakeambient (aref (pbr-material-fakeambient materials) material))
+         (metallic    (aref (pbr-material-metallic materials) material))
          (final-color (v! 0 0 0)))
     (dotimes (i (scene-data-ndir scene))
       (with-slots (colors positions fudge)
           dirlights
         (incf final-color
-              (+ (* fakeambient (* color ao))
+              (+ (* fakeambient color)
                  (* (pbr-direct-lum (aref positions i) frag-pos cam-pos normal
                                     roughness
                                     metallic
@@ -65,7 +62,7 @@
       (with-slots (colors positions linear quadratic far fudge)
           pointlights
         (incf final-color
-              (+ (* fakeambient (* color ao)
+              (+ (* fakeambient color
                     (point-light-attenuation
                      (aref linear i)
                      (aref quadratic i)
@@ -89,7 +86,7 @@
       (with-slots (colors positions linear quadratic cutoff outer-cutoff direction fudge)
           spotlights
         (incf final-color
-              (+ (* fakeambient (* color ao)
+              (+ (* fakeambient color
                     (point-light-attenuation
                      (aref linear i)
                      (aref quadratic i)
@@ -112,20 +109,19 @@
                                    i))))))
     (v! final-color 1)))
 
-(defpipeline-g textured-forward-pipe ()
+(defpipeline-g textured-ambient-cg-forward-pipe ()
   (vert-with-tbdata g-pnt tb-data)
-  (textured-forward-frag
+  (textured-ambient-cg-forward-frag
    :vec2 :vec3 :vec3
    :mat3
    (:vec4 2) (:vec4 2)
    (:vec3 2) (:vec3 2) (:vec3 4)
    :vec3 :vec3))
 
-(defmethod paint (scene (camera forward) (actor textured-pbr) time)
-  (with-slots (buf material scale uv-repeat dispscale
-               albedo normal aomap roughmap specmap dispmap)
+(defmethod paint (scene (camera forward) (actor textured-ambient-cg) time)
+  (with-slots (buf material scale uv-repeat dispscale albedo normal roughmap dispmap)
       actor
-    (map-g #'textured-forward-pipe buf
+    (map-g #'textured-ambient-cg-forward-pipe buf
            :dispscale dispscale
            :uv-repeat uv-repeat
            :scale scale
@@ -144,11 +140,9 @@
            :pointlights (point-ubo *state*)
            ;; Samplers
            :albedo albedo
-           :aomap aomap
            :dispmap dispmap
            :normalmap normal
            :roughmap roughmap
-           :specmap specmap
            ;; Matrices
            :model-world (model->world actor)
            :world-view (world->view camera)
