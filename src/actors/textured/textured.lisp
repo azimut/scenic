@@ -38,7 +38,9 @@
               :initarg :dispscale))
   (:default-initargs
    :dispmap (get-tex "static/null/2k_wall/8/white_plaster_02_disp_2k.png" NIL T :r8)
-   :dispscale .01))
+   :dispscale .01)
+  (:documentation "inverse of a heightmap, since is easier to fake depth
+                   0 = surface, 1 = depth"))
 
 (defmethod initialize-instance :before ((obj displaced) &key dispscale dispmap)
   (check-type dispmap %cepl.types:sampler)

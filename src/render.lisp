@@ -216,23 +216,32 @@
 ;;--------------------------------------------------
 ;; https://learnopengl.com/Advanced-Lighting/Parallax-Mapping
 ;; vec3 viewDir   = normalize(fs_in.TangentViewPos - fs_in.TangentFragPos);
+
 (defun-g parallax-mapping ((uv           :vec2)
                            (view-dir     :vec3)
                            (depth-map    :sampler-2d)
                            (height-scale :float))
-  (let* ((height (x (texture depth-map uv)))
-         (p      (* height height-scale (/ (s~ view-dir :xy)
-                                           (z view-dir)))))
-    (- uv p)))
-
-(defun-g parallax-mapping-flipped ((uv           :vec2)
-                                   (view-dir     :vec3)
-                                   (depth-map    :sampler-2d)
-                                   (height-scale :float))
-  (let* ((height (- 1 (x (texture depth-map uv))));; flipped
-         (p      (* height height-scale (/ (s~ view-dir :xy)
-                                           (z view-dir)))))
-    (- uv p)))
+  (let* ((n-layers            (mix 32f0 8f0 (max (dot (v! 0 0 1) view-dir) 0f0)))
+         (layer-depth         (/ 1f0 n-layers))
+         (current-layer-depth 0f0)
+         (p                   (* height-scale (s~ view-dir :xy)))
+         (delta-coords        (/ p n-layers))
+         (current-uv          uv)
+         (current-depth       (x (texture depth-map current-uv))))
+    ;; Parallax Step Mapping
+    (while (< current-layer-depth current-depth )
+           (decf current-uv delta-coords)
+           (setf current-depth (x (texture depth-map current-uv)))
+           (incf current-layer-depth layer-depth))
+    ;; Parallax Oclussion Mapping
+    (let* ((prev-uv (+ current-uv delta-coords))
+           (after-depth (- current-depth current-layer-depth))
+           (before-depth (+ layer-depth
+                            (- (x (texture depth-map prev-uv))
+                               current-layer-depth)))
+           (weight (/ after-depth (- after-depth before-depth))))
+      (+ (* prev-uv weight)
+         (* current-uv (- 1f0 weight))))))
 
 ;; https://catlikecoding.com/unity/tutorials/rendering/part-20/
 ;; Limit lenght of 1
@@ -240,16 +249,7 @@
                                   (view-dir     :vec3)
                                   (depth-map    :sampler-2d)
                                   (height-scale :float))
-  (let* ((height (x (texture depth-map uv)))
-         (height (- height .5))
-         (p      (* height height-scale)))
-    (+ uv (* (s~ view-dir :xy) p))))
-
-(defun-g parallax-mapping-offset-flipped ((uv           :vec2)
-                                          (view-dir     :vec3)
-                                          (depth-map    :sampler-2d)
-                                          (height-scale :float))
-  (let* ((height (- 1 (x (texture depth-map uv)))) ;; flipped
+  (let* ((height (x (texture depth-map uv)));; flip by (- 1 (x (texture...)))
          (height (- height .5))
          (p      (* height height-scale)))
     (+ uv (* (s~ view-dir :xy) p))))
