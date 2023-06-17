@@ -1,5 +1,9 @@
 (in-package #:scenic)
 
+;; References:
+;; https://github.com/Graphics-Physics-Libraries/Nimble/blob/a0c86a7073fda65e4ba8f436204c30522c2f7f5f/src/shader/post_process/ssr/ssr_cs.glsl#L140
+;; https://github.com/simeonradivoev/ComputeStochasticReflections
+
 (defclass ssr (postprocess renderable)
   ((out :reader out))
   (:default-initargs
@@ -18,9 +22,9 @@
     (setf out (sample (first tex)))
     (setf (%cepl.types::%sampler-imagine out) t)))
 
-(defun-g read-depth ((uv    :vec2)
-                     (depth :sampler-2d))
-  (1- (* (x (texture-lod depth uv 0)))))
+(defun-g read-depth ((uv   :vec2)
+                     (samd :sampler-2d))
+  (1- (* 2 (x (texture-lod samd uv 0)))));; remove 2?
 
 (defun-g binary-search ((dir   :vec3)
                         (coord :vec3)
@@ -166,15 +170,15 @@
 (defpipeline-g ssr-pipe ()
   :compute ssr-compute)
 
-(defun-g ssr-apply-frag ((uv          :vec2)
+(defun-g ssr-apply-frag ((uv        :vec2)
                          &uniform
-                         (color       :vec3)
-                         (scene-sam   :sampler-2d)
-                         (ssr-sam     :sampler-2d))
-  (let* ((ssr (s~ (texture ssr-sam uv) :xyz))
-         (reflection (s~ (texture scene-sam (s~ ssr :xy)) :xyz))
-         (albedo color))
-    (v! (mix albedo reflection (* .5 (z ssr)))
+                         (scene-sam :sampler-2d)
+                         (ssr-sam   :sampler-2d)
+                         (ssr-unit  :float))
+  (let* ((color (s~ (texture scene-sam uv) :xyz))
+         (ssr   (s~ (texture ssr-sam uv) :xyz))
+         (reflection (s~ (texture scene-sam (s~ ssr :xy)) :xyz)))
+    (v! (mix color reflection (* ssr-unit (z ssr)))
         1)))
 
 (defpipeline-g ssr-apply-pipe (:points)
@@ -199,8 +203,8 @@
                :ssr-sam (out ssr)))))
   ;;#+nil
   (map-g #'ssr-apply-pipe (bs *state*)
-         :scene-sam (first (sam (next *state*)))
-         :ssr-sam (first (sam ssr))
-         :color (v! .5 .5 .5))
+         :ssr-unit .5
+         :scene-sam (first (sam (prev *state*)))
+         :ssr-sam (first (sam ssr)))
   ;;(wait-on-gpu-fence (make-gpu-fence))
   )
