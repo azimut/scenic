@@ -77,6 +77,7 @@
    (:file "postprocess/defer/defer")
    (:file "postprocess/defer/ibl")
    (:file "postprocess/dof")
+   (:file "postprocess/ssr")
    (:file "postprocess/fog/iqfog")
    (:file "actors/untextured/untextured")
    (:file "actors/untextured/defer")

@@ -31,36 +31,31 @@
                         (proj  :mat4)
                         (samd  :sampler-2d))
   (let* ((projected-coord (vec4 0))
-         (coord coord))
+         (hit-coord coord))
     (dotimes (i 5) ; kNumBinarySearchSteps
-      (setf projected-coord
-            (* proj (v! coord 1)))
-      (setf (s~ projected-coord :xyz)
-            (/ (s~ projected-coord :xyz)
-               (w projected-coord)))
+      (setf projected-coord (* proj (v! hit-coord 1)))
+      (divf (s~ projected-coord :xyz)
+            (vec3 (w projected-coord)))
       (setf (s~ projected-coord :xy)
             (+ .5 (* .5 (s~ projected-coord :xy))))
-      (setf dir (* .5 dir))
+      (multf dir (vec3 .5))
       (let ((depth (1- (* 2 (x (texture samd (s~ projected-coord :xy)))))))
         (if (< (z projected-coord) depth)
-            (incf coord dir)
-            (decf coord dir))))
-    (setf projected-coord (* proj (v! coord 1)))
-    (setf (s~ projected-coord :xy)
-          (/ (s~ projected-coord :xy) (w projected-coord)))
+            (incf hit-coord dir)
+            (decf hit-coord dir))))
+    (setf projected-coord
+          (* proj (v! hit-coord 1)))
+    (divf (s~ projected-coord :xy)
+          (vec2 (w projected-coord)))
     (setf (s~ projected-coord :xy)
           (+ .5 (* .5 (s~ projected-coord :xy))))
-    (s~ projected-coord :xy)
-    #+nil
-    (values
-     dir
-     coord)))
+    (s~ projected-coord :xy)))
 
 (defun-g ray-march ((dir  :vec3)
                     (pos  :vec3)
                     (proj :mat4)
                     (samd :sampler-2d))
-  (let* ((k-ray-step      .1)
+  (let* ((k-ray-step      .1); kRayStep
          (ray-step        (* dir k-ray-step))
          (ray-sample      pos)
          (projected-coord (vec4 0))
@@ -69,33 +64,32 @@
       (incf ray-sample ray-step)
       (setf projected-coord
             (* proj (v! ray-sample 1)))
-      (setf (s~ projected-coord :xyz)
-            (/ (s~ projected-coord :xyz)
-               (w projected-coord)))
+      (divf (s~ projected-coord :xyz)
+            (vec3 (w projected-coord)))
       (setf (s~ projected-coord :xy)
             (+ .5 (* .5 (s~ projected-coord :xy))))
       (setf z-val
             (read-depth (s~ projected-coord :xy) samd))
       (if (> (z projected-coord) z-val)
-          ;;(multiple-value-bind (ret newdir newcoord))
-          ;;(binary-search ray-step ray-sample proj samd)
-          ;;(setf ray-step   newdir)
-          ;;(setf ray-sample newcoord)
-          (return (v! (binary-search ray-step ray-sample proj samd)
+          (return (v! (binary-search ray-step
+                                     ray-sample
+                                     proj
+                                     samd)
                       1)))))
   (vec3 0f0))
 
-(defun-g ssr-compute (&uniform (world-view  :mat4)
-                               ;;(model-world :mat4)
-                               (view-clip   :mat4)
-                               (iview-clip  :mat4)
-                               (iworld-view :mat4)
-                               (metal-map   :sampler-2d)
-                               (albedo      :sampler-2d)
-                               (samd        :sampler-2d)
-                               (samp        :sampler-2d)
-                               (samn        :sampler-2d)
-                               (ssr-sam     :image-2d))
+(defun-g ssr-compute
+    (&uniform (world-view  :mat4)
+              ;;(model-world :mat4)
+              (view-clip   :mat4)
+              (iview-clip  :mat4)
+              (iworld-view :mat4)
+              (metal-map   :sampler-2d)
+              (albedo      :sampler-2d)
+              (samd        :sampler-2d)
+              (samp        :sampler-2d)
+              (samn        :sampler-2d)
+              (ssr-sam     :image-2d))
   (declare (local-size :x 16 :y 16 :z 1))
   (let* ((k-min-ray-step .1)
          (size (texture-size samd 0))
@@ -160,11 +154,8 @@
                        (ivec2 (int (x gl-global-invocation-id))
                               (int (y gl-global-invocation-id)))
                        (v! (s~ hit-coord :xy)
-                           #+nil
-                           (v! (x hit-coord)
-                               (- 1 (y hit-coord)))
                            total-attenuation
-                           1f0))))
+                           1))))
     (values)))
 
 (defpipeline-g ssr-pipe ()
@@ -185,26 +176,23 @@
   :fragment (ssr-apply-frag :vec2))
 
 (defmethod blit (scene (ssr ssr) (camera defered) _)
-  ;;#+nil
-  (when (drawp ssr)
-    (let ((compute (destructuring-bind (x y) (dim ssr)
-                     (make-compute-space (floor (/ x 16)) (floor (/ y 16))))))
-      (destructuring-bind (s1 s2 s3 s4 sd) (sam camera)
-        (map-g #'ssr-pipe compute
-               :world-view  (world->view camera)
-               :iworld-view (m4:inverse (world->view camera))
-               :view-clip (projection  camera)
-               :iview-clip (m4:inverse (projection camera))
-               :albedo s1
-               :samp s2                 ; pos
-               :samn s3                 ; normal
-               :metal-map s4
-               :samd sd                 ; depth
-               :ssr-sam (out ssr)))))
-  ;;#+nil
+  (let ((compute (destructuring-bind (x y) (dim ssr)
+                   (make-compute-space (floor (/ x 16))
+                                       (floor (/ y 16))))))
+    (destructuring-bind (s1 s2 s3 s4 sd) (sam camera)
+      (map-g #'ssr-pipe compute
+             :world-view  (world->view camera)
+             :iworld-view (m4:inverse (world->view camera))
+             :view-clip (projection  camera)
+             :iview-clip (m4:inverse (projection camera))
+             :albedo s1
+             :samp s2                 ; pos
+             :samn s3                 ; normal
+             :metal-map s4
+             :samd sd                 ; depth
+             :ssr-sam (out ssr))))
+  ;;(wait-on-gpu-fence (make-gpu-fence))?
   (map-g #'ssr-apply-pipe (bs *state*)
          :ssr-unit .5
          :scene-sam (first (sam (prev *state*)))
-         :ssr-sam (first (sam ssr)))
-  ;;(wait-on-gpu-fence (make-gpu-fence))
-  )
+         :ssr-sam (first (sam ssr))))
