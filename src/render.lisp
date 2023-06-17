@@ -92,6 +92,8 @@
                        norm))
          (t0  (normalize (* normal-m3 (tb-data-tangent tb))))
          (n0  (normalize (* normal-m3 (norm vert))))
+         ;; (t0 (normalize (s~ (* model-world (v! (tb-data-tangent tb) 0)) :xyz)))
+         ;; (n0 (normalize (s~ (* model-world (v! (norm vert) 0)) :xyz)))
          (t0  (normalize (- t0 (* (dot t0 n0) n0))))
          (b0  (cross n0 t0))
          (tbn (mat3 t0 b0 n0)))
@@ -110,7 +112,7 @@
                                        (scale       :float)
                                        (offsets     (:mat4 41)) ;; FIXME
                                        (cam-pos     :vec3))
-  (let* ((pos       (pos vert))
+  (let* ((pos        (pos vert))
          (world-pos (* (m4:scale (v3! scale)) ;; FIXME
                        model-world
                        (+ (* (aref (assimp-bones-weights bones) 0)
@@ -146,7 +148,7 @@
 (defun-g norm-from-map ((normal-map :sampler-2d)
                         (uv         :vec2))
   (let* ((normal (s~ (texture normal-map uv) :xyz))
-         (normal (normalize (- (* 2f0 normal) 1f0))))
+         (normal (normalize (1- (* 2 normal)))))
     normal))
 
 (defun-g norm-from-map-flipped ((normal-map :sampler-2d)

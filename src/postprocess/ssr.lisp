@@ -1,40 +1,22 @@
 (in-package #:scenic)
 
-(defclass ssr (postprocess renderable); drawable
-  ((out :reader out)
-   (dim :reader dim))
+(defclass ssr (postprocess renderable)
+  ((out :reader out))
+  (:default-initargs
+   :texture-opts '((0 :element-type :rgba32f))
+   :sample-opts  '((:wrap :clamp-to-edge)))
   (:documentation "screen space reflections, compute shader based"))
 
-(defmethod reinitialize-instance :around ((obj ssr) &key dim)
-  (when (not (equal dim (dimensions (tex obj))))
-    (call-next-method)))
-
-(defmethod reinitialize-instance :after ((obj ssr) &key dim)
-  (with-slots ((old-tex tex)
-               (old-sam sam)
-               (old-out out)
-               (old-dim dim))
-      obj
-    (let* ((new-tex (make-texture nil :dimensions dim :element-type :rgba32))
-           (new-sam (sample new-tex))
-           (new-out (sample new-tex)))
-      (setf (%cepl.types::%sampler-imagine new-out) t)
-      (rotatef old-dim dim)
-      (rotatef old-tex new-tex)
-      (rotatef old-sam new-sam)
-      (rotatef old-out new-out)
-      (free new-tex))))
-
 (defmethod initialize-instance :after ((obj ssr) &key)
-  (with-slots (tex sam out dim) obj
-    (setf dim (dim (current-camera)))
-    (setf tex (make-texture nil :dimensions dim :element-type :rgba32))
-    (setf sam (sample tex))
-    (setf out (sample tex))
+  (with-slots (tex out) obj
+    (setf out (sample (first tex)))
     (setf (%cepl.types::%sampler-imagine out) t)))
 
-(defmethod free ((obj ssr))
-  (free (tex obj)))
+(defmethod handle ((e resize) (ssr ssr))
+  (setf (dim ssr) (list (width e) (height e)))
+  (with-slots (tex out) ssr
+    (setf out (sample (first tex)))
+    (setf (%cepl.types::%sampler-imagine out) t)))
 
 (defun-g read-depth ((uv    :vec2)
                      (depth :sampler-2d))
@@ -100,7 +82,6 @@
   (vec3 0f0))
 
 (defun-g ssr-compute (&uniform (world-view  :mat4)
-
                                ;;(model-world :mat4)
                                (view-clip   :mat4)
                                (iview-clip  :mat4)
@@ -186,44 +167,40 @@
   :compute ssr-compute)
 
 (defun-g ssr-apply-frag ((uv          :vec2)
-                         (frag-normal :vec3)
-                         (frag-pos    :vec3)
                          &uniform
                          (color       :vec3)
                          (scene-sam   :sampler-2d)
                          (ssr-sam     :sampler-2d))
   (let* ((ssr (s~ (texture ssr-sam uv) :xyz))
          (reflection (s~ (texture scene-sam (s~ ssr :xy)) :xyz))
-         (ao 1f0)
-         (spec .01)
-         (rough .9)
          (albedo color))
-    ;;(v! 0 1 0 1)
-    ;;#+nil
-    (v! (mix albedo
-             reflection
-             (* .5 (z ssr)))
+    (v! (mix albedo reflection (* .5 (z ssr)))
         1)))
 
-(defpipeline-g ssr-apply-pipe ()
-  :vertex   (vert g-pnt)
-  :fragment (ssr-apply-frag :vec2 :vec3 :vec3))
+(defpipeline-g ssr-apply-pipe (:points)
+  :fragment (ssr-apply-frag :vec2))
 
 (defmethod blit (scene (ssr ssr) (camera defered) _)
+  ;;#+nil
   (when (drawp ssr)
     (let ((compute (destructuring-bind (x y) (dim ssr)
                      (make-compute-space (floor (/ x 16)) (floor (/ y 16))))))
-      (destructuring-bind (s1 s2 s3 s4 sd) camera
+      (destructuring-bind (s1 s2 s3 s4 sd) (sam camera)
         (map-g #'ssr-pipe compute
                :world-view  (world->view camera)
                :iworld-view (m4:inverse (world->view camera))
                :view-clip (projection  camera)
-               :view-clip (m4:inverse (projection camera))
+               :iview-clip (m4:inverse (projection camera))
                :albedo s1
                :samp s2                 ; pos
                :samn s3                 ; normal
                :metal-map s4
                :samd sd                 ; depth
                :ssr-sam (out ssr)))))
+  ;;#+nil
+  (map-g #'ssr-apply-pipe (bs *state*)
+         :scene-sam (first (sam (next *state*)))
+         :ssr-sam (first (sam ssr))
+         :color (v! .5 .5 .5))
   ;;(wait-on-gpu-fence (make-gpu-fence))
   )

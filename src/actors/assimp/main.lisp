@@ -56,7 +56,7 @@
 (defmethod update ((actor assimp-thing) dt))
 (defmethod update ((actor assimp-thing-with-bones) dt))
 
-;; NOTE: see how assimp-mesh structure is similar to a "g-pnt + tb-data" one
+;; NOTE: same to a "g-pnt + tb-data", used for the CPU accessors
 (defstruct-g assimp-mesh
   (pos       :vec3 :accessor pos)
   (normal    :vec3)

@@ -17,10 +17,11 @@
   (check-type new-value boolean))
 
 (defclass normaled ()
-  ((normal :initarg :normal)
-   (flip-p :initarg :flip-p;; TODO
-           :accessor flip-p
-           :documentation "whether flip the normals or not"))
+  ((normal       :initarg :normal)
+   (normal-scale :initarg :normal-scale);; TODO
+   (flip-p       :initarg :flip-p ;; TODO
+                 :accessor flip-p
+                 :documentation "whether flip the normals or not"))
   (:default-initargs
    :flip-p NIL
    :normal (get-tex "static/null/2k_wall/8/white_plaster_02_nor_2k.png" NIL T :rgb8)))
