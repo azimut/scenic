@@ -8,7 +8,7 @@
 ;;   fbo looks good enough for me in the low res i work
 ;; - Is really awkward use "renderable" with some textures being half the size
 
-(defclass dof (postprocess renderable)
+(defclass dof (postprocess)
   ((radius          :accessor dof-radius
                     :initarg :radius
                     :documentation "resolution of the bokeh effect, aka strength")
