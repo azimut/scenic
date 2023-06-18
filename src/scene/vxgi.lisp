@@ -14,7 +14,7 @@
                        nil
                        :dimensions '(64 64 64)
                        :mipmap 7
-                       :element-type :rgba16f))
+                       :element-type :rgba8))
     (setf voxel-sam (sample voxel-light :magnify-filter :nearest
                                         :wrap :clamp-to-border))
     (setf voxel-zam (sample voxel-light :magnify-filter :nearest
@@ -83,12 +83,11 @@
                                (linear      :float)
                                (quadratic   :float))
   "no ambient for voxelization mainly"
-  (let* ((light-dir   (normalize (- light-pos pos)))
-         (diff        (saturate  (dot (normalize nor) light-dir)))
-         (distance    (length    (- light-pos pos)))
-         (attenuation (/ 1 (+ 1f0 (* linear distance) (* quadratic distance distance))))
-         (diffuse     (* light-color diff)))
-    (* color attenuation diffuse)))
+  (let* ((direction   (normalize (- light-pos pos)))
+         (distance    (distance light-pos pos))
+         (attenuation (/ (+ 1 (* linear distance) (* quadratic distance distance))))
+         (diff        (saturate (dot (normalize nor) direction))))
+    (* diff light-color attenuation)))
 
 ;; Scales and bias a given vector (i.e. from [-1, 1] to [0, 1])
 (defun-g scale-and-bias ((p :vec3))
@@ -198,21 +197,22 @@
   (let* ((voxel-size #.(/ 1f0 64f0))
          (mipmap-hardcap 5.4)
          (max-dist
+           (distance (abs from) (v3! -1))
            ;;#.(sqrt 2)
-           #.(* 1 (sqrt 3))
+           ;;#.(sqrt 3)
            );F 1.414213=(sqrt 2);A 1.73205080757=(sqrt 3)
          ;;
          (direction (normalize direction))
          (aperture
-           ;;".325"
-           ".55785173935"
-           );F .325;A .55785173935=(tan 22.5)
+           "0.325"
+           ;;".55785173935"
+           );F .325;A .55785173935=(tan 22.5); AKA CONE_SPREAD
          (acc (vec4 0f0))
          ;; Controls bleeding from close surfaces.
          ;; Low values look rather bad if using shadow cone tracing.
          ;; Might be a better choice to use shadow maps and lower this value.
-         (dist ;;.1953125f0
-           .1953
+         (dist
+           "0.1953125"
            ;;(* 1 0.04)
            ;;(* 3.5f0 voxel-size)
            ); F .1953125 ; A 0.04 * voxelgiOffset("1"*100/100)
@@ -220,33 +220,25 @@
     ;; Trace
     (while (and (< dist max-dist)
                 (< (w acc) 1f0))
-           #+nil
-           (let* ((sample-pos (scale-and-bias (+ from (* dist direction))))
-                  (mip (max (log2 (* 64 diam)) 0))
-                  (mip-sample (texture-lod voxel-light sample-pos mip)))
-             (incf acc  (* (- 1f0 (w acc)) mip-sample))
-             (incf dist (max (/ diam 2f0) voxel-size))
-             (setf diam (* dist aperture)))
-           ;;#+nil
            (let* ((sample-pos (scale-and-bias (+ from (* dist direction))))
                   (l          (+ 1f0 (/ (* aperture dist) voxel-size)))
                   (level      (log2 l))
-                  (ll         (* (+ 1f0 level) (+ 1f0 level)))
+                  (ll         (* (1+ level) (1+ level)))
                   (voxel      (texture-lod voxel-light
                                            sample-pos
                                            (min mipmap-hardcap level))))
-             (incf acc  (* 0.075 ll voxel (pow (- 1 (w voxel)) 2f0)))
+             (incf acc  (* 0.075 ll voxel (pow (- 1f0 (w voxel)) 2f0)))
              (incf dist (* ll voxel-size 2))))
-    ;;(s~ acc :xyz)
-    (pow (* (s~ acc :xyz) 2f0) (vec3 1.5))
-    ))
+    (pow (* 2 (s~ acc :xyz))
+         (vec3 1.5))))
 
 ;; From Friduric
 (defun-g orthogonal ((u :vec3))
   "Returns a vector that is orthogonal to u."
   (let ((u (normalize u))
-        (v (v! .99146 .11664 .05832)))
-    (if (> (abs (dot u v)) .99999)
+        (v (v! "0.99146" "0.11664" "0.05832")))
+    (if (> (abs (dot u v))
+           "0.99999")
         (cross u (v! 0 1 0))
         (cross u v))))
 
@@ -258,7 +250,7 @@
          (diffuse-indirect-factor .52)
          ;; Angle mix (1.0f => orthogonal direction,
          ;;            0.0f => direction of normal).
-         (angle-mix               .5)
+         (angle-mix               0.5)
          (w                       (v! 1 1 1)) ; cone weights
          ;; Find a base for the side cones with the normal as one
          ;; of its base vectors.
@@ -270,14 +262,13 @@
          ;; Find start position of trace (start with a bit of offset).
          (voxel-size              #.(/ 1f0 64f0))
          (n-offset                (* normal (+ 1 (* 4 isqrt2)) voxel-size))
-         ;;(n-offset 0f0)
          (c-origin                (+ wpos n-offset))
          ;; Accumulate indirect diffuse light.
-         (acc                     (v! 0 0 0))
+         (acc                     (vec3 0))
          ;; We offset forward in normal direction, and backward in cone direction.
          ;; Backward in cone direction improves GI, and forward direction removes
          ;; artifacts.
-         (cone-offset             -0.01))
+         (cone-offset             "-0.01"))
     ;; Trace front cone
     (incf acc (* (x w) (trace-diffuse-voxel-cone (+ c-origin (* cone-offset normal))
                                                  normal
@@ -390,7 +381,9 @@
                                 (* (aref lightspace i) (v! frag-pos 1))
                                 (aref fudge i)
                                 i)))))
-    (v! (+ indirect final-color)
+    (v! (+ indirect
+           ;;final-color
+           )
         ;; TODO: this alpha is to blend the possible cubemap
         ;;(- 1 (step (y color) 0f0))
         1
