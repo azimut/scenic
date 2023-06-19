@@ -95,3 +95,10 @@
   (loop :for tex :in textures
         :for opt :in sample-opts
         :collect (apply #'sample tex opt)))
+
+(defclass renderable-screen (renderable listener)
+  ()
+  (:documentation "a renderable that keeps in sync with the size of the screen"))
+
+(defmethod handle :after ((e resize) (listener renderable-screen))
+  (setf (dim listener) (list (width e) (height e))))

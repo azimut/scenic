@@ -25,15 +25,10 @@
   ()
   (:documentation "forward rending"))
 
-(defclass orthogonal (renderable orth forward) ())
-(defclass perspective (renderable pers forward) ())
+(defclass orthogonal (renderable-screen orth forward) ())
+(defclass perspective (renderable-screen pers forward) ())
 (defun make-orthogonal (&rest args) (apply #'make-instance 'orthogonal args))
 (defun make-perspective (&rest args) (apply #'make-instance 'perspective args))
-
-(defclass resize (event)
-  ((height :initarg :height :reader height)
-   (width  :initarg :width  :reader width))
-  (:documentation "when a viewport resizes"))
 
 (defmethod handle :around ((e resize) (obj perspective))
   (when (equal obj (current-camera))

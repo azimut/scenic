@@ -30,6 +30,11 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   ()
   (:documentation "when the environment map of the scene changes"))
 
+(defclass resize (event)
+  ((height :initarg :height :reader height)
+   (width  :initarg :width  :reader width))
+  (:documentation "when a viewport resizes"))
+
 (defgeneric add-listener (listener event-loop))
 (defgeneric remove-listener (listener event-loop))
 (defgeneric handle (event listener))

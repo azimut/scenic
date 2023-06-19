@@ -4,7 +4,7 @@
 ;; https://github.com/Graphics-Physics-Libraries/Nimble/blob/a0c86a7073fda65e4ba8f436204c30522c2f7f5f/src/shader/post_process/ssr/ssr_cs.glsl#L140
 ;; https://github.com/simeonradivoev/ComputeStochasticReflections
 
-(defclass ssr (postprocess renderable)
+(defclass ssr (postprocess renderable-screen)
   ((out :reader out))
   (:default-initargs
    :texture-opts '((0 :element-type :rgba32f))
@@ -17,7 +17,6 @@
     (setf (%cepl.types::%sampler-imagine out) t)))
 
 (defmethod handle ((e resize) (ssr ssr))
-  (setf (dim ssr) (list (width e) (height e)))
   (with-slots (tex out) ssr
     (setf out (sample (first tex)))
     (setf (%cepl.types::%sampler-imagine out) t)))

@@ -14,7 +14,7 @@
 (defstruct-g (random-kernel :layout :std-140)
   (random-v3 (:vec3 64)))
 
-(defclass ssao (renderable postprocess)
+(defclass ssao (postprocess renderable-screen)
   ((noise-kernel  :reader   ssao-noise-kernel)
    (noise-tex     :reader   ssao-noise-tex)
    (noise-sam     :reader   ssao-noise-sam)
@@ -45,9 +45,6 @@
                             :magnify-filter :nearest))
     (setf noise-kernel (make-ubo (list (generate-sample-kernel))
                                  'random-kernel))))
-
-(defmethod handle ((e resize) (obj ssao))
-  (setf (dim obj) (list (width e) (height e))))
 
 (defmethod free :after ((obj ssao))
   (free (noise-kernel obj))
