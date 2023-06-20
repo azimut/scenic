@@ -37,64 +37,63 @@
          (color     (s~ color1 :xyz))
          (frag-pos  (s~ color2 :xyz))
          (frag-norm (s~ color3 :xyz))
-         (final-color (v! 0 0 0)))
+         (final-color (vec3 0))
+         (ambient     (vec3 0)))
     (dotimes (i (scene-data-ndir scene))
       (with-slots (colors positions lightspace fudge)
           dirlights
+        (incf ambient (* fakeambient color ao))
         (incf final-color
-              (+ (* fakeambient color)
-                 (* (pbr-direct-lum (aref positions i) frag-pos cam-pos frag-norm
-                                    roughness
-                                    metallic
-                                    color
-                                    specular
-                                    (aref colors i))
-                    (shadow-factor dirshadows (* (aref lightspace i) (v! frag-pos 1)) (aref fudge i) i))))))
+              (* (pbr-direct-lum (aref positions i) frag-pos cam-pos frag-norm
+                                 roughness
+                                 metallic
+                                 color
+                                 specular
+                                 (aref colors i))
+                 (shadow-factor dirshadows (* (aref lightspace i) (v! frag-pos 1)) (aref fudge i) i)))))
     (dotimes (i (scene-data-npoint scene))
       (with-slots (colors positions linear quadratic far fudge)
           pointlights
+        (incf ambient (* fakeambient color ao
+                         (point-light-attenuation
+                          (aref linear i) (aref quadratic i) (aref positions i) frag-pos)))
         (incf final-color
-              (+ (* fakeambient
-                    (* color ao)
-                    (point-light-attenuation
-                     (aref linear i) (aref quadratic i) (aref positions i) frag-pos))
-                 (* (pbr-point-lum (aref positions i) frag-pos cam-pos
-                                   frag-norm
-                                   roughness
-                                   metallic
-                                   color
-                                   specular
-                                   (aref linear i) (aref quadratic i) (aref colors i))
-                    (shadow-factor pointshadows
-                                   frag-pos
-                                   (aref positions i) ;;?
-                                   (aref far i)
-                                   (aref fudge i)
-                                   i))))))
+              (* (pbr-point-lum (aref positions i) frag-pos cam-pos
+                                frag-norm
+                                roughness
+                                metallic
+                                color
+                                specular
+                                (aref linear i) (aref quadratic i) (aref colors i))
+                 (shadow-factor pointshadows
+                                frag-pos
+                                (aref positions i) ;;?
+                                (aref far i)
+                                (aref fudge i)
+                                i)))))
     (dotimes (i (scene-data-nspot scene))
       (with-slots (colors positions linear quadratic far cutoff outer-cutoff direction lightspace fudge)
           spotlights
+        (incf ambient (* fakeambient color ao
+                         (point-light-attenuation
+                          (aref linear i) (aref quadratic i) (aref positions i) frag-pos)))
         (incf final-color
-              (+ (* fakeambient
-                    (* color ao)
-                    (point-light-attenuation
-                     (aref linear i) (aref quadratic i) (aref positions i) frag-pos))
-                 (* (pbr-spot-lum (aref positions i) frag-pos cam-pos frag-norm
-                                  roughness
-                                  metallic
-                                  color
-                                  specular
-                                  (aref colors       i)
-                                  (aref direction    i)
-                                  (aref cutoff       i)
-                                  (aref outer-cutoff i)
-                                  (aref linear       i)
-                                  (aref quadratic    i))
-                    (shadow-factor spotshadows
-                                   (* (aref lightspace i) (v! frag-pos 1))
-                                   (aref fudge i)
-                                   i))))))
-    (v! final-color
+              (* (pbr-spot-lum (aref positions i) frag-pos cam-pos frag-norm
+                               roughness
+                               metallic
+                               color
+                               specular
+                               (aref colors       i)
+                               (aref direction    i)
+                               (aref cutoff       i)
+                               (aref outer-cutoff i)
+                               (aref linear       i)
+                               (aref quadratic    i))
+                 (shadow-factor spotshadows
+                                (* (aref lightspace i) (v! frag-pos 1))
+                                (aref fudge i)
+                                i)))))
+    (v! (+ final-color ambient)
         ;; TODO: this alpha is to blend the possible cubemap
         (- 1 (step (y color) 0f0)))))
 
