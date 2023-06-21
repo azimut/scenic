@@ -6,21 +6,15 @@
                             (sample2      :sampler-2d)
                             (sample3      :sampler-2d)
                             (sample4      :sampler-2d)
-                            (samd         :sampler-2d)
+                            ;; Lighting
+                            (ssao-blur    :sampler-2d)
+                            (fakeambient  :float)
+                            (cam-pos      :vec3)
+                            (scene        scene-data          :ubo)
+                            ;; Lights
                             (dirlights    dir-light-data      :ubo)
                             (pointlights  point-light-data    :ubo)
                             (spotlights   spot-light-data     :ubo)
-                            (scene        scene-data          :ubo)
-                            (cam-pos      :vec3)
-                            (fakeambient  :float)
-                            ;; SSAO
-                            (kernel-effect :float)
-                            (kernel-radius :float)
-                            (kernel        :int)
-                            (random-kernel random-kernel :ubo)
-                            (tex-noise     :sampler-2d)
-                            (res           :vec2)
-                            (view-clip     :mat4)
                             ;; Shadows
                             (dirshadows   :sampler-2d-array)
                             (spotshadows  :sampler-2d-array)
@@ -34,13 +28,7 @@
          (frag-norm (s~ color3 :xyz))
          (roughness (w color1))
          (ao        (* (w color2)
-                       (ssao-calculate uv res frag-norm
-                                       view-clip samd
-                                       (random-kernel-random-v3 random-kernel)
-                                       tex-noise
-                                       kernel-radius
-                                       kernel
-                                       kernel-effect)))
+                       (x (texture ssao-blur uv))))
          (specular  (w color3))
          (metallic  (x color4))
          (emissive  (y color4))
@@ -112,10 +100,33 @@
   :fragment (defered-ssao-frag :vec2))
 
 (defmethod blit ((scene scene-ssao) (postprocess list) (camera defered) time)
-  (destructuring-bind (s1 s2 s3 s4 samd) (sam camera)
+  (destructuring-bind (_s1 _s2 g-normal _s4 g-depth) (sam camera)
+    (declare (ignore _s1 _s2 _s4))
+    (with-slots (ssao-render ssao-blur
+                 kernel-number kernel-effect kernel-radius kernel
+                 noise-kernel noise-sam tex-noise)
+        scene
+      (with-setf* ((depth-test-function) #'always
+                   (depth-mask) nil
+                   (cull-face) nil
+                   (clear-color) (v! 0 0 0 1))
+        (map-g-into (fbo ssao-render) #'ssao-pipe (bs *state*)
+                    :ssao-kernel-effect kernel-effect
+                    :ssao-kernel-radius kernel-radius
+                    :ssao-kernel kernel-number
+                    :random-kernel noise-kernel
+                    :ssao-tex-noise noise-sam
+                    :res (res camera)
+                    :view-clip (projection camera)
+                    :g-normal g-normal
+                    :g-depth g-depth)
+        (map-g-into (fbo ssao-blur) #'blur-pipe (bs *state*)
+                    :ssao-pass (first (sam ssao-render))))))
+  (destructuring-bind (s1 s2 s3 s4 _) (sam camera)
+    (declare (ignore _))
     (with-slots (prev bs) *state*
       (with-slots (kernel-number kernel-effect kernel-radius
-                   noise-kernel noise-sam)
+                   noise-kernel noise-sam ssao-blur)
           scene
         (with-fbo-bound ((fbo prev))
           (clear-fbo (fbo prev)) ;; needed for scenes with no envmap
@@ -127,20 +138,12 @@
                    :fakeambient (fakeambient camera)
                    :cam-pos (pos camera)
                    :scene (ubo scene)
-                   ;; SSAO
-                   :kernel-effect kernel-effect
-                   :kernel-radius kernel-radius
-                   :kernel kernel-number
-                   :random-kernel noise-kernel
-                   :tex-noise noise-sam
-                   :res (res camera)
-                   :view-clip (projection camera)
-                   :samd samd
                    ;; Samples
                    :sample1 s1
                    :sample2 s2
                    :sample3 s3
                    :sample4 s4
+                   :ssao-blur (first (sam ssao-blur))
                    ;; Lights
                    :dirlights (dir-ubo *state*)
                    :spotlights (spot-ubo *state*)

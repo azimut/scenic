@@ -1,5 +1,12 @@
 (in-package #:scenic)
 
+;; References:
+;; - https://github.com/McNopper/OpenGL/blob/master/Example28/shader/ssao.frag.glsl
+;; - http://ogldev.atspace.co.uk/www/tutorial46/tutorial46.html
+;; - https://learnopengl.com/Advanced-Lighting/SSAO
+;; - https://www.youtube.com/watch?v=7fLV5ezO64w
+;;   "AO is the area where ambient light gets ocludded"
+
 (defstruct-g (random-kernel :layout :std-140)
   (random-v3 (:vec3 64)))
 
@@ -59,53 +66,3 @@
                (scale (/ i 64f0))
                (scale (lerp .1 1f0 (* scale scale))))
           (v3:*s sample scale))))
-
-(defun-g get-view-pos ((uv         :vec2)
-                       (g-depth    :sampler-2d)
-                       (world-view :mat4))
-  (let* ((x (1- (* 2 (x uv))))
-         (y (1- (* 2 (y uv))))
-         (z (1- (* 2 (x (texture g-depth uv)))))
-         (pos-proj (v! x y z 1))
-         (pos-view (* (inverse world-view) pos-proj))
-         (pos-view (/ pos-view (w pos-view))))
-    pos-view))
-
-(defun-g ssao-calculate
-    ((uv                 :vec2)
-     (res                :vec2)
-     (normal             :vec3)
-     (view-clip          :mat4)
-     (g-depth            :sampler-2d)
-     (random-v3         (:vec3 64))
-     (ssao-tex-noise     :sampler-2d)
-     (ssao-radius        :float)
-     (ssao-kernel        :int)
-     (ssao-kernel-effect :float))
-  (let* ((pos-view (get-view-pos uv g-depth view-clip))
-         (normal-view
-           (normalize
-            (1- (* 2 normal))))
-         (random-vector
-           (normalize
-            (1- (* 2 (s~ (texture ssao-tex-noise (* (/ res 4) uv)) :xyz)))))
-         (tangent-view
-           (normalize
-            (- random-vector (* (dot random-vector normal-view)
-                                normal-view))))
-         (bitangent-view (cross normal-view tangent-view))
-         (kernel-matrix  (mat3 tangent-view bitangent-view normal-view))
-         (oclussion 0f0))
-    (dotimes (i ssao-kernel)
-      (let* ((sample-vector-view (* kernel-matrix (aref random-v3 (int i))))
-             (sample-point-view  (+ pos-view (* ssao-radius (v! sample-vector-view 0))))
-             (sample-point-ndc   (* view-clip sample-point-view))
-             (sample-point-ndc   (/ sample-point-ndc
-                                    (w sample-point-ndc)))
-             (sample-point-uv    (+ .5 (* .5 (s~ sample-point-ndc :xy))))
-             (z-scene-ndc        (1- (* 2 (x (texture g-depth sample-point-uv)))))
-             (delta (- (z sample-point-ndc) z-scene-ndc)))
-        (if (and (> delta .0001)
-                 (< delta .005))
-            (incf oclussion 1f0))))
-    (- 1 (/ oclussion (1- (* ssao-kernel-effect ssao-kernel))))))
