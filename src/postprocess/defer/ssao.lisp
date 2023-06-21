@@ -43,18 +43,6 @@
          (frag-pos  (s~ color2 :xyz))
          (frag-norm (s~ color3 :xyz))
          (roughness (w color1))
-         #+nil
-         (ao        (* (w color2)
-                       (ssao-calculate uv res frag-norm
-                                       sample2 samd
-                                       (random-kernel-random-v3
-                                        random-kernel)
-                                       view-clip
-                                       tex-noise
-                                       kernel-radius
-                                       kernel
-                                       kernel-effect)))
-         ;;#+nil
          (ao        (* (w color2)
                        (ssao-calculate uv res frag-norm
                                        view-clip samd
@@ -79,7 +67,10 @@
                                  color
                                  specular
                                  (aref colors i))
-                 (shadow-factor dirshadows (* (aref lightspace i) (v! frag-pos 1)) (aref fudge i) i)))))
+                 (shadow-factor dirshadows
+                                (* (aref lightspace i) (v! frag-pos 1))
+                                (aref fudge i)
+                                i)))))
     (dotimes (i (scene-data-npoint scene))
       (with-slots (colors positions linear quadratic far fudge)
           pointlights
