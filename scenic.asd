@@ -74,7 +74,6 @@
    (:file "postprocess/defer/ssao")
    (:file "postprocess/dof")
    (:file "postprocess/ssr")
-   (:file "postprocess/ssao")
    (:file "postprocess/fog/iqfog")
    (:file "camera/capture/capture")
    (:file "camera/capture/capture6")

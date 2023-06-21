@@ -1,5 +1,8 @@
 (in-package #:scenic)
 
+(defvar *downscale* 1f0
+  "Dowscales the value sent by the RESIZE event")
+
 (defun skitter-listen ()
   (skitter:listen-to #'window-size-trampoline
                      (skitter:window 0)
@@ -30,4 +33,7 @@
          (h (if (> width height) height (* width  (/ 9 16f0)))))
     (setf (resolution (current-viewport)) (v! w h))
     (when (scenes *state*)
-      (issue (current-scene) 'resize :height h :width w))))
+      (issue (current-scene)
+             'resize
+             :height (round (* *downscale* h))
+             :width  (round (* *downscale* w))))))
