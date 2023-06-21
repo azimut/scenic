@@ -127,6 +127,62 @@
             (incf oclussion 1f0))))
     (- 1 (/ oclussion (1- (* ssao-kernel-effect ssao-kernel))))))
 
+(defun-g ssao-calculate
+    ((uv                 :vec2)
+     (res                :vec2)
+     (frag-nor           :vec3)
+     (g-position         :sampler-2d)
+     (g-depth            :sampler-2d)
+     (random-v3         (:vec3 64))
+     (view-clip          :mat4)
+     (ssao-tex-noise     :sampler-2d)
+     (ssao-radius        :float)
+     (ssao-kernel        :int)
+     (ssao-kernel-effect :float))
+  (let* (;; get input for SSAO algorithm
+         (frag-pos (s~ (texture g-position uv) :xyz))
+         (normal   (normalize frag-nor))
+         (random-vector
+           (normalize
+            (s~ (texture ssao-tex-noise (* (/ res 4) uv)) :xyz)))
+         ;; create TBN change-of-basis matrix: from tangent-space to view-space
+         (tangent
+           (normalize
+            (- random-vector
+               (* normal (dot random-vector normal)))))
+         (bitangent (cross normal tangent))
+         (tbn       (mat3 tangent bitangent normal))
+         (occlussion 0f0))
+    ;; iterate over the sample kernel and calculate occlusion factor
+    (dotimes (i ssao-kernel)
+      (let* (;; from tangent to view-space
+             (sample-pos (* tbn (aref random-v3 i)))
+             (sample-pos (+ frag-pos (* sample-pos ssao-radius)))
+             (offset (v! sample-pos 1))
+             ;; From view to clip space
+             (offset (* view-clip offset))
+             ;; Perspective divide
+             (offset (v! (/ (s~ offset :xyz) (w offset))
+                         (w offset)))
+             ;; Transform to range 0-1
+             (offset (v! (+ .5 (* .5 (s~ offset :xyz)))
+                         (w offset)))
+             (bias 0.025);; !!!!!!!!!!!!!!!!!!
+             ;; get sample depth
+             (sample-depth (z (texture g-position (s~ offset :xy))))
+             ;; range check & accumulate
+             (range-check
+               (smoothstep 0f0
+                           1f0
+                           (/ ssao-radius
+                              (abs (- (z frag-pos)
+                                      sample-depth))))))
+        (incf occlussion
+              (if (>= sample-depth (+ bias (z sample-pos)))
+                  (* range-check 1f0)
+                  0f0))))
+    (- 1 (/ occlussion ssao-kernel))))
+
 (defun-g ssao-frag
     ((uv :vec2)
      &uniform

@@ -43,6 +43,18 @@
          (frag-pos  (s~ color2 :xyz))
          (frag-norm (s~ color3 :xyz))
          (roughness (w color1))
+         #+nil
+         (ao        (* (w color2)
+                       (ssao-calculate uv res frag-norm
+                                       sample2 samd
+                                       (random-kernel-random-v3
+                                        random-kernel)
+                                       view-clip
+                                       tex-noise
+                                       kernel-radius
+                                       kernel
+                                       kernel-effect)))
+         ;;#+nil
          (ao        (* (w color2)
                        (ssao-calculate uv res frag-norm
                                        view-clip samd
