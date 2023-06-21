@@ -1,15 +1,5 @@
 (in-package #:scenic)
 
-(defun-g point-light-attenuation ((linear    :float)
-                                  (quadratic :float)
-                                  (light-pos :vec3)
-                                  (frag-pos  :vec3))
-  "Can be usefult to apply distance attenuation to the ambient of a pointlight"
-  (let ((distance (length (- light-pos frag-pos))))
-    (/ 1f0 (+ 1f0
-              (* linear distance)
-              (* quadratic distance)))))
-
 (defun-g defered-ssao-frag ((uv :vec2)
                             &uniform
                             (sample1      :sampler-2d)
@@ -113,7 +103,8 @@
                                 (* (aref lightspace i) (v! frag-pos 1))
                                 (aref fudge i)
                                 i)))))
-    (v! (+ final-color ambient)
+    (v! (+ final-color
+           ambient)
         ;; TODO: this alpha is to blend the possible cubemap
         (- 1 (step (y color) 0f0)))))
 
