@@ -132,3 +132,25 @@
     (if (> current-depth 1)
         1f0
         shadow)))
+
+;; PCF
+(defun-g shadow-factor ((light-sampler      :sampler-2d-array)
+                        (pos-in-light-space :vec4)
+                        (bias               :float)
+                        (light-index        :uint))
+  (let* ((proj-coords   (/ (s~ pos-in-light-space :xyz)
+                           (w  pos-in-light-space)))
+         (proj-coords   (+ .5 (* .5 proj-coords)))
+         (current-depth (z proj-coords))
+         (uv (s~ proj-coords :xy))
+         (texel-size (s~ (/ 1f0 (texture-size light-sampler 0))
+                         :xy))
+         (shadow 0f0))
+    (unless (> current-depth 1)
+      (for (x -1) (<= x 1) (++ x)
+           (for (y -1) (<= y 1) (++ y)
+                (let* ((uv+offset (+ uv (* (v! x y) texel-size)))
+                       (pcf-depth (x (texture light-sampler
+                                              (v! uv+offset light-index)))))
+                  (incf shadow (step pcf-depth (- current-depth bias)))))))
+    (- 1 (/ shadow 9f0))))
