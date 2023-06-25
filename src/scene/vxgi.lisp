@@ -1,20 +1,43 @@
 (in-package #:scenic)
 
 (defclass vxgi ()
-  ((voxel-fbo)
-   (voxel-light)
-   (voxel-sam)
-   (voxel-zam))
+  (voxel-fbo
+   voxel-light
+   voxel-sam
+   voxel-zam
+   (voxel-scale      :reader    voxel-scale)
+   (voxel-bounds-min :accessor voxel-bounds-min :initarg :bounds-min)
+   (voxel-bounds-max :accessor voxel-bounds-max :initarg :bounds-max))
+  (:default-initargs
+   :bounds-min (v! -1 -1 -1)
+   :bounds-max (v! +1 +1 +1))
   (:documentation "voxel global illumination"))
 
-(defmethod initialize-instance :after ((obj vxgi) &key)
+(defun calculate-voxel-scale (bmin bmax)
+  "(v! 0.95 0.95 0.95) ; when -1,+1 and offset 0.1
+   (v! 1 1 1)          ; when -1,+1 and offset 0"
+  (let ((offset 0.1))
+    (v! (/ (- 2 offset) (abs (- (x bmax) (x bmin))))
+        (/ (- 2 offset) (abs (- (y bmax) (y bmin))))
+        (/ (- 2 offset) (abs (- (z bmax) (z bmin)))))))
+
+(defmethod initialize-instance :before ((obj vxgi) &key bounds-min bounds-max)
+  (check-type bounds-min rtg-math.types:vec3)
+  (check-type bounds-max rtg-math.types:vec3)
+  (assert (and (> (x bounds-max) (x bounds-min))
+               (> (y bounds-max) (y bounds-min))
+               (> (z bounds-max) (z bounds-min)))))
+
+(defmethod initialize-instance :after ((obj vxgi) &key bounds-min bounds-max)
+  (setf (slot-value obj 'voxel-scale)
+        (calculate-voxel-scale bounds-min bounds-max))
   (with-slots (voxel-fbo voxel-light voxel-sam voxel-zam) obj
     (setf voxel-fbo (make-fbo `(:d :dimensions (64 64))))
     (setf voxel-light (make-texture
                        nil
                        :dimensions '(64 64 64)
                        :mipmap 7
-                       :element-type :rgba16f))
+                       :element-type :rgba8))
     (setf voxel-sam (sample voxel-light :magnify-filter :nearest
                                         :wrap :clamp-to-border))
     (setf voxel-zam (sample voxel-light :magnify-filter :nearest
@@ -22,6 +45,20 @@
     (setf (cepl.samplers::border-color voxel-sam) (v! 0 0 0 1))
     (setf (cepl.samplers::border-color voxel-zam) (v! 0 0 0 1))
     (setf (%cepl.types::%sampler-imagine voxel-sam) t)))
+
+(defmethod (setf voxel-bounds-max) :before (new-value (obj vxgi))
+  (check-type new-value rtg-math.types:vec3))
+(defmethod (setf voxel-bounds-min) :before (new-value (obj vxgi))
+  (check-type new-value rtg-math.types:vec3))
+
+(defmethod (setf voxel-bounds-max) :after (new-value (obj vxgi))
+  (with-slots (voxel-bounds-min) obj
+    (setf (slot-value obj 'voxel-scale)
+          (calculate-voxel-scale voxel-bounds-min new-value))))
+(defmethod (setf voxel-bounds-min) :after (new-value (obj vxgi))
+  (with-slots (voxel-bounds-max) obj
+    (setf (slot-value obj 'voxel-scale)
+          (calculate-voxel-scale new-value voxel-bounds-max))))
 
 (defmethod free :after ((obj vxgi))
   (with-slots (voxel-fbo voxel-light) obj
@@ -34,13 +71,19 @@
 
 (defun-g voxelize-vert ((vert g-pnt) &uniform
                         (scale       :float)
-                        (model-world :mat4))
-  (values (* model-world (v! (* scale (pos vert)) 1))
-          (normalize (* (m4:to-mat3 model-world) (norm vert)))
-          (tex vert)))
+                        (model-world :mat4)
+                        (voxel-scale :vec3))
+  (let ((wpos (s~ (* model-world (v! (* scale (pos vert)) 1)) :xyz)))
+    ;; we want to voxelize everything
+    ;; so the whole world is scaled to be inside clip space (-1.0...1.0)
+    (values (v! (* wpos voxel-scale) 1)
+            wpos
+            (normalize (* (m4:to-mat3 model-world) (norm vert)))
+            (tex vert))))
 
-(defun-g voxelize-geom ((nor (:vec3 3))
-                        (uv  (:vec2 3)))
+(defun-g voxelize-geom ((wpos (:vec3 3))
+                        (nor  (:vec3 3))
+                        (uv   (:vec2 3)))
   (declare (output-primitive :kind :triangle-strip
                              :max-vertices 3))
   (let* ((p1 (- (s~ (gl-position (aref gl-in 1)) :xyz)
@@ -55,18 +98,20 @@
       (cond ((= (z p) axis)
              (emit () (v! (x wp) (y wp) 0 1)
                    wp
+                   (aref wpos i)
                    (aref nor i) (aref uv i)))
             ((= (x p) axis)
              (emit () (v! (y wp) (z wp) 0 1)
                    wp
+                   (aref wpos i)
                    (aref nor i) (aref uv i)))
             (t
              (emit () (v! (x wp) (z wp) 0 1)
                    wp
+                   (aref wpos i)
                    (aref nor i) (aref uv i)))))
     (emit-vertex)
     (end-primitive)))
-
 
 (defun-g inside-cube-p ((p :vec3) (e :float))
   "Returns true if the point p is inside the unity cube."
@@ -94,59 +139,56 @@
 
 ;; Not using texture
 (defun-g voxelize-frag
-    ((pos :vec3)
-     (nor :vec3)
-     (uv  :vec2)
+    ((vpos :vec3)
+     (pos  :vec3)
+     (nor  :vec3)
+     (uv   :vec2)
+     ;;     (vpos :vec3);; Voxel Position
      &uniform
-     (material    :int)
-     (materials   pbr-material     :ubo)
+     (material     :int)
+     (materials    pbr-material     :ubo)
      (pointshadows :sampler-cube-array)
-     (dirlights   dir-light-data   :ubo)
-     (pointlights point-light-data :ubo)
-     (spotlights  spot-light-data  :ubo)
-     (scene       scene-data       :ubo)
-     (cam-pos     :vec3)
-     (ithing      :image-3d)
-     (color       :vec3))
-  (if (not (inside-cube-p pos 0f0))
+     (dirlights    dir-light-data   :ubo)
+     (pointlights  point-light-data :ubo)
+     (spotlights   spot-light-data  :ubo)
+     (scene        scene-data       :ubo)
+     (voxel-scale  :vec3)
+     (cam-pos      :vec3)
+     (ithing       :image-3d)
+     (color        :vec3))
+  (if (not (inside-cube-p vpos 0f0))
       (return))
   (let (;; NT: we do not care about specular here, because that is view dependant
         (emissive (aref (pbr-material-emissive materials) material))
         (nor      (normalize nor))
-        ;;(vis      (shadow-factor shadowmap pos light-pos *far-plane*))
-        (vis      1f0)
-        (final-color    (v! 0 0 0)))
+        (final-color (vec3 0)))
     (dotimes (i (scene-data-npoint scene))
       (with-slots (colors positions linear quadratic far fudge)
           pointlights
         (incf final-color
-              (* (point-light-strength color (aref colors i) (aref positions i)
-                                       pos nor (aref linear i) (aref quadratic i))
-                 (shadow-factor pointshadows pos (aref positions i)
-                                (aref far i) (aref fudge i) i)))))
+              (* (point-light-strength color
+                                       (aref colors i)
+                                       (aref positions i)
+                                       pos
+                                       nor
+                                       (aref linear i)
+                                       (aref quadratic i))
+                 (shadow-factor pointshadows pos
+                                (aref positions i) (aref far i) (aref fudge i) i)))))
     (let* ((voxel (scale-and-bias pos))
            (dim   (image-size ithing))
            (dxv   (* voxel dim))
-           ;;(alpha (pow 1f0 4f0)); 1f0 = (pow (- 1 transparency) 4f0)
-           ;;(alpha 1f0)
-           ;;(res   (* alpha (v! color 1)))
-           (res   (v! final-color 0))
+           (res   (v! final-color 1))
            (coord (ivec3 (int (x dxv))
                          (int (y dxv))
                          (int (z dxv)))))
-      ;; rgba16f
-      (image-store ithing coord
-                   ;;(v! 1 0 0 1)
-                   res
-                   ;;(v! pos 1)
-                   ;;(v! nor 1)
-                   )
+      (image-store ithing coord res)
       (values))))
 
 (defpipeline-g voxelize-pipe ()
   :vertex   (voxelize-vert g-pnt)
-  :geometry (voxelize-geom (:vec3 3) (:vec2 3))
-  :fragment (voxelize-frag :vec3 :vec3 :vec2))
+  :geometry (voxelize-geom (:vec3 3) (:vec3 3) (:vec2 3))
+  :fragment (voxelize-frag :vec3 :vec3 :vec3 :vec2))
 
 (let ((doit T))
   (defmethod draw ((scene scene-vxgi) (camera defered) time)
@@ -154,9 +196,9 @@
       (paint scene camera l time))
     (dolist (a (remove-if #'cube-p (actors scene)));; TODO: ewww!
       (paint scene camera a time))
-    (when doit
+    (when t;;doit
       (setf doit NIL)
-      (with-slots (voxel-fbo voxel-light) scene
+      (with-slots (voxel-fbo voxel-light voxel-scale) scene
         (%gl:clear-tex-image (texture-id voxel-light)
                              0
                              :rgba
@@ -164,13 +206,14 @@
                              (cffi:null-pointer))
         (with-fbo-bound (voxel-fbo :attachment-for-size :d)
           (with-setf* ((depth-test-function) nil
-                       (clear-color) (v! 1 1 1 1)
+                       ;;(clear-color) (v! 1 1 1 1)
                        (depth-mask) nil
                        (cull-face) nil)
             (dolist (actor (actors scene))
               (with-slots (buf scale color material) actor
                 (map-g #'voxelize-pipe buf
                        :scene (ubo scene)
+                       :voxel-scale voxel-scale
                        ;; - Vertex
                        :scale scale
                        :model-world (model->world actor)
@@ -202,9 +245,10 @@
            );F 1.414213=(sqrt 2);A 1.73205080757=(sqrt 3)
          ;;
          (aperture
-           ;;"0.325"
+           "0.325"
            ;;#.(max 0.1f0 (tan (* (radians 22f0) 0.5)))
-           ".55785173935"
+           ;;".55785173935"
+           ;;#.(clamp (* 3.14159265359 .5 .75 (max 0f0 .8)) 0.00174533102 3.14159265359)
            ) ;F=.325;A=.55785173935=(tan 22.5); AKA CONE_SPREAD
          ;;
          ;; Controls bleeding from close surfaces.
@@ -247,13 +291,12 @@
         (cross u v))))
 
 ;; From Armory (used instead of orthogonal)
-(defun-g tangent ((n :vec3))
+(defun-g tangential ((n :vec3))
   (let ((t1 (cross n (v! 0 0 1)))
         (t2 (cross n (v! 0 1 0))))
     (if (> (length t1) (length t2))
         (normalize t1)
         (normalize t2))))
-
 
 (defun-g indirect-diffuse-light ((wpos        :vec3)
                                  (normal      :vec3)
@@ -267,7 +310,7 @@
          (w                       (vec3 1)) ; cone weights
          ;; Find a base for the side cones with the normal as one
          ;; of its base vectors.
-         (ortho                   (normalize (tangent normal)))
+         (ortho                   (normalize (tangential normal)))
          (ortho2                  (normalize (cross ortho normal)))
          ;; Find base vectors for the corner cones too.
          (corner                  (* 0.5 (+ ortho ortho2)))
@@ -329,6 +372,7 @@
                             (pointlights  point-light-data    :ubo)
                             (spotlights   spot-light-data     :ubo)
                             (scene        scene-data          :ubo)
+                            (voxel-scale  :vec3)
                             (cam-pos      :vec3)
                             (voxel-light  :sampler-3d)
                             (dirshadows   :sampler-2d-array)
@@ -347,7 +391,9 @@
          (frag-pos  (s~ color2 :xyz))
          (frag-norm (s~ color3 :xyz))
          (final-color (v! 0 0 0))
-         (indirect-raw (indirect-diffuse-light frag-pos frag-norm voxel-light color))
+         (indirect-raw (indirect-diffuse-light (* frag-pos voxel-scale)
+                                               frag-norm
+                                               voxel-light color))
          (indirect     (s~ indirect-raw :xyz)))
     (dotimes (i (scene-data-ndir scene))
       (with-slots (colors positions lightspace fudge)
@@ -397,11 +443,13 @@
                                 (aref fudge i)
                                 i)))))
     (v! (+ indirect
-           final-color
+           ;;final-color
+           ;;(vec3 (z indirect-raw))
+           ;;(vec3 (saturate (pow (z indirect-raw) (/ 1f0 22f0))))
            )
         ;; TODO: this alpha is to blend the possible cubemap
-        ;;(- 1 (step (y color) 0f0))
-        1
+        (- 1 (step (y color) 0f0))
+        ;;1
         )))
 
 (defpipeline-g defered-vxgi-pipe (:points)
@@ -421,6 +469,7 @@
                  :cam-pos (pos camera)
                  :scene (ubo scene)
                  ;; Samples
+                 :voxel-scale (voxel-scale scene)
                  :voxel-light (slot-value scene 'voxel-sam)
                  :sample1 s1
                  :sample2 s2
