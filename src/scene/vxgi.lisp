@@ -13,13 +13,12 @@
    :bounds-max (v! +1 +1 +1))
   (:documentation "voxel global illumination"))
 
-(defun calculate-voxel-scale (bmin bmax)
+(defun calculate-voxel-scale (bmin bmax &optional (offset 0.1))
   "(v! 0.95 0.95 0.95) ; when -1,+1 and offset 0.1
    (v! 1 1 1)          ; when -1,+1 and offset 0"
-  (let ((offset 0.1))
-    (v! (/ (- 2 offset) (abs (- (x bmax) (x bmin))))
-        (/ (- 2 offset) (abs (- (y bmax) (y bmin))))
-        (/ (- 2 offset) (abs (- (z bmax) (z bmin)))))))
+  (v! (/ (- 2 offset) (abs (- (x bmax) (x bmin))))
+      (/ (- 2 offset) (abs (- (y bmax) (y bmin))))
+      (/ (- 2 offset) (abs (- (z bmax) (z bmin))))))
 
 (defmethod initialize-instance :before ((obj vxgi) &key bounds-min bounds-max)
   (check-type bounds-min rtg-math.types:vec3)
@@ -37,7 +36,7 @@
                        nil
                        :dimensions '(64 64 64)
                        :mipmap 7
-                       :element-type :rgba8))
+                       :element-type :rgba16f))
     (setf voxel-sam (sample voxel-light :magnify-filter :nearest
                                         :wrap :clamp-to-border))
     (setf voxel-zam (sample voxel-light :magnify-filter :nearest
@@ -92,24 +91,28 @@
                 (s~ (gl-position (aref gl-in 0)) :xyz)))
          (p  (abs (normalize (cross p1 p2))))
          (axis (max (x p) (y p) (z p)))
-         (wp (vec3 0f0)))
+         (vp (vec3 0f0)))
     (dotimes (i 3)
-      (setf wp (s~ (gl-position (aref gl-in i)) :xyz))
+      (setf vp (s~ (gl-position (aref gl-in i))
+                   :xyz))
       (cond ((= (z p) axis)
-             (emit () (v! (x wp) (y wp) 0 1)
-                   wp
+             (emit () (v! (x vp) (y vp) 0 1)
+                   vp
                    (aref wpos i)
-                   (aref nor i) (aref uv i)))
+                   (aref nor i)
+                   (aref uv i)))
             ((= (x p) axis)
-             (emit () (v! (y wp) (z wp) 0 1)
-                   wp
+             (emit () (v! (y vp) (z vp) 0 1)
+                   vp
                    (aref wpos i)
-                   (aref nor i) (aref uv i)))
+                   (aref nor i)
+                   (aref uv i)))
             (t
-             (emit () (v! (x wp) (z wp) 0 1)
-                   wp
+             (emit () (v! (x vp) (z vp) 0 1)
+                   vp
                    (aref wpos i)
-                   (aref nor i) (aref uv i)))))
+                   (aref nor i)
+                   (aref uv i)))))
     (emit-vertex)
     (end-primitive)))
 
@@ -126,10 +129,10 @@
                                (nor         :vec3)
                                (linear      :float)
                                (quadratic   :float))
-  "no ambient for voxelization mainly"
+  "no specular, for voxelization mainly"
   (let* ((direction   (normalize (- light-pos pos)))
          (distance    (distance light-pos pos))
-         (attenuation (/ (+ 1 (* linear distance) (* quadratic distance distance))))
+         (attenuation (/ (+ 1 (* linear distance) (* quadratic distance))))
          (diff        (saturate (dot (normalize nor) direction))))
     (* diff light-color color attenuation)))
 
@@ -143,7 +146,6 @@
      (pos  :vec3)
      (nor  :vec3)
      (uv   :vec2)
-     ;;     (vpos :vec3);; Voxel Position
      &uniform
      (material     :int)
      (materials    pbr-material     :ubo)
@@ -175,7 +177,7 @@
                                        (aref quadratic i))
                  (shadow-factor pointshadows pos
                                 (aref positions i) (aref far i) (aref fudge i) i)))))
-    (let* ((voxel (scale-and-bias pos))
+    (let* ((voxel (scale-and-bias vpos))
            (dim   (image-size ithing))
            (dxv   (* voxel dim))
            (res   (v! final-color 1))
@@ -190,13 +192,15 @@
   :geometry (voxelize-geom (:vec3 3) (:vec3 3) (:vec2 3))
   :fragment (voxelize-frag :vec3 :vec3 :vec3 :vec2))
 
+;;----------------------------------------
+
 (let ((doit T))
   (defmethod draw ((scene scene-vxgi) (camera defered) time)
     (dolist (l (lights scene))
       (paint scene camera l time))
-    (dolist (a (remove-if #'cube-p (actors scene)));; TODO: ewww!
+    (dolist (a (remove-if #'cube-p (actors scene))) ;; TODO: ewww!
       (paint scene camera a time))
-    (when t;;doit
+    (when t ;;doit
       (setf doit NIL)
       (with-slots (voxel-fbo voxel-light voxel-scale) scene
         (%gl:clear-tex-image (texture-id voxel-light)
@@ -230,7 +234,7 @@
                        :dirlights (dir-ubo *state*)
                        :pointlights (point-ubo *state*)
                        :spotlights (spot-ubo *state*))))))
-        (generate-mipmaps voxel-light)))  ))
+        (generate-mipmaps voxel-light)))))
 
 (defun-g trace-diffuse-voxel-cone ((from        :vec3)
                                    (direction   :vec3)
@@ -240,8 +244,8 @@
          (mipmap-hardcap 5.4)
          (max-dist
            ;;(distance (abs from) (v3! -1))
-           ;;#.(sqrt 2)
-           #.(sqrt 3)
+           #.(sqrt 2)
+           ;;#.(sqrt 3)
            );F 1.414213=(sqrt 2);A 1.73205080757=(sqrt 3)
          ;;
          (aperture
@@ -443,7 +447,7 @@
                                 (aref fudge i)
                                 i)))))
     (v! (+ indirect
-           ;;final-color
+           final-color
            ;;(vec3 (z indirect-raw))
            ;;(vec3 (saturate (pow (z indirect-raw) (/ 1f0 22f0))))
            )
