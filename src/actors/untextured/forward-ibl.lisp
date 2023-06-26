@@ -21,7 +21,7 @@
                               (dirshadows   :sampler-2d-array)
                               (spotshadows  :sampler-2d-array)
                               (pointshadows :sampler-cube-array))
-  (let* ((ao .1f0)
+  (let* ((ao          1f0)
          (final-color (v! 0 0 0))
          #+nil
          (ambient (ambient-ibl (normalize (- cam-pos frag-pos))

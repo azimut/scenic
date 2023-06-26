@@ -20,7 +20,7 @@
                                   (material  :int)
                                   (materials pbr-material :ubo))
   (with-slots (roughness specular metallic emissive) materials
-    (let ((ao .1f0)
+    (let ((ao         1f0)
           (roughness (aref roughness material))
           (specular  (aref specular  material))
           (metallic  (aref metallic  material))
