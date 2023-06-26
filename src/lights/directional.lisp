@@ -105,6 +105,11 @@
            :view-clip (projection camera)
            :scale scale)))
 
+(defmethod draw :around ((obj scene) (light directional) _)
+  (when (drawp light)
+    (call-next-method)
+    (setf (drawp light) NIL)))
+
 (defmethod draw ((scene scene) (light directional) time)
   ;;(with-setf (cull-face) :front)
   (let ((fbo (fbo light)))
