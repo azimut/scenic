@@ -55,9 +55,9 @@
          (h         (normalize (+ v l)))
          (distance  (length    (- light-pos frag-pos)))
          (constant  1f0)
-         (attenuation (/ 1f0 (+ constant
-                                (* linear distance)
-                                (* quadratic distance))))
+         (attenuation (/ (+ constant
+                            (* linear distance)
+                            (* quadratic distance))))
          (radiance (* light-color attenuation))
          ;; pbr - cook-torrance brdf
          (ndf (distribution-ggx n h roughness))
@@ -79,7 +79,7 @@
          (lo      (* (+ specular (/ (* kd albedo) +PI+))
                      radiance
                      n-dot-l)))
-    (* attenuation lo)))
+    lo))
 
 (defun-g pbr-direct-lum ((light-pos         :vec3)
                          (frag-pos          :vec3)
