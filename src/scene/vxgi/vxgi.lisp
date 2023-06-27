@@ -108,9 +108,9 @@
                                                frag-norm
                                                voxel-light
                                                color))
-         (ao       (* ao ;;(w indirect-raw)
-                      ))
+         (ao       (* ao (w indirect-raw)))
          (indirect (+ (s~ indirect-raw :xyz)
+                      ;;#+nil
                       (indirect-specular-light frag-pos
                                                voxel-pos
                                                frag-norm
@@ -168,9 +168,10 @@
                                 (aref fudge i)
                                 i)))))
     (v! (+ (* ao indirect)
+           ;;indirect
            final-color
            ;;(vec3 ao)
-           ;;(vec3 (saturate (pow (z indirect-raw) (/ 1f0 22f0))))
+           ;;(vec3 (w indirect-raw))
            )
         ;; TODO: this alpha is to blend the possible cubemap
         (- 1 (step (y color) 0f0)))))

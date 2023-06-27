@@ -54,14 +54,14 @@
      (direction      :vec3)
      (voxel-light    :sampler-3d)
      (aperture-angle :float))
-  (let* ((aperture   (max 0.1 (tan (radians aperture-angle)))) ;; !!! parameter 5°
-         (voxel-resolution (x (texture-size voxel-light 0)))
+  (let* ((voxel-resolution (x (texture-size voxel-light 0)))
          (voxel-size (/ voxel-resolution))
-         (distance   (* 8 voxel-size));; aka offset ;; !!! parameter 8
-         (acc-color  (vec3 0))
-         (acc-occlusion 0f0)
+         (aperture (max 0.1 (tan (radians aperture-angle)))) ;; !!! parameter 5°
+         (distance   (* 8 voxel-size)) ;; aka offset ;; !!! parameter 8
          (sampling-factor 1f0);; !! parameter 0-1
-         (distance-max  2f0))
+         (distance-max  2f0);; !! parameter
+         (acc-color (vec3 0))
+         (acc-occlusion 0f0))
     (while (and (<= distance distance-max)
                 (< acc-occlusion 1f0))
            (let* ((cone-voxelgrid-pos (scale-and-bias (+ from (* direction distance))))
@@ -89,12 +89,12 @@
          (right      (normalize
                       (- guide (* (dot normal guide) normal))))
          (up         (cross right normal))
-         (directions (vector (v! 0.0 1.0 0.0)
-                             (v! 0.0 0.5 0.866025)
-                             (v! 0.823639 0.5 0.267617)
-                             (v! 0.509037 0.5 -0.7006629)
-                             (v! -0.50937 0.5 -0.7006629)
-                             (v! -0.823639 0.5 0.267617)))
+         (directions (vector (v!  0.0      1.0  0.0)
+                             (v!  0.0      0.5  0.866025)
+                             (v!  0.823639 0.5  0.267617)
+                             (v!  0.509037 0.5 -0.7006629)
+                             (v! -0.50937  0.5 -0.7006629)
+                             (v! -0.823639 0.5  0.267617)))
          (weights    (vector #.(/ +PI+ 4)
                              #.(* 3 (/ +PI+ 20))
                              #.(* 3 (/ +PI+ 20))
@@ -102,14 +102,16 @@
                              #.(* 3 (/ +PI+ 20))
                              #.(* 3 (/ +PI+ 20)))))
     (dotimes (i 6)
-      (let* ((cone-direction (normalize
-                              (+ (* up (z (aref directions i)))
-                                 (* right (x (aref directions i)))
-                                 normal)))
-             (start-clip-pos (+ vpos (* normal
-                                        ;;(* 8 (/ 1 64f0))
-                                        (/ .81 64)
-                                        ))))
+      (let ((cone-direction
+              (normalize
+               (+ (* right (x (aref directions i)))
+                  (* up    (z (aref directions i)))
+                  normal)))
+            (start-clip-pos
+              (+ vpos (* normal
+                         (* 8 (/ 1 64f0))
+                         ;;(/ .81 64)
+                         ))))
         (incf acc-color (* (aref weights i)
                            (trace-cone start-clip-pos
                                        normal
@@ -118,4 +120,4 @@
                                        60f0)))))
     (v! (* (s~ acc-color :xyz)
            albedo)
-        (w acc-color))))
+        (clamp (w acc-color) 0 1))))
