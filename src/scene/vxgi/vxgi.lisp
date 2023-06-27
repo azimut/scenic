@@ -136,6 +136,7 @@
                                                   voxel-light
                                                   color
                                                   metallic)))))
+    (incf final-color (* emissive color))
     (dotimes (i (scene-data-ndir scene))
       (with-slots (colors positions lightspace fudge)
           dirlights

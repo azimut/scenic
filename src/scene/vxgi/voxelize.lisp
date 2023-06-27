@@ -86,6 +86,7 @@
         (roughness (aref (pbr-material-roughness materials) material))
         (nor       (normalize nor))
         (final-color (vec3 0)))
+    (incf final-color (* emissive color))
     (dotimes (i (scene-data-npoint scene))
       (with-slots (colors positions linear quadratic far fudge)
           pointlights
@@ -179,6 +180,7 @@
         (color     (s~ (texture albedo uv) :xyz))
         (nor       (normalize nor))
         (final-color (vec3 0)))
+    (incf final-color (* emissive color))
     (dotimes (i (scene-data-npoint scene))
       (with-slots (colors positions linear quadratic far fudge)
           pointlights
