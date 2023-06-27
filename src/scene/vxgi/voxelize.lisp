@@ -89,7 +89,7 @@
      (voxel-scale  :vec3)
      (cam-pos      :vec3)
      (ithing       :image-3d)
-     w     (color        :vec3))
+     (color        :vec3))
   (if (not (inside-cube-p vpos 0f0))
       (return))
   (let (;; NT: we do not care about specular here, because that is view dependant
