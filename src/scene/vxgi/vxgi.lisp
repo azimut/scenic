@@ -11,10 +11,18 @@
    voxel-light
    voxel-sam
    voxel-zam
-   (voxel-scale      :reader    voxel-scale)
+   (voxel-diffuse    :accessor voxel-diffuse
+                     :initarg  :diffuse
+                     :documentation "power of indirect diffuse lighting")
+   (voxel-specular   :accessor voxel-specular
+                     :initarg  :specular
+                     :documentation "power of indirect specular lighting")
+   (voxel-scale      :reader   voxel-scale)
    (voxel-bounds-min :accessor voxel-bounds-min :initarg :bounds-min)
    (voxel-bounds-max :accessor voxel-bounds-max :initarg :bounds-max))
   (:default-initargs
+   :diffuse 1f0
+   :specular 1f0
    :bounds-min (v! -1 -1 -1)
    :bounds-max (v! +1 +1 +1))
   (:documentation "voxel global illumination"))
@@ -26,9 +34,11 @@
       (/ (- 2 offset) (abs (- (y bmax) (y bmin))))
       (/ (- 2 offset) (abs (- (z bmax) (z bmin))))))
 
-(defmethod initialize-instance :before ((obj vxgi) &key bounds-min bounds-max)
+(defmethod initialize-instance :before ((obj vxgi) &key bounds-min bounds-max diffuse specular)
   (check-type bounds-min rtg-math.types:vec3)
   (check-type bounds-max rtg-math.types:vec3)
+  (check-type diffuse single-float)
+  (check-type specular single-float)
   (assert (and (> (x bounds-max) (x bounds-min))
                (> (y bounds-max) (y bounds-min))
                (> (z bounds-max) (z bounds-min)))))
@@ -51,6 +61,10 @@
     (setf (cepl.samplers::border-color voxel-zam) (v! 0 0 0 1))
     (setf (%cepl.types::%sampler-imagine voxel-sam) t)))
 
+(defmethod (setf voxel-diffuse) :before (new-value (obj vxgi))
+  (check-type new-value single-float))
+(defmethod (setf voxel-specular) :before (new-value (obj vxgi))
+  (check-type new-value single-float))
 (defmethod (setf voxel-bounds-max) :before (new-value (obj vxgi))
   (check-type new-value rtg-math.types:vec3))
 (defmethod (setf voxel-bounds-min) :before (new-value (obj vxgi))
@@ -76,20 +90,22 @@
 
 (defun-g defered-vxgi-frag ((uv :vec2)
                             &uniform
-                            (sample1      :sampler-2d)
-                            (sample2      :sampler-2d)
-                            (sample3      :sampler-2d)
-                            (sample4      :sampler-2d)
-                            (dirlights    dir-light-data      :ubo)
-                            (pointlights  point-light-data    :ubo)
-                            (spotlights   spot-light-data     :ubo)
-                            (scene        scene-data          :ubo)
-                            (voxel-scale  :vec3)
-                            (cam-pos      :vec3)
-                            (voxel-light  :sampler-3d)
-                            (dirshadows   :sampler-2d-array)
-                            (spotshadows  :sampler-2d-array)
-                            (pointshadows :sampler-cube-array))
+                            (specular-power :float)
+                            (diffuse-power  :float)
+                            (sample1        :sampler-2d)
+                            (sample2        :sampler-2d)
+                            (sample3        :sampler-2d)
+                            (sample4        :sampler-2d)
+                            (dirlights      dir-light-data      :ubo)
+                            (pointlights    point-light-data    :ubo)
+                            (spotlights     spot-light-data     :ubo)
+                            (scene          scene-data          :ubo)
+                            (voxel-scale    :vec3)
+                            (cam-pos        :vec3)
+                            (voxel-light    :sampler-3d)
+                            (dirshadows     :sampler-2d-array)
+                            (spotshadows    :sampler-2d-array)
+                            (pointshadows   :sampler-cube-array))
   (let* ((color1    (texture sample1 uv))
          (color2    (texture sample2 uv))
          (color3    (texture sample3 uv))
@@ -109,16 +125,17 @@
                                                voxel-light
                                                color))
          (ao       (* ao (w indirect-raw)))
-         (indirect (+ (s~ indirect-raw :xyz)
-                      ;;#+nil
-                      (indirect-specular-light frag-pos
-                                               voxel-pos
-                                               frag-norm
-                                               cam-pos
-                                               specular
-                                               voxel-light
-                                               color
-                                               metallic))))
+         (indirect (+ (* diffuse-power
+                         (s~ indirect-raw :xyz))
+                      (* specular-power
+                         (indirect-specular-light frag-pos
+                                                  voxel-pos
+                                                  frag-norm
+                                                  cam-pos
+                                                  specular
+                                                  voxel-light
+                                                  color
+                                                  metallic)))))
     (dotimes (i (scene-data-ndir scene))
       (with-slots (colors positions lightspace fudge)
           dirlights
@@ -192,6 +209,8 @@
           (map-g #'defered-vxgi-pipe bs
                  :cam-pos (pos camera)
                  :scene (ubo scene)
+                 :diffuse-power (voxel-diffuse scene)
+                 :specular-power (voxel-specular scene)
                  ;; Samples
                  :voxel-scale (voxel-scale scene)
                  :voxel-light (slot-value scene 'voxel-sam)
