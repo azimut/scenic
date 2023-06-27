@@ -51,6 +51,8 @@
                                   spec
                                   voxel-light))))
 
+;;----------------------------------------
+
 (defun-g trace-cone
     ((from           :vec3)
      (normal         :vec3)
@@ -61,8 +63,8 @@
          (voxel-size (/ voxel-resolution))
          (aperture (max 0.1 (tan (radians aperture-angle)))) ;; !!! parameter 5°
          (distance   (* 8 voxel-size)) ;; aka offset ;; !!! parameter 8
-         (sampling-factor 1f0);; !! parameter 0-1
-         (distance-max  2f0);; !! parameter
+         (sampling-factor 1f0)         ;; !! parameter 0-1
+         (distance-max  2f0)           ;; !! parameter
          (acc-color (vec3 0))
          (acc-occlusion 0f0))
     (while (and (<= distance distance-max)
@@ -72,7 +74,7 @@
                   (mipmap-level (log2 (* diameter voxel-resolution)))
                   (voxel-sample (texture-lod voxel-light
                                              cone-voxelgrid-pos
-                                             (min mipmap-level 6))));; !! param 6
+                                             (min mipmap-level 6)))) ;; !! param 6
              ;; front to back composition
              (incf acc-color     (* (- 1 acc-occlusion) (s~ voxel-sample :xyz)))
              (incf acc-occlusion (* (- 1 acc-occlusion) (w voxel-sample)))

@@ -151,6 +151,99 @@
   :geometry (voxelize-geom (:vec3 3) (:vec3 3) (:vec2 3))
   :fragment (voxelize-frag :vec3 :vec3 :vec3 :vec2))
 
+(defun-g voxelize-tex-frag
+    ((vpos :vec3)
+     (pos  :vec3)
+     (nor  :vec3)
+     (uv   :vec2)
+     &uniform
+     (albedo       :sampler-2d)
+     (material     :int)
+     (materials    pbr-material     :ubo)
+     (dirshadows   :sampler-2d-array)
+     (spotshadows  :sampler-2d-array)
+     (pointshadows :sampler-cube-array)
+     (dirlights    dir-light-data   :ubo)
+     (pointlights  point-light-data :ubo)
+     (spotlights   spot-light-data  :ubo)
+     (scene        scene-data       :ubo)
+     (voxel-scale  :vec3)
+     (cam-pos      :vec3)
+     (ithing       :image-3d))
+  (if (not (inside-cube-p vpos))
+      (return))
+  (let (;; NT: we do not care about specular here, because that is view dependant
+        (emissive  (aref (pbr-material-emissive  materials) material))
+        (metallic  (aref (pbr-material-metallic  materials) material))
+        (roughness (aref (pbr-material-roughness materials) material))
+        (color     (s~ (texture albedo uv) :xyz))
+        (nor       (normalize nor))
+        (final-color (vec3 0)))
+    (dotimes (i (scene-data-npoint scene))
+      (with-slots (colors positions linear quadratic far fudge)
+          pointlights
+        (incf final-color
+              (* (pbr-point-lum (aref positions i)
+                                pos
+                                (+ pos .1) ;; Add some random non-zero value
+                                nor
+                                roughness
+                                metallic
+                                color
+                                0 ;; No specular strength
+                                (aref linear i)
+                                (aref quadratic i)
+                                (aref colors i))
+                 (shadow-factor pointshadows pos
+                                (aref positions i)
+                                (aref far i)
+                                (aref fudge i) i)))))
+    (dotimes (i (scene-data-nspot scene))
+      (with-slots (colors positions linear quadratic far cutoff outer-cutoff direction lightspace fudge)
+          spotlights
+        (incf final-color
+              (* (pbr-spot-lum (aref positions i) pos (+ pos .1) nor
+                               roughness
+                               metallic
+                               color
+                               0
+                               (aref colors       i)
+                               (aref direction    i)
+                               (aref cutoff       i)
+                               (aref outer-cutoff i)
+                               (aref linear       i)
+                               (aref quadratic    i))
+                 (shadow-factor spotshadows
+                                (* (aref lightspace i) (v! pos 1))
+                                (aref fudge i)
+                                i)))))
+    (dotimes (i (scene-data-ndir scene))
+      (with-slots (colors positions lightspace fudge)
+          dirlights
+        (incf final-color
+              (* (pbr-direct-lum (aref positions i) pos (+ pos .1) nor
+                                 roughness
+                                 metallic
+                                 color
+                                 0
+                                 (aref colors i))
+                 (shadow-factor dirshadows (* (aref lightspace i) (v! pos 1))
+                                (aref fudge i) i)))))
+    (let* ((voxel (scale-and-bias vpos))
+           (dim   (image-size ithing))
+           (dxv   (* voxel dim))
+           (res   (v! final-color 1))
+           (coord (ivec3 (int (x dxv))
+                         (int (y dxv))
+                         (int (z dxv)))))
+      (image-store ithing coord res)
+      (values))))
+
+(defpipeline-g voxelize-tex-pipe ()
+  :vertex   (voxelize-vert g-pnt)
+  :geometry (voxelize-geom (:vec3 3) (:vec3 3) (:vec2 3))
+  :fragment (voxelize-tex-frag :vec3 :vec3 :vec3 :vec2))
+
 (let ((doit T))
   (defmethod draw ((scene scene-vxgi) (camera defered) time)
     (dolist (l (lights scene))
@@ -171,26 +264,51 @@
                        (depth-mask) nil
                        (cull-face) nil)
             (dolist (actor (actors scene))
-              (with-slots (buf scale color material) actor
-                (map-g #'voxelize-pipe buf
-                       :scene (ubo scene)
-                       :voxel-scale voxel-scale
-                       ;; - Vertex
-                       :scale scale
-                       :model-world (model->world actor)
-                       ;; - Fragment
-                       :color color
-                       :cam-pos (pos camera)
-                       :ithing (slot-value scene 'voxel-sam)
-                       ;; Shadows
-                       :dirshadows (dir-sam *state*)
-                       :pointshadows (point-sam *state*)
-                       :spotshadows  (spot-sam *state*)
-                       ;; Material
-                       :material material
-                       :materials (materials-ubo *state*)
-                       ;; Lights
-                       :dirlights (dir-ubo *state*)
-                       :pointlights (point-ubo *state*)
-                       :spotlights (spot-ubo *state*))))))
+              (typecase actor
+                (albedoed
+                 (with-slots (buf scale albedo material) actor
+                   (map-g #'voxelize-tex-pipe buf
+                          :scene (ubo scene)
+                          :voxel-scale voxel-scale
+                          ;; - Vertex
+                          :scale scale
+                          :model-world (model->world actor)
+                          ;; - Fragment
+                          :albedo albedo
+                          :cam-pos (pos camera)
+                          :ithing (slot-value scene 'voxel-sam)
+                          ;; Shadows
+                          :dirshadows (dir-sam *state*)
+                          :pointshadows (point-sam *state*)
+                          :spotshadows  (spot-sam *state*)
+                          ;; Material
+                          :material material
+                          :materials (materials-ubo *state*)
+                          ;; Lights
+                          :dirlights (dir-ubo *state*)
+                          :pointlights (point-ubo *state*)
+                          :spotlights (spot-ubo *state*))))
+                (t
+                 (with-slots (buf scale color material) actor
+                   (map-g #'voxelize-pipe buf
+                          :scene (ubo scene)
+                          :voxel-scale voxel-scale
+                          ;; - Vertex
+                          :scale scale
+                          :model-world (model->world actor)
+                          ;; - Fragment
+                          :color color
+                          :cam-pos (pos camera)
+                          :ithing (slot-value scene 'voxel-sam)
+                          ;; Shadows
+                          :dirshadows (dir-sam *state*)
+                          :pointshadows (point-sam *state*)
+                          :spotshadows  (spot-sam *state*)
+                          ;; Material
+                          :material material
+                          :materials (materials-ubo *state*)
+                          ;; Lights
+                          :dirlights (dir-ubo *state*)
+                          :pointlights (point-ubo *state*)
+                          :spotlights (spot-ubo *state*))))))))
         (generate-mipmaps voxel-light)))))
