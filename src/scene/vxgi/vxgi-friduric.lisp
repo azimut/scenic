@@ -150,7 +150,7 @@
                 (< (w acc) 1f0))
            (let ((c (+ from (* dist direction))))
              #+nil
-             (if (not (inside-cube-p c 0f0))
+             (if (not (inside-cube-p c))
                  (break))
              (setf c (scale-and-bias c))
              (let* ((level (* .1 spec (log2 (+ 1f0 (/ dist voxel-size)))))

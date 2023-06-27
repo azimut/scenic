@@ -1,28 +1,14 @@
 (in-package #:scenic)
 
-(defun-g point-light-strength ((color       :vec3)
-                               (light-color :vec3)
-                               (light-pos   :vec3)
-                               (pos         :vec3)
-                               (nor         :vec3)
-                               (linear      :float)
-                               (quadratic   :float))
-  "no specular, for voxelization mainly"
-  (let* ((direction   (normalize (- light-pos pos)))
-         (distance    (distance light-pos pos))
-         (attenuation (/ (+ 1 (* linear distance) (* quadratic distance))))
-         (diff        (saturate (dot (normalize nor) direction))))
-    (* diff light-color color attenuation)))
-
 ;; Scales and bias a given vector (i.e. from [-1, 1] to [0, 1])
 (defun-g scale-and-bias ((p :vec3))
   (+ .5 (* .5 p)))
 
-(defun-g inside-cube-p ((p :vec3) (e :float))
+(defun-g inside-cube-p ((p :vec3))
   "Returns true if the point p is inside the unity cube."
-  (and (< (abs (x p)) (+ e 1f0))
-       (< (abs (y p)) (+ e 1f0))
-       (< (abs (z p)) (+ e 1f0))))
+  (and (< (abs (x p)) 1f0)
+       (< (abs (y p)) 1f0)
+       (< (abs (z p)) 1f0)))
 
 (defun-g voxelize-vert ((vert g-pnt) &uniform
                         (scale       :float)
@@ -81,6 +67,8 @@
      &uniform
      (material     :int)
      (materials    pbr-material     :ubo)
+     (dirshadows   :sampler-2d-array)
+     (spotshadows  :sampler-2d-array)
      (pointshadows :sampler-cube-array)
      (dirlights    dir-light-data   :ubo)
      (pointlights  point-light-data :ubo)
@@ -90,13 +78,13 @@
      (cam-pos      :vec3)
      (ithing       :image-3d)
      (color        :vec3))
-  (if (not (inside-cube-p vpos 0f0))
+  (if (not (inside-cube-p vpos))
       (return))
   (let (;; NT: we do not care about specular here, because that is view dependant
         (emissive  (aref (pbr-material-emissive  materials) material))
         (metallic  (aref (pbr-material-metallic  materials) material))
         (roughness (aref (pbr-material-roughness materials) material))
-        (nor      (normalize nor))
+        (nor       (normalize nor))
         (final-color (vec3 0)))
     (dotimes (i (scene-data-npoint scene))
       (with-slots (colors positions linear quadratic far fudge)
@@ -104,18 +92,49 @@
         (incf final-color
               (* (pbr-point-lum (aref positions i)
                                 pos
-                                cam-pos
+                                (+ pos .1) ;; Add some random non-zero value
                                 nor
                                 roughness
                                 metallic
                                 color
-                                0
+                                0 ;; No specular strength
                                 (aref linear i)
                                 (aref quadratic i)
                                 (aref colors i))
                  (shadow-factor pointshadows pos
                                 (aref positions i)
                                 (aref far i)
+                                (aref fudge i) i)))))
+    (dotimes (i (scene-data-nspot scene))
+      (with-slots (colors positions linear quadratic far cutoff outer-cutoff direction lightspace fudge)
+          spotlights
+        (incf final-color
+              (* (pbr-spot-lum (aref positions i) pos (+ pos .1) nor
+                               roughness
+                               metallic
+                               color
+                               0
+                               (aref colors       i)
+                               (aref direction    i)
+                               (aref cutoff       i)
+                               (aref outer-cutoff i)
+                               (aref linear       i)
+                               (aref quadratic    i))
+                 (shadow-factor spotshadows
+                                (* (aref lightspace i) (v! pos 1))
+                                (aref fudge i)
+                                i)))))
+    (dotimes (i (scene-data-ndir scene))
+      (with-slots (colors positions lightspace fudge)
+          dirlights
+        (incf final-color
+              (* (pbr-direct-lum (aref positions i) pos (+ pos .1) nor
+                                 roughness
+                                 metallic
+                                 color
+                                 0
+                                 (aref colors i))
+                 (shadow-factor dirshadows (* (aref lightspace i) (v! pos 1))
                                 (aref fudge i) i)))))
     (let* ((voxel (scale-and-bias vpos))
            (dim   (image-size ithing))
@@ -164,7 +183,9 @@
                        :cam-pos (pos camera)
                        :ithing (slot-value scene 'voxel-sam)
                        ;; Shadows
+                       :dirshadows (dir-sam *state*)
                        :pointshadows (point-sam *state*)
+                       :spotshadows  (spot-sam *state*)
                        ;; Material
                        :material material
                        :materials (materials-ubo *state*)

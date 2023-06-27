@@ -18,15 +18,18 @@
     (while (and (<= distance distance-max)
                 (< acc-occlusion 1f0))
            (let* ((cone-voxelgrid-pos
-                    (scale-and-bias (+ from (* direction distance))))
+                    (scale-and-bias
+                     (+ from (* direction distance))))
                   (diameter (* 2 aperture distance))
                   (mipmap-level (log2 (* diameter voxel-resolution)))
                   (voxel-sample (texture-lod voxel-light
                                              cone-voxelgrid-pos
-                                             (min mipmap-level 6))))
+                                             (min mipmap-level 5.4))))
              ;; front to back composition
-             (incf acc-color     (* (- 1f0 acc-occlusion) (s~ voxel-sample :xyz)))
-             (incf acc-occlusion (* (- 1f0 acc-occlusion) (w voxel-sample)))
+             (incf acc-color     (* (- 1f0 acc-occlusion)
+                                    (s~ voxel-sample :xyz)))
+             (incf acc-occlusion (* (- 1f0 acc-occlusion)
+                                    (w voxel-sample)))
              (incf distance (* diameter sampling-factor))))
     acc-color))
 
