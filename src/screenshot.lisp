@@ -93,4 +93,4 @@
 
 (defun screen-to-disk (filename)
   "take what is already rendered on the main fbo and save it"
-  (texture-to-disk filename (first (tex (current-camera)))))
+  (texture-to-disk filename (first (tex (prev *state*)))))
