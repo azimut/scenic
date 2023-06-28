@@ -162,6 +162,7 @@
                                 (aref linear i) (aref quadratic i) (aref colors i))
                  (shadow-factor pointshadows
                                 frag-pos
+                                cam-pos
                                 (aref positions i) ;;?
                                 (aref far i)
                                 (aref fudge i)
