@@ -14,7 +14,9 @@
 	(- a2 a1))))
 
 (defun cpu-1-linear-to-srgb (c)
-  (expt c #.(/ 2.2)))
+  (if (minusp c)
+      0f0
+      (expt c #.(/ 2.2))))
 
 (defun cpu-1-tone-map-reinhard (color1 exposure)
   (declare (type single-float color1 exposure))
