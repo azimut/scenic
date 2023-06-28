@@ -37,7 +37,7 @@
     (dotimes (i (scene-data-ndir scene))
       (with-slots (colors positions lightspace fudge)
           dirlights
-        (incf ambient (* fakeambient color ao))
+        (incf ambient (* fakeambient color))
         (incf final-color
               (* (pbr-direct-lum (aref positions i) frag-pos cam-pos frag-norm
                                  roughness
@@ -52,7 +52,7 @@
     (dotimes (i (scene-data-npoint scene))
       (with-slots (colors positions linear quadratic far fudge)
           pointlights
-        (incf ambient (* fakeambient color ao
+        (incf ambient (* fakeambient color
                          (point-light-attenuation
                           (aref linear i) (aref quadratic i) (aref positions i) frag-pos)))
         (incf final-color
@@ -72,7 +72,7 @@
     (dotimes (i (scene-data-nspot scene))
       (with-slots (colors positions linear quadratic far cutoff outer-cutoff direction lightspace fudge)
           spotlights
-        (incf ambient (* fakeambient color ao
+        (incf ambient (* fakeambient color
                          (point-light-attenuation
                           (aref linear i) (aref quadratic i) (aref positions i) frag-pos)))
         (incf final-color
@@ -91,8 +91,8 @@
                                 (* (aref lightspace i) (v! frag-pos 1))
                                 (aref fudge i)
                                 i)))))
-    (v! (+ final-color
-           ambient)
+    (v! (+ (* ambient ao)
+           final-color)
         ;; TODO: this alpha is to blend the possible cubemap
         (- 1 (step (y color) 0f0)))))
 

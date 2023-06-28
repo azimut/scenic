@@ -48,69 +48,70 @@
          (normal      (norm-from-map normalmap uv tbn))
          ;;(normal      (norm-from-map normalmap uv frag-pos frag-norm))
          ;;(normal      frag-norm)
+         (ambient     (vec3 0))
          (final-color (v! 0 0 0)))
     (dotimes (i (scene-data-ndir scene))
       (with-slots (colors positions fudge)
           dirlights
+        (incf ambient (* fakeambient color))
         (incf final-color
-              (+ (* fakeambient (* color ao))
-                 (* (pbr-direct-lum (aref positions i) frag-pos cam-pos normal
-                                    roughness
-                                    metallic
-                                    color
-                                    spec
-                                    (aref colors i))
-                    (shadow-factor dirshadows (aref dir-pos i) (aref fudge i) i))))))
+              (* (pbr-direct-lum (aref positions i) frag-pos cam-pos normal
+                                 roughness
+                                 metallic
+                                 color
+                                 spec
+                                 (aref colors i))
+                 (shadow-factor dirshadows (aref dir-pos i) (aref fudge i) i)))))
     (dotimes (i (scene-data-npoint scene))
       (with-slots (colors positions linear quadratic far fudge)
           pointlights
+        (incf ambient (* fakeambient color
+                         (point-light-attenuation
+                          (aref linear i)
+                          (aref quadratic i)
+                          (aref positions i)
+                          frag-pos)))
         (incf final-color
-              (+ (* fakeambient (* color ao)
-                    (point-light-attenuation
-                     (aref linear i)
-                     (aref quadratic i)
-                     (aref positions i)
-                     frag-pos))
-                 (* (pbr-point-lum (aref positions i) frag-pos cam-pos normal
-                                   roughness
-                                   metallic
-                                   color
-                                   spec
-                                   (aref linear    i)
-                                   (aref quadratic i)
-                                   (aref colors    i))
-                    (shadow-factor pointshadows
-                                   frag-pos
-                                   (aref positions i)
-                                   (aref far i)
-                                   (aref fudge i)
-                                   i))))))
+              (* (pbr-point-lum (aref positions i) frag-pos cam-pos normal
+                                roughness
+                                metallic
+                                color
+                                spec
+                                (aref linear    i)
+                                (aref quadratic i)
+                                (aref colors    i))
+                 (shadow-factor pointshadows
+                                frag-pos
+                                (aref positions i)
+                                (aref far i)
+                                (aref fudge i)
+                                i)))))
     (dotimes (i (scene-data-nspot scene))
       (with-slots (colors positions linear quadratic cutoff outer-cutoff direction fudge)
           spotlights
+        (incf ambient (* fakeambient color
+                         (point-light-attenuation
+                          (aref linear i)
+                          (aref quadratic i)
+                          (aref positions i)
+                          frag-pos)))
         (incf final-color
-              (+ (* fakeambient (* color ao)
-                    (point-light-attenuation
-                     (aref linear i)
-                     (aref quadratic i)
-                     (aref positions i)
-                     frag-pos))
-                 (* (pbr-spot-lum (aref positions i) frag-pos cam-pos normal
-                                  roughness
-                                  metallic
-                                  color
-                                  spec
-                                  (aref colors       i)
-                                  (aref direction    i)
-                                  (aref cutoff       i)
-                                  (aref outer-cutoff i)
-                                  (aref linear       i)
-                                  (aref quadratic    i))
-                    (shadow-factor spotshadows
-                                   (aref spot-pos i)
-                                   (aref fudge    i)
-                                   i))))))
-    (v! final-color 1)))
+              (* (pbr-spot-lum (aref positions i) frag-pos cam-pos normal
+                               roughness
+                               metallic
+                               color
+                               spec
+                               (aref colors       i)
+                               (aref direction    i)
+                               (aref cutoff       i)
+                               (aref outer-cutoff i)
+                               (aref linear       i)
+                               (aref quadratic    i))
+                 (shadow-factor spotshadows
+                                (aref spot-pos i)
+                                (aref fudge    i)
+                                i)))))
+    (v! (+ final-color (* ambient ao)) 1)))
 
 (defpipeline-g textured-forward-pipe ()
   (vert-with-tbdata g-pnt tb-data)
