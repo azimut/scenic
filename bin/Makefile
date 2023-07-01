@@ -1,9 +1,7 @@
 OS ?= Linux
 
 AppDir/scenic:
-	sbcl --non-interactive \
-	--load ~/quicklisp/setup.lisp \
-	--load ./deploy.lisp
+	sbcl --non-interactive --load ./deploy.lisp
 ifeq ($(OS),Linux)
 	find . -name '*.so*' -exec strip {} \;
 	rm -vf AppDir/libstdc* # NOTE: bodge-ode dep
