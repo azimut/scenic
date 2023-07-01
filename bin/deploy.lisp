@@ -1,4 +1,5 @@
 (ql:quickload :deploy)
+(load "../scenic.asd")
 (ql:quickload :scenic)
 (deploy:define-library CL-OPENGL-BINDINGS::OPENGL :dont-deploy t)
 (deploy:define-resource-directory assets "static/")
