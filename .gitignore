@@ -26,6 +26,7 @@
 *.zip
 bin/*
 !bin/Makefile
+!bin/deploy.lisp
 !bin/AppRun
 !bin/iconfile.svg
 !bin/scenic.desktop

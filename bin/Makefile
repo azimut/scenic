@@ -3,12 +3,8 @@ OS ?= Linux
 AppDir/scenic:
 	sbcl --non-interactive \
 	--load ~/quicklisp/setup.lisp \
-	--eval '(ql:quickload :deploy)' \
 	--load ../scenic.asd \
-	--eval '(ql:quickload :scenic)' \
-	--eval '(deploy:define-library CL-OPENGL-BINDINGS::OPENGL :dont-deploy t)' \
-	--eval '(deploy:define-resource-directory assets "static/")' \
-	--eval '(asdf:make :scenic :force t)'
+	--load deploy.lisp
 ifeq ($(OS),Linux)
 	find . -name '*.so*' -exec strip {} \;
 	rm -vf AppDir/libstdc* # NOTE: bodge-ode dep

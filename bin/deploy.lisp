@@ -1,0 +1,6 @@
+(ql:quickload :deploy)
+(ql:quickload :scenic)
+(deploy:define-library CL-OPENGL-BINDINGS::OPENGL :dont-deploy t)
+(deploy:define-resource-directory assets "static/")
+(sb-ext:gc :full t)
+(asdf:make :scenic :force t)
