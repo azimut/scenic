@@ -2,11 +2,12 @@ OS ?= Linux
 
 AppDir/scenic:
 	sbcl --non-interactive \
-	--eval '(load "~/quicklisp/setup.lisp")' \
+	--load ~/quicklisp/setup.lisp \
 	--eval '(ql:quickload :deploy)' \
 	--load ../scenic.asd \
 	--eval '(ql:quickload :scenic)' \
 	--eval '(deploy:define-library CL-OPENGL-BINDINGS::OPENGL :dont-deploy t)' \
+	--eval '(deploy:define-resource-directory assets "static/")' \
 	--eval '(asdf:make :scenic :force t)'
 ifeq ($(OS),Linux)
 	find . -name '*.so*' -exec strip {} \;
@@ -14,18 +15,13 @@ ifeq ($(OS),Linux)
 	rm -vf AppDir/libgcc*
 endif
 
-AppDir/static:
-	install -d AppDir/static/SFX/Step
-	install -D ../static/bunny.obj          AppDir/static/bunny.obj
-	install -D ../static/SFX/Step/Step*.wav AppDir/static/SFX/Step
-
-scenic.AppImage: AppDir/scenic AppDir/static AppRun iconfile.svg scenic.desktop appimagetool
+scenic.AppImage: AppDir/scenic AppRun iconfile.svg scenic.desktop appimagetool
 	install -D scenic.desktop AppDir/scenic.desktop
 	install -D AppRun         AppDir/AppRun
 	install -D iconfile.svg   AppDir/iconfile.svg
 	ARCH=x86_64 ./appimagetool -v AppDir scenic.AppImage
 
-scenic-$(OS).tgz: AppDir/scenic AppDir/static
+scenic-$(OS).tgz: AppDir/scenic
 	tar cvzf scenic-$(OS).tgz AppDir/ --transform s/AppDir/scenic-$(OS)/
 
 .PHONY: tar
