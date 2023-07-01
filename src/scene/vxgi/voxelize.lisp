@@ -1,15 +1,5 @@
 (in-package #:scenic)
 
-;; Scales and bias a given vector (i.e. from [-1, 1] to [0, 1])
-(defun-g scale-and-bias ((p :vec3))
-  (+ .5 (* .5 p)))
-
-(defun-g inside-cube-p ((p :vec3))
-  "Returns true if the point p is inside the unity cube."
-  (and (< (abs (x p)) 1f0)
-       (< (abs (y p)) 1f0)
-       (< (abs (z p)) 1f0)))
-
 (defun-g voxelize-vert ((vert g-pnt) &uniform
                         (scale       :float)
                         (model-world :mat4)
