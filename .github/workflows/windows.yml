@@ -129,8 +129,13 @@ jobs:
         run: |
           export PATH="$HOME/sbcl/bin:${PATH}"
           cd bin/
-          make zip
+          make
         shell: bash
+
+      - uses: vimtor/action-zip@v1
+        with:
+          files: bin/AppDir/
+          dest: scenic-Windows_NT.zip
 
       - name: Dev Release
         uses: marvinpinto/action-automatic-releases@latest
@@ -141,7 +146,7 @@ jobs:
           prerelease: true
           title: "Development Windows Build"
           files: |
-            bin/scenic*.zip
+            scenic*.zip
 
       - name: Stable Release
         uses: marvinpinto/action-automatic-releases@latest
