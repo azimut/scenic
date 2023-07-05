@@ -129,7 +129,7 @@ jobs:
         run: |
           export PATH="$HOME/sbcl/bin:${PATH}"
           cd bin/
-          make tar
+          make zip
         shell: bash
 
       - name: Dev Release
@@ -141,8 +141,7 @@ jobs:
           prerelease: true
           title: "Development Windows Build"
           files: |
-            bin/scenic*.tgz
-            LICENSE
+            bin/scenic*.zip
 
       - name: Stable Release
         uses: marvinpinto/action-automatic-releases@latest
@@ -151,8 +150,7 @@ jobs:
           prerelease: false
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           files: |
-            bin/scenic*.tgz
-            LICENSE
+            bin/scenic*.zip
 
       # - name: DEBUG SHELL
       #   uses: mxschmitt/action-tmate@v3n

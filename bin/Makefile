@@ -7,6 +7,8 @@ ifeq ($(OS),Linux)
 	rm -vf AppDir/libstdc* # NOTE: bodge-ode dep
 	rm -vf AppDir/libgcc*
 endif
+	install -D ../LICENSE   AppDir/
+	install -D ../README.md AppDir/
 
 scenic.AppImage: AppDir/scenic AppRun iconfile.svg scenic.desktop appimagetool
 	install -D scenic.desktop AppDir/scenic.desktop
@@ -17,8 +19,14 @@ scenic.AppImage: AppDir/scenic AppRun iconfile.svg scenic.desktop appimagetool
 scenic-$(OS).tgz: AppDir/scenic
 	tar cvzf scenic-$(OS).tgz AppDir/ --transform s/AppDir/scenic-$(OS)/
 
+scenic-$(OS).zip: AppDir/scenic
+	zip -X -r scenic-$(OS).zip AppDir/
+
 .PHONY: tar
 tar: scenic-$(OS).tgz
+
+.PHONY: zip
+zip: scenic-$(OS).zip
 
 .PHONY: clean
 clean:
