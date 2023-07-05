@@ -20,7 +20,12 @@ scenic-$(OS).tgz: AppDir/scenic
 	tar cvzf scenic-$(OS).tgz AppDir/ --transform s/AppDir/scenic-$(OS)/
 
 scenic-$(OS).zip: AppDir/scenic
-	zip -X -r scenic-$(OS).zip AppDir/
+	mv AppDir scenic-$(OS)
+ifeq ($(OS),Windows_NT)
+	Compress-Archive -Path scenic-$(OS) -Destination scenic-$(OS).zip
+else
+	zip -X -r scenic-$(OS).zip scenic-$(OS)
+endif
 
 .PHONY: tar
 tar: scenic-$(OS).tgz
