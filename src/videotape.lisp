@@ -69,7 +69,8 @@
 
 (defun record-init ()
   (setf (viewport-resolution (current-viewport)) (v! (width *tape*) (height *tape*)))
-  (init))
+  (init)
+  (main-loop)); with an extra draw we make sure everything is ready (eg: ibl)
 
 (def-simple-main-loop record-render (:on-start #'record-init)
   (main-loop)
