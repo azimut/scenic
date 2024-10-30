@@ -8,7 +8,57 @@
         #:vari
         #:with-setf)
   (:shadow #:space)
-  (:export #:start)
+  (:export
+   #:*state*
+   #:start
+   #:stop
+   #:register
+   #:update
+   #:init-state
+   #:init-all-the-things
+   #:current-scene
+   #:current-camera
+   #:assimp-load-mesh
+   #:make-material
+   #:make-scene
+   #:make-scene-ibl
+   #:make-scene-ode-ibl
+   #:make-scene-ode
+   #:make-scene-vxgi
+   #:textured-pbr
+   #:untextured
+   ;; camera
+   #:fps
+   #:make-defered
+   #:make-perspective
+   #:perspective
+   #:defered
+   #:make-physic-camera
+   #:physic-camera
+   ;; controls
+   #:god-move
+   #:human-move
+   #:human-rot
+   #:tank-rot
+   #:full-rot
+   ;; shapes
+   #:box
+   #:sphere
+   #:lattice
+   #:physic-box
+   ;; lights
+   #:make-directional
+   #:make-point
+   #:make-spot
+   #:directional
+   #:point
+   #:spot
+   #:light-color
+   ;; accessors
+   #:color
+   #:pos
+   #:rot
+   )
   (:import-from #:temporal-functions
                 #:make-stepper
                 #:seconds)
