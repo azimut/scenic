@@ -119,9 +119,9 @@
   (dolist (a (remove-if #'cube-p (actors scene)));; TODO: ewww!
     (paint scene camera a time)))
 
-(defmethod draw :around ((obj scene) (camera renderable) time)
+(defmethod draw :around ((scene scene) (camera renderable) time)
   (let ((fbo (fbo camera)))
     (with-fbo-bound (fbo)
-      (with-setf (clear-color) (color obj)
+      (with-setf (clear-color) (color scene)
         (clear-fbo fbo)
         (call-next-method)))))

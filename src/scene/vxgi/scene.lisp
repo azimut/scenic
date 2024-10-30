@@ -4,6 +4,9 @@
   ()
   (:documentation "scene with global illumination"))
 
+(defun make-scene-vxgi (&rest args)
+  (apply #'make-instance 'scene-vxgi args))
+
 (defun-g defered-vxgi-frag ((uv :vec2)
                             &uniform
                             (specular-power :float)
