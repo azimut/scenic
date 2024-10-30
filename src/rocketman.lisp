@@ -9,15 +9,30 @@
 
 (defun rocket-init (&optional standalone-p)
   (unless *rocket*
-    (setf *rocket* (rocketman:make-rocket))
+    (setf *rocket* (rocketman:make-rocket :rps 8))
     (unless standalone-p
       (rocketman:connect *rocket*))))
 
-;;--------------------------------------------------
-
 (defun rocket-reset (&optional standalone-p)
   (rocket-free)
-  (rocket-init standalone-p))
+  (rocket-init standalone-p)
+  (sleep 0.5))
+
+(defmacro with-rocket-commands (&body body)
+  "flush messages after sending commands"
+  `(when *rocket*
+     ,@body
+     (when-let* ((socket (rocketman::con-socket *rocket*))
+                 (stream (usocket:socket-stream socket)))
+         (loop :while (listen stream)
+               :do (ecase (read-byte stream)
+                     (0 (rocketman::handle-set-key     *rocket* stream))
+                     (1 (rocketman::handle-delete-key  *rocket* stream))
+                     (3 (rocketman::handle-set-row     *rocket* stream))
+                     (4 (rocketman::handle-pause       *rocket* stream))
+                     (5 (rocketman::handle-save-tracks *rocket* stream)))
+                   (sleep .02)))
+     (rocket-set-row 0)))
 
 (defun rocket-update ()
   (when *rocket*
