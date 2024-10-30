@@ -87,6 +87,7 @@
    (:file "camera/capture/draw")
    (:file "render")
    (:file "scenic")
+   (:file "videotape")
    (:file "actors/untextured/untextured")
    (:file "actors/untextured/defer")
    (:file "actors/untextured/forward")
