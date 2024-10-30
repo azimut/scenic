@@ -93,6 +93,11 @@
                     :retain-arrays t)))
     stream))
 
+(defun random-v3 (&key (min 0f0) (max 1f0))
+  (v! (serapeum:random-in-range min max)
+      (serapeum:random-in-range min max)
+      (serapeum:random-in-range min max)))
+
 ;; Took from shinmera/trial/render-loop.lisp
 #+sbcl
 (define-symbol-macro current-time-start
