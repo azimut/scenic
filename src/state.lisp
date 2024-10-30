@@ -52,6 +52,6 @@
   (when (equal obj (current-camera))
     (call-next-method)))
 
-(defun default-state ()
+(defun init-default-state ()
   (init-state (list (make-material :roughness .8 :metallic .02 :specular .1)
                     (make-material :roughness .4 :metallic .4  :specular .1))))
