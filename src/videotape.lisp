@@ -18,6 +18,11 @@
    :sample-opts '((:wrap :clamp-to-edge)))
   (:documentation "records *STATE* into video FILENAME"))
 
+(defmethod initialize-instance :before ((obj videotape) &key filename)
+  (flet ((valid-filename-p (f)
+           (string-equal "mp4" (subseq (string-downcase f) (- (length f) 3)))))
+    (assert (valid-filename-p filename))))
+
 (defmethod initialize-instance :after ((obj videotape) &key)
   (destructuring-bind (width height)
       (viewport-dimensions (current-viewport))
@@ -54,7 +59,7 @@
          (row-major-aref-c c-array i)
          (uiop:process-info-input (process *tape*))))))
   ;; TICK
-  (let ((step-size (/ (rps *rocket*) (fps *tape*))))
+  (let ((step-size (/ 10 (fps *tape*))));; TODO: rps?
     (incf (rocketman::state-row *rocket*)
           step-size)))
 
@@ -62,9 +67,9 @@
   (record-loop)
   (main-loop))
 
-(defun record (&key (fps 30) (seconds 1))
+(defun record (&key (fps 30) (seconds 1) (filename "output.mp4"))
   (free *tape*)
-  (setf *tape* (make-instance 'videotape :fps fps :seconds seconds))
+  (setf *tape* (make-instance 'videotape :fps fps :seconds seconds :filename filename))
   (record-render :stop)
   (record-render :start (* fps seconds))
   (free *tape*))
