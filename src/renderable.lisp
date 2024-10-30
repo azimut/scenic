@@ -16,7 +16,7 @@
                    (:d :element-type :depth-component24))
    :sample-opts '((:wrap :clamp-to-edge)
                   (:wrap :clamp-to-edge))
-   :dim '(128 128))
+   :dim (viewport-dimensions (current-viewport)))
   (:documentation "an fbo-sampler pair"))
 
 (defmethod initialize-instance
