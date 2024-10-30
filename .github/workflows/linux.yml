@@ -178,6 +178,6 @@ jobs:
           files: |
             bin/scenic.AppImage
 
-      - name: DEBUG SHELL
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ failure() }}
+      # - name: DEBUG SHELL
+      #   uses: mxschmitt/action-tmate@v3
+      #   if: ${{ failure() }}

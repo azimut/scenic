@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    #if: ${{ false }}  # disable for now
+    if: ${{ false }}  # disable for now
     runs-on: windows-2019
     env:
       SBCL_VERSION: 2.1.9
