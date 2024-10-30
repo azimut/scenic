@@ -6,11 +6,15 @@
 ;; TODO: .rocket filepath
 (defclass videotape (renderable)
   ((process  :reader  process)
-   (seconds  :initarg :seconds  :documentation "duration in seconds" :reader seconds)
+   (duration :initarg :duration :documentation "duration in seconds" :reader duration)
    (fps      :initarg :fps      :documentation "frames per second" :reader fps)
-   (filename :initarg :filename :documentation "output video filename"))
+   (filename :initarg :filename :documentation "output video filename")
+   (width    :initarg :width    :documentation "video/viewport WIDTH" :reader width)
+   (height   :initarg :height   :documentation "video/viewport HEIGHT" :reader height))
   (:default-initargs
-   :seconds 10
+   :width 800
+   :height 600
+   :duration 10
    :filename "output.mp4"
    :fps 30
    :dim (viewport-dimensions (current-viewport))
@@ -63,13 +67,17 @@
     (incf (rocketman::state-row *rocket*)
           step-size)))
 
-(def-simple-main-loop record-render (:on-start #'init)
-  (record-loop)
-  (main-loop))
+(defun record-init ()
+  (setf (viewport-resolution (current-viewport)) (v! (width *tape*) (height *tape*)))
+  (init))
 
-(defun record (&key (fps 30) (seconds 1) (filename "output.mp4"))
+(def-simple-main-loop record-render (:on-start #'record-init)
+  (main-loop)
+  (record-loop))
+
+(defun record (&key (fps 30) (duration 1) (filename "output.mp4") (width 800) (height 600))
   (free *tape*)
-  (setf *tape* (make-instance 'videotape :fps fps :seconds seconds :filename filename))
+  (setf *tape* (make-instance 'videotape :fps fps :duration duration :filename filename :width width :height height))
   (record-render :stop)
-  (record-render :start (* fps seconds))
+  (record-render :start (* fps duration))
   (free *tape*))
