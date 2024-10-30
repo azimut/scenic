@@ -78,6 +78,9 @@
 (defun rocket-row ()
   (slot-value *rocket* 'rocketman::row))
 
+(defmethod (setf rocket-row) (new-value)
+  (rocketman:set-row *rocket* (max 0 new-value)))
+
 (defun rocket-load-file (file)
   (rocketman:load-file *rocket* (truename file)))
 
