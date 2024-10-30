@@ -105,3 +105,13 @@
     (when (key-down-p key.space) (move camera *vec3-up*      mult))
     (when (key-down-p key.c)     (move camera *vec3-down*    mult)))
   (pos camera))
+
+(defun rocket-controls ()
+  (when (key-down-p key.space)
+    (rocket-pause-toggle))
+  (when (key-down-p key.r)
+    (rocket-set-row 0))
+  (when (key-down-p key.comma)
+    (decf (rocket-row) 0.1))
+  (when (key-down-p key.period)
+    (incf (rocket-row) 0.1)))
