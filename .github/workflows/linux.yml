@@ -129,8 +129,8 @@ jobs:
                --eval '(load "quicklisp.lisp")' \
                --eval '(quicklisp-quickstart:install)' \
                --eval '(ql-util:without-prompting (ql:add-to-init-file))' \
-               --eval '(ql:update-all-dists)' \
-               --eval '(ql-dist:install-dist "http://bodge.borodust.org/dist/org.borodust.bodge.txt" :replace t :prompt nil)'
+               --eval '(ql:update-all-dists)'
+
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Get LISP deps
