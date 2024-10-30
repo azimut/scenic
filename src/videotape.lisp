@@ -70,9 +70,15 @@
   (main-loop)
   (record-loop))
 
+(defmacro with-videotape ((fps duration filename width height) &body body)
+  `(progn
+     (setf *tape* (make-instance
+                   'videotape
+                   :fps ,fps :duration ,duration :filename ,filename :dim (list ,width ,height)))
+     ,@body
+     (free *tape*)))
+
 (defun record (&key (fps 30) (duration 1) (filename "output.mp4") (width 800) (height 600))
-  (free *tape*)
-  (setf *tape* (make-instance 'videotape :fps fps :duration duration :filename filename :dim `(,width ,height)))
-  (record-render :stop)
-  (record-render :start (* fps duration))
-  (free *tape*))
+  (with-videotape (fps duration filename width height)
+    (record-render :stop)
+    (record-render :start (* fps duration))))
