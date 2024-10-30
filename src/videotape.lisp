@@ -8,12 +8,8 @@
   ((process  :reader  process)
    (duration :initarg :duration :documentation "duration in seconds" :reader duration)
    (fps      :initarg :fps      :documentation "frames per second" :reader fps)
-   (filename :initarg :filename :documentation "output video filename")
-   (width    :initarg :width    :documentation "video/viewport WIDTH" :reader width)
-   (height   :initarg :height   :documentation "video/viewport HEIGHT" :reader height))
+   (filename :initarg :filename :documentation "output video filename"))
   (:default-initargs
-   :width 800
-   :height 600
    :duration 10
    :filename "output.mp4"
    :fps 30
@@ -27,9 +23,8 @@
            (string-equal "mp4" (subseq (string-downcase f) (- (length f) 3)))))
     (assert (valid-filename-p filename))))
 
-(defmethod initialize-instance :after ((obj videotape) &key)
-  (destructuring-bind (width height)
-      (viewport-dimensions (current-viewport))
+(defmethod initialize-instance :after ((obj videotape) &key dim)
+  (destructuring-bind (width height) dim
     (with-slots (process filename fps) obj
       (setf process
             (uiop:launch-program
@@ -56,19 +51,18 @@
               :exposure .9)
   ;;  tape -> ffmpeg
   (let ((c-array (pull1-g (first (tex *tape*)))))
-    (destructuring-bind (width height)
-        (viewport-dimensions (current-viewport))
+    (destructuring-bind (width height) (dim *tape*)
       (dotimes (i (* width height))
         (write-sequence
          (row-major-aref-c c-array i)
          (uiop:process-info-input (process *tape*))))))
   ;; TICK
-  (let ((step-size (/ 10 (fps *tape*))));; TODO: rps?
+  (let ((step-size (/ (rocketman::state-rps *rocket*) (fps *tape*))));; TODO: rps?
     (incf (rocketman::state-row *rocket*)
           step-size)))
 
 (defun record-init ()
-  (setf (viewport-resolution (current-viewport)) (v! (width *tape*) (height *tape*)))
+  (setf (viewport-dimensions (current-viewport)) (dim *tape*))
   (init)
   (main-loop)); with an extra draw we make sure everything is ready (eg: ibl)
 
@@ -78,7 +72,7 @@
 
 (defun record (&key (fps 30) (duration 1) (filename "output.mp4") (width 800) (height 600))
   (free *tape*)
-  (setf *tape* (make-instance 'videotape :fps fps :duration duration :filename filename :width width :height height))
+  (setf *tape* (make-instance 'videotape :fps fps :duration duration :filename filename :dim `(,width ,height)))
   (record-render :stop)
   (record-render :start (* fps duration))
   (free *tape*))
