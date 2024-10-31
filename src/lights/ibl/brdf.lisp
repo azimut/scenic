@@ -7,11 +7,6 @@
    (brdf-fbo :reader brdf-fbo))
   (:documentation "brdf lookup table"))
 
-(defmethod free :after ((obj brdf))
-  (free (bs obj))
-  (free (brdf-fbo obj))
-  (free (brdf-tex obj)))
-
 (defun-g importance-sample-ggx ((xi :vec2)
                                 (n :vec3)
                                 (roughness :float))

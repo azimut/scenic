@@ -60,3 +60,9 @@
       (setf (aref-c (pbr-material-specular     (aref-c c 0)) idx) specular)
       (setf (aref-c (pbr-material-metallic     (aref-c c 0)) idx) metallic)
       (setf (aref-c (pbr-material-emissive     (aref-c c 0)) idx) emissive))))
+
+(defun set-and-upload-materials (materials materials-ubo)
+  (mapc (lambda (m)
+          (setf (slot-value m 'ubo) materials-ubo)
+          (upload m))
+        materials))

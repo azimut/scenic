@@ -24,21 +24,6 @@
    (point-ubo :reader point-ubo :documentation "common point lights ubo"))
   (:documentation "state global pointlight resources"))
 
-(defmethod free :after ((obj spotlights))
-  (with-slots (spot-tex spot-ubo) obj
-    (free spot-tex)
-    (free spot-ubo)))
-
-(defmethod free :after ((obj pointlights))
-  (with-slots (point-tex point-ubo) obj
-    (free point-tex)
-    (free point-ubo)))
-
-(defmethod free :after ((obj dirlights))
-  (with-slots (dir-tex dir-ubo) obj
-    (free dir-tex)
-    (free dir-ubo)))
-
 (defmethod initialize-instance :before ((obj lights) &key dim)
   (check-type dim (integer 256 4096)))
 

@@ -15,10 +15,6 @@
     (setf (slot-value obj 'prev) (make-renderable))
     (setf (slot-value obj 'next) (make-renderable))))
 
-(defmethod free :after ((obj screen))
-  (free (prev obj))
-  (free (next obj)))
-
 (defmethod handle :after ((e resize) (obj screen))
   (setf (dim (prev *state*)) (list (width e) (height e))
         (dim (next *state*)) (list (width e) (height e))))

@@ -18,16 +18,26 @@
 (defmethod initialize-instance :after ((obj state) &key materials)
   (with-slots (materials-ubo) obj
     (setf materials-ubo (make-ubo NIL 'pbr-material))
-    (mapc (lambda (m)
-            (setf (slot-value m 'ubo) materials-ubo)
-            (upload m))
-          materials)))
+    (set-and-upload-materials materials materials-ubo)))
+
+(defmethod reinitialize-instance :after ((obj state) &key materials)
+  (with-slots (scenes scene-index last-time materials-ubo) obj
+    (set-and-upload-materials materials materials-ubo)
+    (setf last-time (get-internal-real-time))
+    (setf scene-index -1)
+    (setf scenes ())))
 
 (defun init-state (materials)
-  (setf *state* (make-instance 'state :materials materials)))
+  (if *state*
+      (reinitialize-instance *state* :materials materials)
+      (setf *state* (make-instance 'state :materials materials))))
+
+(defun init-default-state ()
+  (init-state (list (make-material :roughness .8 :metallic .02 :specular .1)
+                    (make-material :roughness .4 :metallic .4  :specular .1))))
 
 (defmethod free ((obj state))
-  (free (materials-ubo obj))
+  (reset-material-counter)
   (mapc #'free (scenes obj)))
 
 (defmethod (setf scene-index) :before (new-value (obj state))
@@ -51,7 +61,3 @@
 (defmethod handle :around ((e resize) (obj perspective))
   (when (equal obj (current-camera))
     (call-next-method)))
-
-(defun init-default-state ()
-  (init-state (list (make-material :roughness .8 :metallic .02 :specular .1)
-                    (make-material :roughness .4 :metallic .4  :specular .1))))
