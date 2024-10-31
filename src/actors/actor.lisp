@@ -1,13 +1,15 @@
 (in-package #:scenic)
 
 (defclass actor (listener drawable occluder paintable)
-  ((pos      :initarg :pos      :accessor pos      :documentation "3d position")
+  ((name     :initarg :name     :reader   name)
+   (pos      :initarg :pos      :accessor pos      :documentation "3d position")
    (rot      :initarg :rot      :accessor rot      :documentation "3d rotation")
    (buf      :initarg :buf      :accessor buf      :documentation "buffer stream")
    (color    :initarg :color    :accessor color    :documentation "base color")
    (scale    :initarg :scale    :accessor scale    :documentation "vextex fudge scale")
    (material :initarg :material :accessor material :documentation "material index"))
   (:default-initargs
+   :name (gensym)
    :material 0
    :color (v! 1 1 1)
    :pos (v! 0 0 0)
@@ -17,8 +19,7 @@
   (:documentation "base object, with tangents"))
 
 (defclass assimp-thing (actor)
-  ((name  :initarg :name :reader name)
-   (scene :initarg :scene)))
+  ((scene :initarg :scene)))
 
 (defclass assimp-thing-with-bones (assimp-thing)
   ((bones            :initarg :bones
