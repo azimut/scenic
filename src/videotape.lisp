@@ -52,7 +52,7 @@
   ;;  tape -> ffmpeg
   (let ((c-array (pull1-g (first (tex *tape*)))))
     (destructuring-bind (width height) (dim *tape*)
-      (dotimes (i (* width height))
+      (loop :for i :from (1- (* width height)) :downto 0 :do
         (write-sequence
          (row-major-aref-c c-array i)
          (uiop:process-info-input (process *tape*))))))
