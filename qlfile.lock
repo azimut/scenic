@@ -1,15 +1,23 @@
 ("quicklisp" .
  (:class qlot/source/dist:source-dist
   :initargs (:distribution "https://beta.quicklisp.org/dist/quicklisp.txt" :%version :latest)
-  :version "2023-10-21"))
+  :version "2024-10-12"))
 ("cm" .
  (:class qlot/source/github:source-github
   :initargs (:repos "ormf/cm" :ref nil :branch nil :tag nil)
-  :version "github-e8eb3242329cf62ab4e1b89758fa5d66c6915b6f"))
+  :version "github-4382b68b6f74f5bf6ddc4ef8707af798229fe656"))
 ("cepl.fond" .
  (:class qlot/source/github:source-github
   :initargs (:repos "cbaggers/cepl.fond" :ref nil :branch nil :tag nil)
   :version "github-45ed0ef72b65c905a2ee97c6e87da6de6ec424b7"))
+("nineveh" .
+ (:class qlot/source/github:source-github
+  :initargs (:repos "azimut/nineveh" :ref nil :branch nil :tag nil)
+  :version "github-986e05fb1e609c64bdbf967fa52af2284d9e830e"))
+("varjo" .
+ (:class qlot/source/github:source-github
+  :initargs (:repos "azimut/varjo" :ref nil :branch nil :tag nil)
+  :version "github-13b1f28102fdb781583b26caaa1434aa8cc5db3c"))
 ("rocketman" .
  (:class qlot/source/github:source-github
   :initargs (:repos "azimut/rocketman" :ref nil :branch nil :tag nil)
@@ -21,7 +29,7 @@
 ("cepl" .
  (:class qlot/source/github:source-github
   :initargs (:repos "azimut/cepl" :ref nil :branch "rm-project" :tag nil)
-  :version "github-NIL"))
+  :version "github-4114a353883726333c640fb318726d0da38a3b7f"))
 ("cl-openal" .
  (:class qlot/source/github:source-github
   :initargs (:repos "azimut/cl-openal" :ref nil :branch "fixalut" :tag nil)

@@ -1,5 +1,7 @@
 github ormf/cm
 github cbaggers/cepl.fond
+github azimut/nineveh
+github azimut/varjo
 github azimut/rocketman
 github azimut/glsl-spec
 github azimut/cepl :branch rm-project
