@@ -7,16 +7,16 @@
    (specular    :accessor specular    :initarg :specular)
    (metallic    :accessor metallic    :initarg :metallic)
    (emissive    :accessor emissive    :initarg :emissive)
-   (uploadp   :accessor uploadp   :initarg :uploadp)
-   (idx       :reader   idx)
-   (ubo       :reader   ubo))
+   (uploadp     :accessor uploadp     :initarg :uploadp)
+   (ubo         :reader   ubo         :documentation "reserved for a reference to the scene ubo")
+   (idx         :reader   idx))
   (:default-initargs
-   :uploadp   T
+   :fakeambient 0.0
+   :roughness   0.7
    :specular    0.2
    :metallic    0.04
    :emissive    0.0
-   :roughness   0.7
-   :fakeambient 0.0)
+   :uploadp     T)
   (:metaclass counted-class)
   (:documentation "pbr material"))
 
