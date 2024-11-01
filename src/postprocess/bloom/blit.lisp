@@ -13,6 +13,7 @@
       ;; Extract Brightest Parts
       ;;
       (with-fbo-bound ((aref fbos 0))
+        (clear-fbo (aref fbos 0))
         (map-g #'bloom-threshold-pipe (bs postprocess)
                :intensity (intensity-gamma postprocess)
                :threshold (threshold postprocess)
@@ -21,15 +22,11 @@
       ;;
       ;; Downsample ⬇️
       ;;
-      (with-fbo-bound ((aref fbos 1))
-        (map-g #'bloom-blur-pipe (bs postprocess)
-               :delta 1f0
-               :sam (aref samplers 0)
-               :x (aref widths  0)
-               :y (aref heights 0)))
-      (loop :for src :from 1 :to 3 :do
+      (loop :for src :from 0 :to 3 :do
         (with-fbo-bound ((aref fbos (1+ src)))
+          (clear-fbo (aref fbos (1+ src)))
           (map-g #'bloom-blur-pipe (bs postprocess)
+                 :delta 1f0
                  :sam (aref samplers src)
                  :x   (aref widths   src)
                  :y   (aref heights  src))))
@@ -44,13 +41,15 @@
                    :sam (aref samplers (+ 1 dst))
                    :x   (aref widths   (+ 1 dst))
                    :y   (aref heights  (+ 1 dst))
-                   :delta 0.5f0))))
+                   :delta 0.5))))
       ;;
-      ;; Render (fbo captured in :AFTER)
+      ;; Render (captured fbo in :AFTER)
       ;;
       (map-g #'add-textures-pipe (bs postprocess)
              :sam1 (aref samplers 0)
-             :sam2 (first (sam (prev *state*))))))
-  #+nil
-  (draw-tex-br
+             :sam2 (first (sam (prev *state*)))
+             :x    (aref widths 0)
+             :y    (aref heights 0))))
+  ;;#+nil
+  (draw-tex-tr
    (aref (bloom-fbo-samplers (fbos postprocess)) 0)))

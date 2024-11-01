@@ -44,14 +44,13 @@
      (sam   :sampler-2d)
      (x     :float)
      (y     :float))
-  (let* ((texture-size (texture-size sam 0))
-         (o (* (v! x y x y)
+  (let* ((o (* (v! x y x y)
                (v! (- delta) (- delta) delta delta)))
-         (s (+ (texture sam (+ uv (s~ o :xy)))
-               (texture sam (+ uv (s~ o :zy)))
-               (texture sam (+ uv (s~ o :xw)))
-               (texture sam (+ uv (s~ o :zw))))))
-    (* s .25)))
+         (s (+ (s~ (texture sam (+ uv (s~ o :xy))) :xyz)
+               (s~ (texture sam (+ uv (s~ o :zy))) :xyz)
+               (s~ (texture sam (+ uv (s~ o :xw))) :xyz)
+               (s~ (texture sam (+ uv (s~ o :zw))) :xyz))))
+    (v! (* s 0.25) 1)))
 
 (defun-g bloom-blur-frag
     ((uv    :vec2)
@@ -90,10 +89,12 @@
 (defun-g add-textures-frag
     ((uv   :vec2)
      &uniform
+     (x    :float)
+     (y    :float)
      (sam1 :sampler-2d)
      (sam2 :sampler-2d))
   (+ (texture sam1 uv)
-     (texture sam2 uv)))
+     (sample-box uv 0.5 sam2 x y)))
 
 (defpipeline-g add-textures-pipe (:points)
   :fragment (add-textures-frag :vec2))

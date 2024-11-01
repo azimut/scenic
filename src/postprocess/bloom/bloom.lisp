@@ -14,7 +14,7 @@
   (:default-initargs
    :intensity      1f0 ;; 1.0 - 10.0
    :threshold      1f0
-   :threshold-soft 0.5
+   :threshold-soft 0.5 ;; > wider bloom
    :blending (make-blending-params :source-rgb :one :destination-rgb :one)))
 
 ;; https://github.com/DukeChiang/DCET/blob/52cde71d239e6023daf42a0d84f04041c235e413/Server/Packages/UnityEngine/Unity/Mathf.cs#L681
