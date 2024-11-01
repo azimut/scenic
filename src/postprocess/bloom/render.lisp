@@ -54,7 +54,7 @@
                (texture sam (+ uv (s~ o :zw))))))
     (* s .25)))
 
-(defun-g blur-frag
+(defun-g bloom-blur-frag
     ((uv    :vec2)
      &uniform
      (delta :float)
@@ -64,8 +64,8 @@
   (let ((color (sample-box uv delta sam x y)))
     color))
 
-(defpipeline-g blur-pipe (:points)
-  :fragment (blur-frag :vec2))
+(defpipeline-g bloom-blur-pipe (:points)
+  :fragment (bloom-blur-frag :vec2))
 
 ;;----------------------------------------
 ;; 2D - Apply Bloom
