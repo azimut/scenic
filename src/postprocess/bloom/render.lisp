@@ -28,9 +28,8 @@
      (sam       :sampler-2d))
   (let ((color (s~ (texture sam uv) :xyz)))
     (bloom-prefilter color
-                     .5;;threshold
-                     .24                  ;soft
-                     ))
+                     threshold
+                     soft))
   );; TODO: add uniform
 
 (defpipeline-g bloom-threshold-pipe (:points)

@@ -27,8 +27,7 @@
                :sam (aref samplers 0)
                :x (aref widths  0)
                :y (aref heights 0)))
-      (dolist (src '(1 2 3))
-        (declare (type fixnum src))
+      (loop :for src :from 1 :to 3 :do
         (with-fbo-bound ((aref fbos (1+ src)))
           (map-g #'bloom-blur-pipe (bs postprocess)
                  :sam (aref samplers src)
@@ -37,8 +36,7 @@
       ;;
       ;; Upsample ⬆️
       ;;
-      (dolist (dst '(3 2 1 0))
-        (declare (type fixnum dst))
+      (loop :for dst :from 3 :downto 0 :do
         (with-blending (blending postprocess)
           (with-fbo-bound ((aref fbos dst))
             (clear-fbo (aref fbos dst))
