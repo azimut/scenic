@@ -10,7 +10,7 @@
     (with-setf* ((depth-test-function) #'always ; different from :around
                  (clear-color) (v! 0 0 0 1))
       ;;
-      ;; Extract Brightest Parts
+      ;; Prefilter Brightest Parts
       ;;
       (with-fbo-bound ((aref fbos 0))
         (clear-fbo (aref fbos 0))
@@ -46,10 +46,11 @@
       ;; Render (captured fbo in :AFTER)
       ;;
       (map-g #'add-textures-pipe (bs postprocess)
-             :sam1 (aref samplers 0)
-             :sam2 (first (sam (prev *state*)))
-             :x    (aref widths 0)
-             :y    (aref heights 0))))
-  ;;#+nil
+             :intensity (intensity postprocess)
+             :sam1      (aref samplers 0)
+             :sam2      (first (sam (prev *state*)))
+             :x         (aref widths 0)
+             :y         (aref heights 0))))
+  #+nil
   (draw-tex-tr
    (aref (bloom-fbo-samplers (fbos postprocess)) 0)))

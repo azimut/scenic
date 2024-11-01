@@ -9,7 +9,10 @@
                           (max brightness 0.00001))))
     (* color contribution)))
 
-(defun-g bloom-prefilter ((color :vec3) (threshold :float) (soft :float))
+(defun-g bloom-prefilter
+    ((color     :vec3)
+     (threshold :float)
+     (soft      :float))
   (let* ((brightness (max (x color) (max (y color) (z color))))
          (knee       (* threshold soft))
          (soft       (+ (- brightness threshold) knee))
@@ -87,14 +90,15 @@
 
 ;;--------------------------------------------------
 (defun-g add-textures-frag
-    ((uv   :vec2)
+    ((uv        :vec2)
      &uniform
-     (x    :float)
-     (y    :float)
-     (sam1 :sampler-2d)
-     (sam2 :sampler-2d))
-  (+ (texture sam1 uv)
-     (sample-box uv 0.5 sam2 x y)))
+     (x         :float)
+     (y         :float)
+     (sam1      :sampler-2d)
+     (sam2      :sampler-2d)
+     (intensity :float))
+  (+ (* intensity (sample-box uv 0.5 sam1 x y))
+     (texture sam2 uv)))
 
 (defpipeline-g add-textures-pipe (:points)
   :fragment (add-textures-frag :vec2))

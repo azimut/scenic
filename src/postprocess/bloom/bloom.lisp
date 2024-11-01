@@ -12,8 +12,8 @@
    (threshold-soft  :accessor threshold-soft  :initarg :threshold-soft)
    (fbos            :reader   fbos))
   (:default-initargs
-   :intensity      1f0 ;; 1.0 - 10.0
-   :threshold      1f0
+   :intensity      1f0 ;; 1 - 10
+   :threshold      1f0 ;; 1 - 10
    :threshold-soft 0.5 ;; > wider bloom
    :blending (make-blending-params :source-rgb :one :destination-rgb :one)))
 
