@@ -24,6 +24,8 @@
   "http://planetpixelemporium.com/tutorialpages/light.html")
 
 (defun light-color (nth &aux (mod-nth (mod nth (/ (length *light-colors*) 2))))
-  (serapeum:~>> (nth (* 2 mod-nth) *light-colors*)
-                (print)
-                (getf *light-colors*)))
+  (flet ((id-print (k)
+           (format t "~d ~a" mod-nth k) k))
+    (serapeum:~>> (nth (* 2 mod-nth) *light-colors*)
+                  (id-print)
+                  (getf *light-colors*))))
