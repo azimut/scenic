@@ -118,6 +118,7 @@
   :fragment (defered-vxgi-frag :vec2))
 
 (defmethod blit ((scene scene-vxgi) (postprocess list) (camera defered) time)
+  (declare (ignore postprocess))
   (destructuring-bind (s1 s2 s3 s4 _) (sam camera)
     (declare (ignore _))
     (with-slots (prev bs) *state*
@@ -125,8 +126,8 @@
         (clear-fbo (fbo prev)) ;; needed for scenes with no envmap
         (with-blending (blend camera)
           (alexandria:when-let
-           ((actor (find-if #'cube-p (actors scene))))
-           (paint scene camera actor time))
+              ((actor (find-if #'cube-p (actors scene))))
+            (paint scene camera actor time))
           (map-g #'defered-vxgi-pipe bs
                  :cam-pos (pos camera)
                  :scene (ubo scene)

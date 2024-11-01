@@ -101,6 +101,8 @@
   :fragment (defered-frag :vec2))
 
 (defmethod blit ((scene scene) (postprocess list) (camera defered) time)
+  "takes defered camera samplers and blits into PREV"
+  (declare (ignore postprocess))
   (destructuring-bind (s1 s2 s3 s4 _) (sam camera)
     (declare (ignore _))
     (with-slots (prev bs) *state*

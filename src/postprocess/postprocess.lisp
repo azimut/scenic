@@ -24,13 +24,17 @@
     (call-next-method)))
 
 (defmethod blit (scene (postprocess list) (camera renderable) time)
+  "main blit, puts forward CAMERA into PREV" ; WHY!? due shared logic with defer?
+  (declare (ignore scene postprocess time))
   (with-slots (prev bs) *state*
     (map-g-into (fbo prev) #'pass-pipe bs :sam (first (sam camera)))))
 
 (defmethod blit
     :after (scene (postprocess list) camera time)
+  ;; 1. ping-pong prev/next
   (dolist (post (butlast postprocess))
     (with-fbo-bound ((fbo (next *state*)))
       (blit scene post camera time))
     (rotatef (prev *state*) (next *state*)))
+  ;; 2. Render to screen using last postprocess
   (blit scene (alexandria:lastcar postprocess) camera time))
