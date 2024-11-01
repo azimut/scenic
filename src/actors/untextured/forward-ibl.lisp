@@ -23,6 +23,7 @@
                               (pointshadows :sampler-cube-array))
   (let* ((ao          1f0)
          (final-color (v! 0 0 0))
+         (emissive    (aref (pbr-material-emissive materials) material))
          #+nil
          (ambient (ambient-ibl (normalize (- cam-pos frag-pos))
                                frag-norm
@@ -41,6 +42,7 @@
                                (aref (pbr-material-metallic materials) material)
                                color
                                ao)))
+    (incf final-color (* color emissive))
     (dotimes (i (scene-data-ndir scene))
       (with-slots (colors positions fudge)
           dirlights
@@ -86,7 +88,8 @@
                                (aref linear i)
                                (aref quadratic i))
                  (shadow-factor spotshadows (aref spot-pos i) (aref fudge i) i)))))
-    (v! (+ final-color ambient) 1)))
+    (v! (+ final-color ambient)
+        1)))
 
 (defpipeline-g untextured-ibl-pipe ()
   :vertex (untextured-vert g-pnt)

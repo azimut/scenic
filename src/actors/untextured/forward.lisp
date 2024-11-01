@@ -50,7 +50,9 @@
                           (pointshadows :sampler-cube-array))
   (let ((fakeambient (aref (pbr-material-fakeambient materials) material))
         (final-color (vec3 0))
+        (emissive    (aref (pbr-material-emissive materials) material))
         (ambient     (vec3 0)))
+    (incf final-color (* emissive color))
     (dotimes (i (scene-data-ndir scene))
       (with-slots (colors positions fudge) dirlights
         (incf ambient (* fakeambient color))
