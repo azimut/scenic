@@ -55,3 +55,9 @@
                   (setf (aref (bloom-fbo-fbos     obj) i) fbo)
                   (setf (aref (bloom-fbo-samplers obj) i) sam)))
       obj)))
+
+(defmethod handle ((e resize) (obj bloom))
+  (let ((oldfbos (fbos obj))
+        (newfbos (make-bloom-fbo)))
+    (setf (slot-value obj 'fbos) newfbos)
+    (free oldfbos)))
