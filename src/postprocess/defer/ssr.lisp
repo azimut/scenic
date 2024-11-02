@@ -182,8 +182,8 @@
       (map-g #'ssr-pipe compute
              :world-view  (world->view camera)
              :iworld-view (m4:inverse (world->view camera))
-             :view-clip (projection  camera)
-             :iview-clip (m4:inverse (projection camera))
+             :view-clip   (projection  camera)
+             :iview-clip  (m4:inverse (projection camera))
              :albedo s1
              :samp s2                 ; pos
              :samn s3                 ; normal
