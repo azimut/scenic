@@ -85,7 +85,7 @@
    (:file "postprocess/bloom/bloom")
    (:file "postprocess/bloom/blit")
    (:file "postprocess/dof/render")
-   (:file "postprocess/dof/bloom")
+   (:file "postprocess/dof/dof")
    (:file "postprocess/dof/blit")
    (:file "camera/capture/capture")
    (:file "camera/capture/capture6")
