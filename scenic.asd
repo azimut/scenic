@@ -74,6 +74,7 @@
    (:file "postprocess/hdr")
    (:file "postprocess/hdr-acesfilm")
    (:file "postprocess/dither")
+   (:file "postprocess/fxaa3")
    (:file "postprocess/defer/defer")
    (:file "postprocess/defer/ibl")
    (:file "postprocess/defer/ssao")
