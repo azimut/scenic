@@ -2,8 +2,8 @@
 
 (defclass dither (postprocess)
   ((dithers   :documentation "list of samplers of dither patterns")
-   (precision :initarg :precision
-              :accessor dither-precision
+   (precision :initarg       :precision
+              :accessor       dither-precision
               :documentation "color depth"))
   (:default-initargs
    :precision 32f0)
@@ -12,8 +12,7 @@
 (defun make-dither (&rest args)
   (apply #'make-instance 'dither args))
 
-(defmethod (setf dither-precision)
-    :before (new-value (obj dither))
+(defmethod (setf dither-precision) :before (new-value (obj dither))
   (check-type new-value single-float))
 
 (defmethod initialize-instance :before ((obj dither) &key precision)
@@ -34,19 +33,23 @@
   (with-slots (dithers) obj
     (setf dithers (alexandria:rotate dithers))))
 
-#+nil
-(defmethod free ((obj dither))
-  (free (slot-value obj 'dithers)))
+(defmethod dither-prev ((obj dither))
+  (with-slots (dithers) obj
+    (setf dithers (alexandria:rotate dithers -1))))
 
-(defun-g channel-error ((col :float) (col-min :float) (col-max :float))
+(defun-g channel-error
+    ((col     :float)
+     (col-min :float)
+     (col-max :float))
   (let ((range  (abs (- col-min col-max)))
         (arange (abs (- col     col-min))))
     (/ arange range)))
 
-(defun-g dithered-channel ((err             :float)
-                           (dither-block-uv :vec2)
-                           (dither-steps    :float)
-                           (dither-pattern  :sampler-2d))
+(defun-g dithered-channel
+    ((err             :float)
+     (dither-block-uv :vec2)
+     (dither-steps    :float)
+     (dither-pattern  :sampler-2d))
   (let* ((err (/ (floor (* err dither-steps))
                  dither-steps))
          (dither-uv (v! err 0))
@@ -79,10 +82,11 @@
         (+ (x yuva) (* (y yuva)  1.8556))
         (w yuva))))
 
-(defun-g psx-dither ((sam            :sampler-2d)
-                     (uv             :vec2)
-                     (precision      :float)
-                     (dither-texture :sampler-2d))
+(defun-g psx-dither
+    ((sam            :sampler-2d)
+     (uv             :vec2)
+     (precision      :float)
+     (dither-texture :sampler-2d))
   (let* ((yuv  (rgb->yuv (texture sam uv)))
          ;; Clamp the YUV color to specified color depth (default: 32, 5 bits per channel, as per playstation hardware)
          (col1 (/ (floor (* yuv precision)) precision))
@@ -123,13 +127,19 @@
                   (w yuv))))
     (yuv->rgb yuv)))
 
-(defun-g dither-frag ((uv :vec2) &uniform (precision  :float) (sam :sampler-2d) (dither-sam :sampler-2d))
+(defun-g dither-frag
+    ((uv         :vec2)
+     &uniform
+     (precision  :float)
+     (sam        :sampler-2d)
+     (dither-sam :sampler-2d))
   (psx-dither sam uv precision dither-sam))
 
 (defpipeline-g dither-pipe (:points)
   :fragment (dither-frag :vec2))
 
-(defmethod blit (scene (postprocess dither) (camera renderable) time)
+(defmethod blit (scene (postprocess dither) camera time)
+  (declare (ignore scene camera time))
   (with-slots (bs dithers precision) postprocess
     (map-g #'dither-pipe bs
            :precision precision

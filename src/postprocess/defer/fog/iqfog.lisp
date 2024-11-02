@@ -61,6 +61,7 @@
 (defpipeline-g iqfog-pipe (:points)
   :fragment (iqfog-frag :vec2))
 
+;; FIXME: assumes that 1st light is the sun
 (defmethod blit (scene (postprocess iqfog) (camera defered) time)
   (with-slots (bs density color1 color2) postprocess
     (map-g #'iqfog-pipe bs

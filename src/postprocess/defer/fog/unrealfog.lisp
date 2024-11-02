@@ -35,6 +35,12 @@
   (check-type height           single-float)
   (check-type terminator-angle single-float))
 
+(defmethod print-object ((obj unrealfog) stream)
+  (print-unreadable-object (obj stream :type T :identity T)
+    (with-slots (density falloff height terminator-angle) obj
+      (format stream "DFHA: ~a ~a ~a ~a"
+              density falloff height terminator-angle))))
+
 (defun-g unrealfog-frag ((uv         :vec2)
                          &uniform
                          (world-clip :mat4)
@@ -80,16 +86,18 @@
 (defpipeline-g unrealfog-pipe (:points)
   :fragment (unrealfog-frag :vec2))
 
+;; FIXME: assumes the first light is the sun
 (defmethod blit (scene (postprocess unrealfog) (camera defered) time)
   (with-slots (bs falloff terminator-angle density height) postprocess
     (map-g #'unrealfog-pipe bs
-           :sam-pos (second (sam camera))
-           :sam (first (sam (prev *state*)))
+           :light-pos  (pos (first (lights scene)))
+           :sam-pos    (second (sam camera))
+           :cam-pos    (pos camera)
+           :sam        (first  (sam (prev *state*)))
            :world-clip (world->clip camera)
            :fog-params
-           (v! (* density (expt 2 (* (- falloff)
-                                     (- (z (pos camera)) height))))
+           (v! (* density
+                  (expt 2 (* (- falloff)
+                             (- (z (pos camera)) height))))
                falloff
-               terminator-angle)
-           :light-pos (pos (first (lights scene)))
-           :cam-pos (pos camera))))
+               terminator-angle))))
