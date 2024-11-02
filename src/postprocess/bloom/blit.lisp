@@ -2,6 +2,7 @@
 
 (defmethod blit (scene (postprocess bloom) camera time)
   "OUTPUT: at fbos[0]"
+  (declare (ignore scene camera time))
   (with-accessors ((fbos     bloom-fbo-fbos)
                    (samplers bloom-fbo-samplers)
                    (widths   bloom-fbo-widths)
