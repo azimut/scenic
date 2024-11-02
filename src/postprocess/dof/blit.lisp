@@ -1,17 +1,36 @@
 (in-package #:scenic)
 
-(defmethod blit (scene (postprocess dof) (camera defered) time)
+(defmethod blit :before (scene (postprocess dof) camera time)
   (declare (ignore scene time))
-  (with-slots (radius distance range kernel bs render-bokeh render-coc render-coc-half)
+  (with-slots (radius distance range bs render-coc)
       postprocess
     (with-setf* ((depth-test-function) #'always)
       (map-g-into (fbo render-coc) #'coc-pipe bs
                   :near          (near camera)
                   :far           (far  camera)
-                  :samd          (fifth (sam camera)) ;; !!!
+                  :samd          (second (sam camera))
                   :bokeh-radius   radius
                   :focus-distance distance
-                  :focus-range    range)
+                  :focus-range    range))))
+
+(defmethod blit :before (scene (postprocess dof) (camera defered) time)
+  (declare (ignore scene time))
+  (with-slots (radius distance range bs render-coc)
+      postprocess
+    (with-setf* ((depth-test-function) #'always)
+      (map-g-into (fbo render-coc) #'coc-pipe bs
+                  :near          (near camera)
+                  :far           (far  camera)
+                  :samd          (fifth (sam camera))
+                  :bokeh-radius   radius
+                  :focus-distance distance
+                  :focus-range    range))))
+
+(defmethod blit (scene (postprocess dof) camera time)
+  (declare (ignore scene camera time))
+  (with-slots (radius kernel bs render-bokeh render-coc render-coc-half)
+      postprocess
+    (with-setf* ((depth-test-function) #'always)
       (map-g-into (fbo render-coc-half) #'coc-prefilter-pipe bs
                   :sam           (first (sam (prev *state*)))
                   :coc-sam       (first (sam render-coc)))
