@@ -337,7 +337,8 @@
 
 (defun assimp-safe-import-into-lisp (file)
   "wrapper around ai:import-into-lisp, attempts to return a valid scene"
-  (let* ((scene (or (ai:import-into-lisp file)
+  (let* ((scene (or (let ((ai::*translate-verbose* t))
+                      (ai:import-into-lisp file))
                     (error "cannot simple load the file")))
          (processing-flags ;; try to ensure normals
            (if (emptyp (ai:normals (aref (ai:meshes scene) 0)))

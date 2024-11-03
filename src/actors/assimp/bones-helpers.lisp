@@ -4,7 +4,7 @@
 (defvar *max-bones-per-vertex* 4)
 
 (defun list-bones (scene)
-  "returns a plain list with all the bones in SCENE, helper for the REPL"
+  "returns a plain list with all the bones in SCENE"
   (declare (ai:scene scene))
   (let* ((meshes (coerce (ai:meshes scene) 'list))
          (bones  (mappend (lambda (m) (coerce (ai:bones m) 'list)) meshes))
@@ -12,7 +12,7 @@
     bones))
 
 (defun list-bones-unique (scene)
-  "returns a plain list with all the bones in SCENE, helper for the REPL"
+  "returns a plain list with all the bones in SCENE"
   (declare (ai:scene scene))
   (let* ((bones (list-bones scene))
          (bones (remove-duplicates bones :key #'ai:name :test #'string=)))
