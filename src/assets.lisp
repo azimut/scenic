@@ -180,15 +180,18 @@
     (when (asdf:find-system :scenic)
       (setf *system-path* (asdf:system-source-directory :scenic))))
   ;; Try different locations
-  (or (uiop:absolute-pathname-p file)
-      (probe-file file)
-      (arrow-macros:some-> (uiop:getenv "APPDIR")
-        (uiop/pathname:subpathname* file)
-        (probe-file))
-      (arrow-macros:some-> *system-path*
-        (uiop/pathname:subpathname* file)
-        (probe-file))
-      (error "Could not resolve-path of: ~a" file)))
+  (flet ((relative-to-project (f)
+           (or (arrow-macros:some-> (uiop:getenv "APPDIR")
+                 (uiop/pathname:subpathname* f)
+                 (probe-file))
+               (arrow-macros:some-> *system-path*
+                 (uiop/pathname:subpathname* f)
+                 (probe-file)))))
+    (or (uiop:absolute-pathname-p file)
+        (probe-file file)
+        (relative-to-project file)
+        (relative-to-project (merge-pathnames "static/" (serapeum:path-basename file)))
+        (error "Could not resolve-path of: ~a" file))))
 
 (defun resolve-paths (&rest args)
   (mapcar #'resolve-path args))

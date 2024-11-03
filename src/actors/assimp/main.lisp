@@ -224,22 +224,34 @@
 
 ;;--------------------------------------------------
 
+(defun assimp-save-embed-textures (scene &aux (textures (ai:textures scene)))
+  (loop :for texture :across textures :do
+    (destructuring-bind (&key data filename &allow-other-keys) (nthcdr 1 texture)
+      (let* ((basename (serapeum:path-basename filename))
+             (savepath (merge-pathnames "static/" basename)))
+        (with-open-file
+            (stream
+             savepath
+             :direction :output
+             :element-type '(unsigned-byte 8)
+             :if-exists nil ; FIXME: check filesize?
+             :if-does-not-exist :create)
+          (when stream
+            (write-sequence data stream)
+            (log:info (format nil "Saved embeded file: ~a" savepath))))))))
+
 (defun assimp-get-textures (mesh scene)
   (declare (ai:mesh mesh) (ai:scene scene))
   (let* ((material-index (ai:material-index mesh))
          (material (aref (ai:materials scene) material-index))
-         ;; TODO resolve-path???????
          (albedo (let ((path (get-texture-path material :ai-texture-type-diffuse)))
-                   (get-tex (if (probe-file path) path *default-albedo*) nil t :rgb8)))
+                   (get-tex (if (resolve-path path) path *default-albedo*) nil t :rgb8)))
          (normals (when-let* ((path (or (get-texture-path material :ai-texture-type-normals)
-                                        (get-texture-path material :ai-texture-type-height)))
-                              (_ (probe-file path)))
+                                        (get-texture-path material :ai-texture-type-height))))
                     (get-tex path nil t :rgb8)))
-         (specular (when-let* ((path (get-texture-path material :ai-texture-type-specular))
-                               (_ (probe-file path)))
+         (specular (when-let* ((path (get-texture-path material :ai-texture-type-specular)))
                      (get-tex path nil t :r8)))
-         (roughmap (when-let* ((path (get-texture-path material :ai-texture-type-shininess))
-                               (_ (probe-file path)))
+         (roughmap (when-let* ((path (get-texture-path material :ai-texture-type-shininess)))
                      (get-tex path nil t :r8))))
     `(:albedo ,albedo
       :normals ,normals
@@ -275,6 +287,7 @@
     (let* ((mesh-index (position mesh (ai:meshes scene)))
            (uvs        (elt texture-coords 0)))
       (assert (length= bitangents tangents normals vertices uvs))
+      (assimp-save-embed-textures scene)
       (append
        `(:buf
          ,(make-buffer-stream-cached
@@ -298,6 +311,7 @@
            ;; I need context for this...hackidy hack
            (bones-per-vertex (get-bones-per-vertex scene bones (length vertices))))
       (assert (length= bitangents tangents normals vertices uvs))
+      (assimp-save-embed-textures scene)
       (append
        `(:buf
          ,(make-buffer-stream-cached
