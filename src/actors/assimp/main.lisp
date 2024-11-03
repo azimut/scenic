@@ -7,12 +7,9 @@
 ;; TODO: fix the animation loop so it does it automatically...might be with a helper, is really manual now
 ;; TODO: scale bone transform
 
-(defvar *default-albedo* "static/null/37.Paint01-1k/paint01_albedo.jpg"
+(defvar *default-albedo* "static/Blender-UVMap-Grid-1-K.jpg"
   "override this locally to change the albedo")
-(defvar *default-normal* "static/null/37.Paint01-1k/paint01_normal.jpg"
-  "override this locally to change the normal map")
-(defvar *default-specular* "static/null/37.Paint01-1k/paint01_height.jpg"
-  "override this locally to change the normal map")
+
 (defvar *assimp-buffers* (make-hash-table :test #'equal))
 
 ;; optimize-meshes:    looks like a good default
@@ -227,6 +224,28 @@
 
 ;;--------------------------------------------------
 
+(defun assimp-get-textures (mesh scene)
+  (declare (ai:mesh mesh) (ai:scene scene))
+  (let* ((material-index (ai:material-index mesh))
+         (material (aref (ai:materials scene) material-index))
+         ;; TODO resolve-path???????
+         (albedo (let ((path (get-texture-path material :ai-texture-type-diffuse)))
+                   (get-tex (if (probe-file path) path *default-albedo*) nil t :rgb8)))
+         (normals (when-let* ((path (or (get-texture-path material :ai-texture-type-normals)
+                                        (get-texture-path material :ai-texture-type-height)))
+                              (_ (probe-file path)))
+                    (get-tex path nil t :rgb8)))
+         (specular (when-let* ((path (get-texture-path material :ai-texture-type-specular))
+                               (_ (probe-file path)))
+                     (get-tex path nil t :r8)))
+         (roughmap (when-let* ((path (get-texture-path material :ai-texture-type-shininess))
+                               (_ (probe-file path)))
+                     (get-tex path nil t :r8))))
+    `(:albedo ,albedo
+      :normals ,normals
+      :roughmap ,roughmap
+      :specular ,specular)))
+
 (defgeneric assimp-mesh-to-stream (mesh scene file type))
 
 (defmethod assimp-mesh-to-stream (mesh scene file (type (eql :untextured)))
@@ -239,60 +258,32 @@
       mesh
     (let ((mesh-index (position mesh (ai:meshes scene))))
       (assert (length= normals vertices))
-      (list :buf (make-buffer-stream-cached file mesh-index
-                                            vertices faces
-                                            normals nil nil)))))
+      `(:buf
+        ,(make-buffer-stream-cached
+          file mesh-index vertices faces normals nil nil)))))
 
 (defmethod assimp-mesh-to-stream (mesh scene file (type (eql :textured)))
   "only textured assimp thing"
-  (declare (ai:mesh mesh)
-           (ai:scene scene))
+  (declare (ai:mesh mesh) (ai:scene scene))
   (with-slots ((vertices       ai:vertices)
                (faces          ai:faces)
                (normals        ai:normals)
                (texture-coords ai:texture-coords)
                (tangents       ai:tangents)
-               (bitangents     ai:bitangents)
-               (mat-index      ai:material-index))
+               (bitangents     ai:bitangents))
       mesh
     (let* ((mesh-index (position mesh (ai:meshes scene)))
-           (uvs        (elt texture-coords 0))
-           (material   (aref (slot-value scene 'ai:materials) mat-index))
-           (tex-file   (get-texture-path material :ai-texture-type-diffuse))
-           (norm-file  (or (get-texture-path material :ai-texture-type-height)
-                           (get-texture-path material :ai-texture-type-normals)))
-           (spec-file  (get-texture-path material :ai-texture-type-specular))
-           (rough-file (get-texture-path material :ai-texture-type-shininess))
-           (file-path  (uiop:pathname-directory-pathname file))
-           (albedo     (if tex-file
-                           (get-tex (merge-pathnames tex-file file-path))
-                           (get-tex *default-albedo*)))
-           (normal-map (if norm-file
-                           (get-tex (merge-pathnames norm-file file-path) nil t :rgb8)
-                           (get-tex *default-normal* nil t :rgb8)))
-           (specular   (if spec-file
-                           (get-tex (merge-pathnames spec-file file-path))
-                           (get-tex *default-specular* nil t :r8)))
-           (roughmap   (if rough-file
-                           (get-tex (merge-pathnames rough-file file-path))
-                           (get-tex *default-specular* nil t :r8))))
-      (assert (length= bitangents
-                       tangents
-                       normals
-                       vertices
-                       uvs))
-      (list :buf (make-buffer-stream-cached file mesh-index
-                                            vertices faces
-                                            normals tangents bitangents uvs)
-            :roughmap roughmap
-            :albedo albedo
-            :normals normal-map
-            :specular specular))))
+           (uvs        (elt texture-coords 0)))
+      (assert (length= bitangents tangents normals vertices uvs))
+      (append
+       `(:buf
+         ,(make-buffer-stream-cached
+           file mesh-index vertices faces normals tangents bitangents uvs))
+       (assimp-get-textures mesh scene)))))
 
 (defmethod assimp-mesh-to-stream (mesh scene file (type (eql :bones)))
   "returns an assimp actor object"
-  (declare (ai:mesh mesh)
-           (ai:scene scene))
+  (declare (ai:mesh mesh) (ai:scene scene))
   (with-slots ((vertices       ai:vertices)
                (faces          ai:faces)
                (normals        ai:normals)
@@ -304,36 +295,14 @@
       mesh
     (let* ((mesh-index (position mesh (ai:meshes scene)))
            (uvs        (elt texture-coords 0))
-           (material   (aref (slot-value scene 'ai:materials) mat-index))
-           (tex-file   (get-texture-path material     :ai-texture-type-diffuse))
-           (norm-file  (or (get-texture-path material :ai-texture-type-height)
-                           (get-texture-path material :ai-texture-type-normals)))
-           (spec-file  (get-texture-path material     :ai-texture-type-specular))
-           (file-path  (uiop:pathname-directory-pathname file))
-           (albedo     (if tex-file
-                           (get-tex (merge-pathnames tex-file file-path))
-                           (get-tex *default-albedo*)))
-           (normal-map (if norm-file
-                           (get-tex (merge-pathnames norm-file file-path) nil t :rgb8)
-                           (get-tex *default-normal* nil t :rgb8)))
-           (specular   (if spec-file
-                           (get-tex (merge-pathnames spec-file file-path))
-                           (get-tex *default-specular* nil t :r8)))
            ;; I need context for this...hackidy hack
            (bones-per-vertex (get-bones-per-vertex scene bones (length vertices))))
-      (assert (length= bitangents
-                       tangents
-                       normals
-                       vertices
-                       uvs))
-      (let ((buffer (make-buffer-stream-cached file mesh-index
-                                               vertices faces normals
-                                               tangents bitangents uvs
-                                               bones-per-vertex)))
-        (list :buf buffer
-              :albedo albedo
-              :normals normal-map
-              :specular specular)))))
+      (assert (length= bitangents tangents normals vertices uvs))
+      (append
+       `(:buf
+         ,(make-buffer-stream-cached
+           file mesh-index vertices faces normals tangents bitangents uvs bones-per-vertex))
+       (assimp-get-textures mesh scene)))))
 
 (defun assimp-safe-import-into-lisp (file)
   "wrapper around ai:import-into-lisp, attempts to return a valid scene"
