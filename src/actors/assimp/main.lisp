@@ -224,12 +224,17 @@
 
 ;;--------------------------------------------------
 
-(defun assimp-save-embed-textures (scene &aux (textures (ai:textures scene)))
+(defun relative-to (path to)
+  (let* ((dirname (uiop:pathname-directory-pathname to))
+         (basename (serapeum:path-basename path)))
+    (merge-pathnames dirname basename)))
+
+(defun assimp-save-embed-textures (scene objfile &aux (textures (ai:textures scene)))
+  "saves embeded textures, in the same directory where OBJFILE is at"
   (when textures
     (loop :for texture :across textures :do
       (destructuring-bind (&key data filename &allow-other-keys) (nthcdr 1 texture)
-        (let* ((basename (serapeum:path-basename filename))
-               (savepath (merge-pathnames "static/" basename)))
+        (let ((savepath (relative-to filename objfile)))
           (with-open-file
               (stream
                savepath
@@ -241,20 +246,22 @@
               (write-sequence data stream)
               (log:info (format nil "Saved embeded file: ~a" savepath)))))))))
 
-(defun assimp-get-textures (mesh scene file)
+(defun assimp-get-textures (mesh scene objfile)
   (declare (ai:mesh mesh) (ai:scene scene))
   (let* ((material-index (ai:material-index mesh))
          (material (aref (ai:materials scene) material-index))
-         (file-path  (uiop:pathname-directory-pathname file))
          (albedo (let ((path (get-texture-path material :ai-texture-type-diffuse)))
-                   (get-tex (if-let ((path (resolve-path (merge-pathnames path file-path)))) path *default-albedo*) nil t :rgb8)))
+                   (get-tex (if-let ((path (relative-to path objfile)))
+                              path
+                              *default-albedo*)
+                            nil t :rgb8)))
          (normals (when-let* ((path (or (get-texture-path material :ai-texture-type-normals)
                                         (get-texture-path material :ai-texture-type-height))))
-                    (get-tex (merge-pathnames path file-path) nil t :rgb8)))
+                    (get-tex (relative-to path objfile) nil t :rgb8)))
          (specular (when-let* ((path (get-texture-path material :ai-texture-type-specular)))
-                     (get-tex (merge-pathnames path file-path) nil t :r8)))
+                     (get-tex (relative-to path objfile) nil t :r8)))
          (roughmap (when-let* ((path (get-texture-path material :ai-texture-type-shininess)))
-                     (get-tex (merge-pathnames path file-path) nil t :r8))))
+                     (get-tex (relative-to path objfile) nil t :r8))))
     `(:albedo ,albedo
       :normals ,normals
       :roughmap ,roughmap
@@ -289,7 +296,7 @@
     (let* ((mesh-index (position mesh (ai:meshes scene)))
            (uvs        (elt texture-coords 0)))
       (assert (length= bitangents tangents normals vertices uvs))
-      (assimp-save-embed-textures scene)
+      (assimp-save-embed-textures scene file)
       (append
        `(:buf
          ,(make-buffer-stream-cached
@@ -313,7 +320,7 @@
            ;; I need context for this...hackidy hack
            (bones-per-vertex (get-bones-per-vertex scene bones (length vertices))))
       (assert (length= bitangents tangents normals vertices uvs))
-      (assimp-save-embed-textures scene)
+      (assimp-save-embed-textures scene file)
       (append
        `(:buf
          ,(make-buffer-stream-cached
@@ -351,7 +358,6 @@
 (defmethod assimp-get-type ((obj ai:scene))
   (let ((bones (list-bones obj)))
     (if (emptyp bones) :textured :bones)))
-;; TODO: support untextured with bones
 (defmethod assimp-get-type ((obj ai:mesh))
   (let ((bones (ai:bones obj))
         (n-uvs (ai:texture-coords obj)))
