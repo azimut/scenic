@@ -225,34 +225,36 @@
 ;;--------------------------------------------------
 
 (defun assimp-save-embed-textures (scene &aux (textures (ai:textures scene)))
-  (loop :for texture :across textures :do
-    (destructuring-bind (&key data filename &allow-other-keys) (nthcdr 1 texture)
-      (let* ((basename (serapeum:path-basename filename))
-             (savepath (merge-pathnames "static/" basename)))
-        (with-open-file
-            (stream
-             savepath
-             :direction :output
-             :element-type '(unsigned-byte 8)
-             :if-exists nil ; FIXME: check filesize?
-             :if-does-not-exist :create)
-          (when stream
-            (write-sequence data stream)
-            (log:info (format nil "Saved embeded file: ~a" savepath))))))))
+  (when textures
+    (loop :for texture :across textures :do
+      (destructuring-bind (&key data filename &allow-other-keys) (nthcdr 1 texture)
+        (let* ((basename (serapeum:path-basename filename))
+               (savepath (merge-pathnames "static/" basename)))
+          (with-open-file
+              (stream
+               savepath
+               :direction :output
+               :element-type '(unsigned-byte 8)
+               :if-exists nil ; FIXME: check filesize?
+               :if-does-not-exist :create)
+            (when stream
+              (write-sequence data stream)
+              (log:info (format nil "Saved embeded file: ~a" savepath)))))))))
 
-(defun assimp-get-textures (mesh scene)
+(defun assimp-get-textures (mesh scene file)
   (declare (ai:mesh mesh) (ai:scene scene))
   (let* ((material-index (ai:material-index mesh))
          (material (aref (ai:materials scene) material-index))
+         (file-path  (uiop:pathname-directory-pathname file))
          (albedo (let ((path (get-texture-path material :ai-texture-type-diffuse)))
-                   (get-tex (if (resolve-path path) path *default-albedo*) nil t :rgb8)))
+                   (get-tex (if-let ((path (resolve-path (merge-pathnames path file-path)))) path *default-albedo*) nil t :rgb8)))
          (normals (when-let* ((path (or (get-texture-path material :ai-texture-type-normals)
                                         (get-texture-path material :ai-texture-type-height))))
-                    (get-tex path nil t :rgb8)))
+                    (get-tex (merge-pathnames path file-path) nil t :rgb8)))
          (specular (when-let* ((path (get-texture-path material :ai-texture-type-specular)))
-                     (get-tex path nil t :r8)))
+                     (get-tex (merge-pathnames path file-path) nil t :r8)))
          (roughmap (when-let* ((path (get-texture-path material :ai-texture-type-shininess)))
-                     (get-tex path nil t :r8))))
+                     (get-tex (merge-pathnames path file-path) nil t :r8))))
     `(:albedo ,albedo
       :normals ,normals
       :roughmap ,roughmap
@@ -292,7 +294,7 @@
        `(:buf
          ,(make-buffer-stream-cached
            file mesh-index vertices faces normals tangents bitangents uvs))
-       (assimp-get-textures mesh scene)))))
+       (assimp-get-textures mesh scene file)))))
 
 (defmethod assimp-mesh-to-stream (mesh scene file (type (eql :bones)))
   "returns an assimp actor object"
@@ -316,7 +318,7 @@
        `(:buf
          ,(make-buffer-stream-cached
            file mesh-index vertices faces normals tangents bitangents uvs bones-per-vertex))
-       (assimp-get-textures mesh scene)))))
+       (assimp-get-textures mesh scene file)))))
 
 (defun assimp-safe-import-into-lisp (file)
   "wrapper around ai:import-into-lisp, attempts to return a valid scene"
