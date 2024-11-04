@@ -107,6 +107,7 @@
    (:file "actors/textured/ambient-cg/ambient-cg")
    (:file "actors/textured/ambient-cg/forward")
    (:file "actors/textured/ambient-cg/forward-ibl")
+   (:file "actors/textured/ambient-cg/defer")
    (:file "actors/assimp/bones-helpers")
    (:file "actors/assimp/otherbones")
    (:file "actors/assimp/main")
