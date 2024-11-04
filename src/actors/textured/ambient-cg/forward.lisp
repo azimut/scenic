@@ -47,69 +47,71 @@
          (spec        (aref (pbr-material-specular    materials) material))
          (fakeambient (aref (pbr-material-fakeambient materials) material))
          (metallic    (aref (pbr-material-metallic    materials) material))
-         (final-color (v! 0 0 0)))
+         (final-color (v! 0 0 0))
+         (ambient     (v! 0 0 0))
+         (ambient-mix .25))
     (dotimes (i (scene-data-ndir scene))
       (with-slots (colors positions fudge)
           dirlights
+        (incf ambient (* fakeambient (mix color (aref colors i) ambient-mix)))
         (incf final-color
-              (+ (* fakeambient color ao)
-                 (* (pbr-direct-lum (aref positions i) frag-pos cam-pos normal
-                                    roughness
-                                    metallic
-                                    color
-                                    spec
-                                    (aref colors i))
-                    (shadow-factor dirshadows (aref dir-pos i) (aref fudge i) i))))))
+              (* (pbr-direct-lum (aref positions i) frag-pos cam-pos normal
+                                 roughness
+                                 metallic
+                                 color
+                                 spec
+                                 (aref colors i))
+                 (shadow-factor dirshadows (aref dir-pos i) (aref fudge i) i)))))
     (dotimes (i (scene-data-npoint scene))
       (with-slots (colors positions linear quadratic far fudge)
           pointlights
+        (incf ambient (* fakeambient (mix color (aref colors i) ambient-mix)
+                         (point-light-attenuation
+                          (aref linear i)
+                          (aref quadratic i)
+                          (aref positions i)
+                          frag-pos)))
         (incf final-color
-              (+ (* (* fakeambient color ao)
-                    (point-light-attenuation
-                     (aref linear i)
-                     (aref quadratic i)
-                     (aref positions i)
-                     frag-pos))
-                 (* (pbr-point-lum (aref positions i) frag-pos cam-pos normal
-                                   roughness
-                                   metallic
-                                   color
-                                   spec
-                                   (aref linear    i)
-                                   (aref quadratic i)
-                                   (aref colors    i))
-                    (shadow-factor pointshadows
-                                   frag-pos
-                                   (aref positions i)
-                                   (aref far i)
-                                   (aref fudge i)
-                                   i))))))
+              (* (pbr-point-lum (aref positions i) frag-pos cam-pos normal
+                                roughness
+                                metallic
+                                color
+                                spec
+                                (aref linear    i)
+                                (aref quadratic i)
+                                (aref colors    i))
+                 (shadow-factor pointshadows
+                                frag-pos
+                                (aref positions i)
+                                (aref far i)
+                                (aref fudge i)
+                                i)))))
     (dotimes (i (scene-data-nspot scene))
       (with-slots (colors positions linear quadratic cutoff outer-cutoff direction fudge)
           spotlights
+        (incf ambient (* fakeambient (mix color (aref colors i) ambient-mix)
+                         (point-light-attenuation
+                          (aref linear i)
+                          (aref quadratic i)
+                          (aref positions i)
+                          frag-pos)))
         (incf final-color
-              (+ (* (* fakeambient color ao)
-                    (point-light-attenuation
-                     (aref linear i)
-                     (aref quadratic i)
-                     (aref positions i)
-                     frag-pos))
-                 (* (pbr-spot-lum (aref positions i) frag-pos cam-pos normal
-                                  roughness
-                                  metallic
-                                  color
-                                  spec
-                                  (aref colors       i)
-                                  (aref direction    i)
-                                  (aref cutoff       i)
-                                  (aref outer-cutoff i)
-                                  (aref linear       i)
-                                  (aref quadratic    i))
-                    (shadow-factor spotshadows
-                                   (aref spot-pos i)
-                                   (aref fudge    i)
-                                   i))))))
-    (v! final-color 1)))
+              (* (pbr-spot-lum (aref positions i) frag-pos cam-pos normal
+                               roughness
+                               metallic
+                               color
+                               spec
+                               (aref colors       i)
+                               (aref direction    i)
+                               (aref cutoff       i)
+                               (aref outer-cutoff i)
+                               (aref linear       i)
+                               (aref quadratic    i))
+                 (shadow-factor spotshadows
+                                (aref spot-pos i)
+                                (aref fudge    i)
+                                i)))))
+    (v! (+ final-color (* ambient ao)) 1)))
 
 (defpipeline-g textured-ambient-cg-forward-pipe ()
   (vert-with-tbdata g-pnt tb-data)

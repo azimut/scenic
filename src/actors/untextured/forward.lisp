@@ -52,11 +52,12 @@
         (emissive    (aref (pbr-material-emissive materials) material))
         (ao          (aref (pbr-material-aocclusion  materials) material))
         (final-color (vec3 0))
-        (ambient     (vec3 0)))
+        (ambient     (vec3 0))
+        (ambient-mix .25))
     (incf final-color (* emissive color))
     (dotimes (i (scene-data-ndir scene))
       (with-slots (colors positions fudge) dirlights
-        (incf ambient (* fakeambient color))
+        (incf ambient (* fakeambient (mix color (aref colors i) ambient-mix)))
         (incf final-color
               (* (pbr-direct-lum (aref positions i) frag-pos cam-pos frag-norm
                                  (aref (pbr-material-roughness materials) material)
@@ -68,7 +69,7 @@
     (dotimes (i (scene-data-npoint scene))
       (with-slots (colors positions linear quadratic far fudge)
           pointlights
-        (incf ambient (* fakeambient color
+        (incf ambient (* fakeambient (mix color (aref colors i) ambient-mix)
                          (point-light-attenuation
                           (aref linear i)
                           (aref quadratic i)
@@ -91,7 +92,7 @@
     (dotimes (i (scene-data-nspot scene))
       (with-slots (colors positions linear quadratic cutoff outer-cutoff direction fudge)
           spotlights
-        (incf ambient (* fakeambient color
+        (incf ambient (* fakeambient (mix color (aref colors i) ambient-mix)
                          (point-light-attenuation
                           (aref linear i)
                           (aref quadratic i)

@@ -49,11 +49,12 @@
          ;;(normal      (norm-from-map normalmap uv frag-pos frag-norm))
          ;;(normal      frag-norm)
          (ambient     (vec3 0))
+         (ambient-mix .25)
          (final-color (v! 0 0 0)))
     (dotimes (i (scene-data-ndir scene))
       (with-slots (colors positions fudge)
           dirlights
-        (incf ambient (* fakeambient color))
+        (incf ambient (* fakeambient (mix color (aref colors i) ambient-mix)))
         (incf final-color
               (* (pbr-direct-lum (aref positions i) frag-pos cam-pos normal
                                  roughness
@@ -65,7 +66,7 @@
     (dotimes (i (scene-data-npoint scene))
       (with-slots (colors positions linear quadratic far fudge)
           pointlights
-        (incf ambient (* fakeambient color
+        (incf ambient (* fakeambient (mix color (aref colors i) ambient-mix)
                          (point-light-attenuation
                           (aref linear i)
                           (aref quadratic i)
@@ -89,7 +90,7 @@
     (dotimes (i (scene-data-nspot scene))
       (with-slots (colors positions linear quadratic cutoff outer-cutoff direction fudge)
           spotlights
-        (incf ambient (* fakeambient color
+        (incf ambient (* fakeambient (mix color (aref colors i) ambient-mix)
                          (point-light-attenuation
                           (aref linear i)
                           (aref quadratic i)
