@@ -70,12 +70,13 @@
                                (aref (pbr-material-metallic materials) material)
                                color
                                ao))
+         (ambient-mix .25)
          (final-color (v! 0 0 0)))
     (dotimes (i (scene-data-ndir scene))
       (with-slots (colors positions fudge)
           dirlights
         (incf final-color
-              (+ (* fakeambient (* color ao))
+              (+ (* fakeambient ao (mix color (aref colors i) ambient-mix))
                  (* (pbr-direct-lum (aref positions i) frag-pos cam-pos normal
                                     roughness
                                     metallic
@@ -87,7 +88,7 @@
       (with-slots (colors positions linear quadratic far fudge)
           pointlights
         (incf final-color
-              (+ (* fakeambient (* color ao)
+              (+ (* fakeambient ao (mix color (aref colors i) ambient-mix)
                     (point-light-attenuation
                      (aref linear i)
                      (aref quadratic i)
@@ -111,7 +112,7 @@
       (with-slots (colors positions linear quadratic cutoff outer-cutoff direction fudge)
           spotlights
         (incf final-color
-              (+ (* fakeambient (* color ao)
+              (+ (* fakeambient ao (mix color (aref colors i) ambient-mix)
                     (point-light-attenuation
                      (aref linear i)
                      (aref quadratic i)
@@ -132,8 +133,7 @@
                                    (aref spot-pos i)
                                    (aref fudge    i)
                                    i))))))
-    (v! (+ final-color
-           ambient)
+    (v! (+ final-color ambient)
         1)))
 
 (defpipeline-g textured-forward-cg-ibl-pipe ()

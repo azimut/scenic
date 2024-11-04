@@ -21,8 +21,10 @@
                               (dirshadows   :sampler-2d-array)
                               (spotshadows  :sampler-2d-array)
                               (pointshadows :sampler-cube-array))
-  (let* ((ao          (aref (pbr-material-aocclusion materials) material))
-         (emissive    (aref (pbr-material-emissive   materials) material))
+  (let* ((ao          (aref (pbr-material-aocclusion  materials) material))
+         (emissive    (aref (pbr-material-emissive    materials) material))
+         (fakeambient (aref (pbr-material-fakeambient materials) material))
+         (ambient-mix .25)
          (final-color (v! 0 0 0))
          #+nil
          (ambient (ambient-ibl (normalize (- cam-pos frag-pos))
@@ -47,47 +49,60 @@
       (with-slots (colors positions fudge)
           dirlights
         (incf final-color
-              (* (pbr-direct-lum (aref positions i) frag-pos cam-pos frag-norm
-                                 (aref (pbr-material-roughness materials) material)
-                                 (aref (pbr-material-metallic materials) material)
-                                 color
-                                 (aref (pbr-material-specular materials) material)
-                                 (aref colors i))
-                 (shadow-factor dirshadows (aref dir-pos i) (aref fudge i) i)))))
+              (+ (* fakeambient ao (mix color (aref colors i) ambient-mix))
+                 (* (pbr-direct-lum (aref positions i) frag-pos cam-pos frag-norm
+                                    (aref (pbr-material-roughness materials) material)
+                                    (aref (pbr-material-metallic materials) material)
+                                    color
+                                    (aref (pbr-material-specular materials) material)
+                                    (aref colors i))
+                    (shadow-factor dirshadows (aref dir-pos i) (aref fudge i) i))))))
     (dotimes (i (scene-data-npoint scene))
       (with-slots (colors positions linear quadratic far fudge)
           pointlights
         (incf final-color
-              (* (pbr-point-lum (aref positions i) frag-pos cam-pos
-                                frag-norm
-                                (aref (pbr-material-roughness materials) material)
-                                (aref (pbr-material-metallic materials) material)
-                                color
-                                (aref (pbr-material-specular materials) material)
-                                (aref linear i) (aref quadratic i) (aref colors i))
-                 (shadow-factor pointshadows
-                                frag-pos
-                                (aref positions i)
-                                (aref far i)
-                                (aref fudge i)
-                                i)))))
+              (+ (* fakeambient ao (mix color (aref colors i) ambient-mix)
+                    (point-light-attenuation
+                     (aref linear i)
+                     (aref quadratic i)
+                     (aref positions i)
+                     frag-pos))
+                 (* (pbr-point-lum (aref positions i) frag-pos cam-pos
+                                   frag-norm
+                                   (aref (pbr-material-roughness materials) material)
+                                   (aref (pbr-material-metallic materials) material)
+                                   color
+                                   (aref (pbr-material-specular materials) material)
+                                   (aref linear i) (aref quadratic i) (aref colors i))
+                    (shadow-factor pointshadows
+                                   frag-pos
+                                   (aref positions i)
+                                   (aref far i)
+                                   (aref fudge i)
+                                   i))))))
     (dotimes (i (scene-data-nspot scene))
       (with-slots (colors positions linear quadratic cutoff outer-cutoff direction fudge)
           spotlights
         (incf final-color
-              (* (pbr-spot-lum (aref positions i) frag-pos cam-pos
-                               frag-norm
-                               (aref (pbr-material-roughness materials) material)
-                               (aref (pbr-material-metallic materials) material)
-                               color
-                               (aref (pbr-material-specular materials) material)
-                               (aref colors i)
-                               (aref direction i)
-                               (aref cutoff i)
-                               (aref outer-cutoff i)
-                               (aref linear i)
-                               (aref quadratic i))
-                 (shadow-factor spotshadows (aref spot-pos i) (aref fudge i) i)))))
+              (+ (* fakeambient ao (mix color (aref colors i) ambient-mix)
+                    (point-light-attenuation
+                     (aref linear i)
+                     (aref quadratic i)
+                     (aref positions i)
+                     frag-pos))
+                 (* (pbr-spot-lum (aref positions i) frag-pos cam-pos
+                                  frag-norm
+                                  (aref (pbr-material-roughness materials) material)
+                                  (aref (pbr-material-metallic materials) material)
+                                  color
+                                  (aref (pbr-material-specular materials) material)
+                                  (aref colors i)
+                                  (aref direction i)
+                                  (aref cutoff i)
+                                  (aref outer-cutoff i)
+                                  (aref linear i)
+                                  (aref quadratic i))
+                    (shadow-factor spotshadows (aref spot-pos i) (aref fudge i) i))))))
     (v! (+ final-color ambient)
         1)))
 

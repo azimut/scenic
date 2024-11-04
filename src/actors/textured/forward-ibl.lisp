@@ -48,6 +48,7 @@
          (ao          (x (texture aomap    uv)))
          (spec        (x (texture specmap  uv)))
          (fakeambient (aref (pbr-material-fakeambient materials) material))
+         (ambient-mix .25)
          (metallic    (aref (pbr-material-metallic materials) material))
          (normal      (norm-from-map normalmap uv tbn))
          ;;(normal      (norm-from-map normalmap uv frag-pos frag-norm))
@@ -75,7 +76,7 @@
       (with-slots (colors positions fudge)
           dirlights
         (incf final-color
-              (+ (* fakeambient (* color ao))
+              (+ (* fakeambient ao (mix color (aref colors i) ambient-mix))
                  (* (pbr-direct-lum (aref positions i) frag-pos cam-pos normal
                                     roughness
                                     metallic
@@ -87,7 +88,7 @@
       (with-slots (colors positions linear quadratic far fudge)
           pointlights
         (incf final-color
-              (+ (* fakeambient (* color ao)
+              (+ (* fakeambient ao (mix color (aref colors i) ambient-mix)
                     (point-light-attenuation
                      (aref linear i)
                      (aref quadratic i)
@@ -111,7 +112,7 @@
       (with-slots (colors positions linear quadratic cutoff outer-cutoff direction fudge)
           spotlights
         (incf final-color
-              (+ (* fakeambient (* color ao)
+              (+ (* fakeambient ao (mix color (aref colors i) ambient-mix)
                     (point-light-attenuation
                      (aref linear i)
                      (aref quadratic i)
@@ -132,8 +133,7 @@
                                    (aref spot-pos i)
                                    (aref fudge    i)
                                    i))))))
-    (v! (+ final-color
-           ambient)
+    (v! (+ final-color ambient)
         1)))
 
 (defpipeline-g textured-forward-ibl-pipe ()
