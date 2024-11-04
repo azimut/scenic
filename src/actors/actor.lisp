@@ -51,6 +51,8 @@
   (emissive  (nth (material obj) (materials *state*))))
 (defmethod roughness ((obj actor))
   (roughness (nth (material obj) (materials *state*))))
+(defmethod aocclusion ((obj actor))
+  (aocclusion (nth (material obj) (materials *state*))))
 
 ;; Setters
 (defmethod (setf specular) (new-value (obj actor))
@@ -61,6 +63,8 @@
   (setf (emissive  (nth (material obj) (materials *state*))) new-value))
 (defmethod (setf roughness) (new-value (obj actor))
   (setf (roughness (nth (material obj) (materials *state*))) new-value))
+(defmethod (setf aocclusion) (new-value (obj actor))
+  (setf (aocclusion (nth (material obj) (materials *state*))) new-value))
 
 (defun model->world (actor)
   (with-slots (pos rot) actor

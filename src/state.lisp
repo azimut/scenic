@@ -33,8 +33,10 @@
       (setf *state* (make-instance 'state :materials materials))))
 
 (defun init-default-state ()
-  (init-state (list (make-material :roughness .8 :metallic .02 :specular .1)
-                    (make-material :roughness .4 :metallic .4  :specular .1))))
+  (init-state
+   (list
+    (make-material :roughness .8 :metallic .02 :specular .1)
+    (make-material :roughness .4 :metallic .4  :specular .1))))
 
 (defmethod free ((obj state))
   (reset-material-counter)

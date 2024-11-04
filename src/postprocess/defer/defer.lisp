@@ -39,6 +39,7 @@
          (frag-norm (s~ color3 :xyz))
          (final-color (vec3 0))
          (ambient     (vec3 0)))
+    (incf final-color (* emissive color))
     (dotimes (i (scene-data-ndir scene))
       (with-slots (colors positions lightspace fudge)
           dirlights

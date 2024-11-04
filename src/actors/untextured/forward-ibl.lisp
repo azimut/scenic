@@ -21,9 +21,9 @@
                               (dirshadows   :sampler-2d-array)
                               (spotshadows  :sampler-2d-array)
                               (pointshadows :sampler-cube-array))
-  (let* ((ao          1f0)
+  (let* ((ao          (aref (pbr-material-aocclusion materials) material))
+         (emissive    (aref (pbr-material-emissive   materials) material))
          (final-color (v! 0 0 0))
-         (emissive    (aref (pbr-material-emissive materials) material))
          #+nil
          (ambient (ambient-ibl (normalize (- cam-pos frag-pos))
                                frag-norm

@@ -19,12 +19,12 @@
                                   (color     :vec3)
                                   (material  :int)
                                   (materials pbr-material :ubo))
-  (with-slots (roughness specular metallic emissive) materials
-    (let ((ao         1f0)
-          (roughness (aref roughness material))
-          (specular  (aref specular  material))
-          (metallic  (aref metallic  material))
-          (emissive  (aref emissive  material)))
+  (with-slots (roughness specular metallic emissive aocclusion) materials
+    (let ((ao        (aref aocclusion material))
+          (roughness (aref roughness  material))
+          (specular  (aref specular   material))
+          (metallic  (aref metallic   material))
+          (emissive  (aref emissive   material)))
       (values (v! color     roughness)
               (v! frag-pos  ao)
               (v! frag-norm specular)
