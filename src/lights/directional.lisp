@@ -124,7 +124,8 @@
 (defmethod point-at ((light directional) point-at near-factor far-factor &aux (pos (pos light)))
   (setf (near light) (* near-factor (v3:distance pos point-at))); smaller ~ 0.99
   (setf (far  light) (*  far-factor (v3:distance pos point-at))); bigger  ~ 1.05
-  (setf (rot  light) (q:point-at (v! 0 1 0) pos point-at)))
+  (setf (rot  light) (q:point-at (v! 0 1 0) pos point-at))
+  (values (near light) (far light)))
 
 (defun make-directional-point-at (point-at near-factor far-factor &rest args)
   (serapeum:lret ((light (apply #'make-instance 'directional args)))
