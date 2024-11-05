@@ -87,5 +87,5 @@
   (with-videotape (fps duration filename width height)
     (with-viewport (make-viewport `(,width ,height))
       (record-render :stop)
-      (record-render :start (* fps duration))))
+      (record-render :start (round (* fps duration)))))
   (skitter-cleanup))
