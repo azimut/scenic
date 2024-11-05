@@ -29,8 +29,16 @@
   (window-listener (first args)))
 
 (defun window-listener (dim &aux (width (x dim)) (height (y dim)))
-  (let* ((w (if (> height width) width  (* height (/ 16 9f0))))
-         (h (if (> width height) height (* width  (/ 9 16f0)))))
+  ;; Ignores dynamic resizes when working on non-default viewports
+  (let ((default-viewport
+          (cepl.context::%cepl-context-default-viewport
+           (cepl-context))))
+    (when (not (equal default-viewport (current-viewport)))
+      (return-from window-listener)))
+  ;; Otherwise resize
+  (let* ((w (if (> height width) width  (* height (/ 16  9f0))))
+         (h (if (> width height) height (* width  (/  9 16f0)))))
+    ;; FIXME: this ^ forces a 16/9 aspect ratio
     (setf (resolution (current-viewport)) (v! w h))
     (when (scenes *state*)
       (issue (current-scene)
