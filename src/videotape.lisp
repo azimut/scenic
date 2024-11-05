@@ -74,9 +74,12 @@
   `(progn
      (setf *tape* (make-instance
                    'videotape
-                   :fps ,fps :duration ,duration :filename ,filename :dim (list ,width ,height)))
-     ,@body
-     (free *tape*)))
+                   :fps ,fps
+                   :duration ,duration
+                   :filename ,filename
+                   :dim (list ,width ,height)))
+     (unwind-protect (progn ,@body)
+       (free *tape*))))
 
 (defun record (&key (fps 30) (duration 1) (filename "output.mp4") (width 800) (height 600))
   (with-videotape (fps duration filename width height)
