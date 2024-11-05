@@ -10,7 +10,7 @@
   (:default-initargs
    :fakeambient 0f0
    :texture-opts
-   '((0  :element-type :rgba16f); color    roughness
+   '((0  :element-type :rgba32f); color    roughness (32 due I am abusing this as a hdr render for skybox)
      (1  :element-type :rgba32f); pos      ao
      (2  :element-type :rgba16f); norm     specular
      (3  :element-type :rg16f)  ; metallic emissive

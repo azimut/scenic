@@ -16,21 +16,19 @@
 (defpipeline-g pass-pipe (:points)
   :fragment (pass-frag :vec2))
 
-(defmethod blit
-    :around (scene (postprocess list) camera time)
+(defmethod blit :AROUND (scene (postprocess list) camera time)
   (with-setf* ((depth-test-function) NIL
                (depth-mask)          NIL
                (cull-face)           NIL)
     (call-next-method)))
 
 (defmethod blit (scene (postprocess list) (camera renderable) time)
-  "main blit, puts forward CAMERA into PREV" ; WHY!? due shared logic with defer?
+  "puts forward CAMERA into PREV" ; WHY!? due shared logic with defer?
   (declare (ignore scene postprocess time))
   (with-slots (prev bs) *state*
     (map-g-into (fbo prev) #'pass-pipe bs :sam (first (sam camera)))))
 
-(defmethod blit
-    :after (scene (postprocess list) camera time)
+(defmethod blit :AFTER (scene (postprocess list) camera time)
   ;; 1. ping-pong prev/next
   (dolist (post (butlast postprocess))
     (with-fbo-bound ((fbo (next *state*)))
