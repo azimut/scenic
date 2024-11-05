@@ -125,8 +125,7 @@
       (with-fbo-bound ((fbo prev))
         (clear-fbo (fbo prev)) ;; needed for scenes with no envmap
         (with-blending (blend camera)
-          (alexandria:when-let
-              ((actor (find-if #'cube-p (actors scene))))
+          (alexandria:when-let ((actor (find-if #'cube-p (actors scene))))
             (paint scene camera actor time))
           (map-g #'defered-vxgi-pipe bs
                  :cam-pos (pos camera)

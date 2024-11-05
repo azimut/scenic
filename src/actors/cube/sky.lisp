@@ -166,7 +166,7 @@
                                8e3   ;; rayleigh scale height
                                1200  ;; mie scale height
                                .758  ;; mie preferred scattering direction
-                               16 ;; 16 AND 8
+                               16    ;; loop steps, next also is
                                8))))
     (v! (* light-color color) 1)))
 
