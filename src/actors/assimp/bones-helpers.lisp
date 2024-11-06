@@ -36,34 +36,33 @@
                                     :test #'string=
                                     :key  #'ai:name)
           :do (assert bone-id)
-              (loop :for weight :across (ai:weights bone)
-                    :do (with-slots ((v ai:id) (w ai:weight)) weight
-                          (when (and (>= w .1) ;; discard bones with low influence
-                                     (< (length (aref v-to-bones v))
-                                        *max-bones-per-vertex*))
-                            (push (cons bone-id w)
-                                  (aref v-to-bones v))
-                            ;; Sort descending by weights
-                            (setf (aref v-to-bones v)
-                                  (sort (aref v-to-bones v) #'>
-                                        :key #'cdr))))))
+              (loop :for weight :across (ai:weights bone) :do
+                (with-slots ((v ai:id) (w ai:weight)) weight
+                  (when (and (>= w .1) ;; discard bones with low influence
+                             (< (length (aref v-to-bones v))
+                                *max-bones-per-vertex*))
+                    (push (cons bone-id w)
+                          (aref v-to-bones v))
+                    ;; Sort descending by weights
+                    (setf (aref v-to-bones v)
+                          (sort (aref v-to-bones v) #'>
+                                :key #'cdr))))))
     v-to-bones))
 
 ;;--------------------------------------------------
 ;; Bone animation helpers
 
+(serapeum:-> find-index (number vector) fixnum)
 (defun find-index (etime positions)
   "returns the index position matching the current ETIME"
-  (declare (type vector positions)
-           (type number etime))
   (let ((pos (position-if (lambda (p) (< etime (slot-value p 'time)))
                           positions)))
     (if pos
         (max 0 (1- pos))
         0)))
 
+(serapeum:-> calc-interpolated-position (number vector) rtg-math.types:vec3)
 (defun calc-interpolated-position (etime positions)
-  "returns a vec3"
   (declare (type vector positions))
   (if (or (< etime (slot-value (aref positions 0) 'time))
           (length= 1 positions))
@@ -80,9 +79,8 @@
               (v3:+ start
                     (v3:*s delta (coerce factor 'single-float)))))))))
 
+(serapeum:-> calc-interpolated-rotation (number vector) rtg-math.types:quaternion)
 (defun calc-interpolated-rotation (etime rotations)
-  "returns a quaternion"
-  (declare (type vector rotations))
   (if (or (< etime (slot-value (aref rotations 0) 'time))
           (length= 1 rotations))
       (ai:value (aref rotations 0))
@@ -97,27 +95,26 @@
                    (qinterp (q:lerp start end (coerce factor 'single-float))))
               (q:normalize qinterp)))))))
 
+(serapeum:-> get-frame-transform (ai::node-animation fixnum) rtg-math.types:mat4)
 (defun get-frame-transform (node-animation frame)
   "returns a matrix"
-  (declare (type ai::node-animation node-animation))
   (with-slots ((pos-keys ai::position-keys)
                (rot-keys ai::rotation-keys)
                (sca-keys ai::scaling-keys))
       node-animation
     ;; reset frame position
-    (setf frame (mod frame (length rot-keys)))
-    ;; Calculate tranform matrix based on time
-    (m4-n:*
-     (m4:translation (ai:value (aref pos-keys frame)))
-     (q:to-mat4      (ai:value (aref rot-keys frame)))
-     ;;(m4:scale (v3! 1.6))
-     ;;(m4:scale (ai:value (aref sca-keys 0)))
-     )))
+    (let ((reset-frame (mod frame (length rot-keys))))
+      ;; Calculate tranform matrix based on time
+      (m4-n:*
+       (m4:translation (ai:value (aref pos-keys reset-frame)))
+       (q:to-mat4      (ai:value (aref rot-keys reset-frame)))
+       ;;(m4:scale (v3! 1.6))
+       ;;(m4:scale (ai:value (aref sca-keys 0)))
+       ))))
 
+(serapeum:-> get-time-transform (ai::node-animation number) rtg-math.types:mat4)
 (defun get-time-transform (node-animation time)
-  "calculate the tansform matrix based on time
-returns a matrix"
-  (declare (type ai::node-animation node-animation))
+  "calculate the tansform matrix based on time returns a matrix"
   (with-slots ((pos-keys ai::position-keys)
                (rot-keys ai::rotation-keys)
                (sca-keys ai::scaling-keys))
