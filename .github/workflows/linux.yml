@@ -29,7 +29,7 @@ jobs:
       - name: APT deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y libassimp5 sbcl
+          sudo apt-get install -y libassimp5 sbcl libzstd-dev
 
       - name: mkdir
         run: |
