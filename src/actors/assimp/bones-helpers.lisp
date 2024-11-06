@@ -2,7 +2,7 @@
 
 (defvar *max-bones-per-vertex* 4)
 
-(serapeum:-> list-bones (ai:scene) cons)
+(s:-> list-bones (ai:scene) cons)
 (defun list-bones (scene)
   "returns a plain list with all the bones in SCENE"
   (let* ((meshes (coerce (ai:meshes scene) 'list))
@@ -10,7 +10,7 @@
          (bones  (remove NIL bones)))
     bones))
 
-(serapeum:-> list-bones-unique (ai:scene) cons)
+(s:-> list-bones-unique (ai:scene) cons)
 (defun list-bones-unique (scene)
   "returns a plain list with all unique bones in SCENE"
   (serapeum:~>
@@ -25,34 +25,30 @@
    To be used once on the buffer stream load. It uses the bones on the meshes
    to build the BONE-IDs because there could be meshes without animation but
    with bones.
-   ex: #(((1 . .9) (2 . .1)) ((10 . .2) (20 . .8)))"
+   ex: #((( 1 . 0.9) ( 2 . 0.1))
+         ((10 . 0.2) (20 . 0.8)))"
   (declare (type ai:scene        scene)
            (type vector          mesh-bones)
            (type positive-fixnum n-vertices))
-  (let ((unique-scene-bones (list-bones-unique scene))
-        (v-to-bones (make-array n-vertices :initial-element NIL)))
-    (loop :for bone :across mesh-bones
-          :for bone-id := (position (ai:name bone) unique-scene-bones
-                                    :test #'string=
-                                    :key  #'ai:name)
+  (let ((v-to-bones (make-array n-vertices :initial-element NIL)))
+    (loop :with unique-scene-bones = (list-bones-unique scene)
+          :for bone :across mesh-bones
+          :for bone-id = (position (ai:name bone) unique-scene-bones
+                                   :test #'string=
+                                   :key  #'ai:name)
           :do (assert bone-id)
               (loop :for weight :across (ai:weights bone) :do
-                (with-slots ((v ai:id) (w ai:weight)) weight
-                  (when (and (>= w .1) ;; discard bones with low influence
-                             (< (length (aref v-to-bones v))
-                                *max-bones-per-vertex*))
-                    (push (cons bone-id w)
-                          (aref v-to-bones v))
-                    ;; Sort descending by weights
-                    (setf (aref v-to-bones v)
-                          (sort (aref v-to-bones v) #'>
-                                :key #'cdr))))))
-    v-to-bones))
+                (with-slots ((bid ai:id) (w ai:weight)) weight
+                  (when (<= 0.2 w 1.0) ;; discard bones with low influence
+                    (push (cons bone-id w) (aref v-to-bones bid))))))
+    ;; Sort descending by weights and keep length under max
+    (map 'vector (lambda (v2b) (s:take *max-bones-per-vertex* (sort v2b #'> :key #'cdr)))
+         v-to-bones)))
 
 ;;--------------------------------------------------
 ;; Bone animation helpers
 
-(serapeum:-> find-index (number vector) fixnum)
+(s:-> find-index (number vector) fixnum)
 (defun find-index (etime positions)
   "returns the index position matching the current ETIME"
   (let ((pos (position-if (lambda (p) (< etime (slot-value p 'time)))
@@ -61,7 +57,7 @@
         (max 0 (1- pos))
         0)))
 
-(serapeum:-> calc-interpolated-position (number vector) rtg-math.types:vec3)
+(s:-> calc-interpolated-position (number vector) rtg-math.types:vec3)
 (defun calc-interpolated-position (etime positions)
   (declare (type vector positions))
   (if (or (< etime (slot-value (aref positions 0) 'time))
@@ -79,7 +75,7 @@
               (v3:+ start
                     (v3:*s delta (coerce factor 'single-float)))))))))
 
-(serapeum:-> calc-interpolated-rotation (number vector) rtg-math.types:quaternion)
+(s:-> calc-interpolated-rotation (number vector) rtg-math.types:quaternion)
 (defun calc-interpolated-rotation (etime rotations)
   (if (or (< etime (slot-value (aref rotations 0) 'time))
           (length= 1 rotations))
@@ -95,7 +91,7 @@
                    (qinterp (q:lerp start end (coerce factor 'single-float))))
               (q:normalize qinterp)))))))
 
-(serapeum:-> get-frame-transform (ai::node-animation fixnum) rtg-math.types:mat4)
+(s:-> get-frame-transform (ai::node-animation fixnum) rtg-math.types:mat4)
 (defun get-frame-transform (node-animation frame)
   "returns a matrix"
   (with-slots ((pos-keys ai::position-keys)
@@ -112,7 +108,7 @@
        ;;(m4:scale (ai:value (aref sca-keys 0)))
        ))))
 
-(serapeum:-> get-time-transform (ai::node-animation number) rtg-math.types:mat4)
+(s:-> get-time-transform (ai::node-animation number) rtg-math.types:mat4)
 (defun get-time-transform (node-animation time)
   "calculate the tansform matrix based on time returns a matrix"
   (with-slots ((pos-keys ai::position-keys)
