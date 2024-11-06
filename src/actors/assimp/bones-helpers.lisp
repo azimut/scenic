@@ -181,45 +181,42 @@
 
 (defun get-bones-tranforms (scene &key (frame 0 frame-p) (time 0 time-p))
   (declare (ai:scene scene))
-  (let* ((root-offset (-> scene
-                          (ai:root-node)
-                          (ai:transform)
-                          (m4:transpose)
-                          (m4:inverse)))
-         (unique-bones     (list-bones-unique scene))
-         (bones-transforms (make-array (length unique-bones)))
-         ;; NOTE: It might have bones but NO animation
-         (node-type        (cond ((and frame-p time-p)
-                                  (error "provide EITHER time or frame offset"))
-                                 ((emptyp (ai:animations scene))
-                                  :static)
-                                 ((not (emptyp (ai:animations scene)))
-                                  :animated)
-                                 (t (error "cannot figure out boned mesh type"))))
-         (nodes-transforms (if frame-p
-                               (get-nodes-transforms scene node-type
-                                                     :frame frame)
-                               (get-nodes-transforms scene node-type
-                                                     :time time))))
+  (let* ((root-offset
+           (-> scene
+               (ai:root-node)
+               (ai:transform)
+               (m4:transpose)
+               (m4:inverse)))
+         (node-type
+           (cond ((and frame-p time-p)
+                  (error "provide EITHER time or frame offset"))
+                 ((emptyp (ai:animations scene))
+                  :static)
+                 ((not (emptyp (ai:animations scene)))
+                  :animated)
+                 (t (error "cannot figure out boned mesh type"))))
+         (nodes-transforms
+           (if frame-p
+               (get-nodes-transforms scene node-type :frame frame)
+               (get-nodes-transforms scene node-type :time time)))
+         (unique-bones
+           (list-bones-unique scene)))
     (declare (type hash-table nodes-transforms))
-    (loop :for bone :in unique-bones
-          :for bone-id :from 0
-          :do (with-slots ((name   ai:name)
-                           (offset ai:offset-matrix))
-                  bone
-                (let ((node-transform (gethash name nodes-transforms)))
-                  (setf (aref bones-transforms bone-id)
-                        ;; I got a mesh that has 0 on the bones offsets...
-                        ;; The mesh also didn't have animations so might be
-                        ;; that was the reason...
-                        ;;node-transform
-                        (if (m4:0p offset)
-                            (m4:* root-offset
-                                  node-transform)
-                            (m4:* root-offset
-                                  node-transform
-                                  (m4:transpose offset)))))))
-    bones-transforms))
+    (s:lret ((bones-transforms (make-array (length unique-bones))))
+      (loop :for bone :in unique-bones
+            :for bone-id :from 0
+            :do (with-slots ((name ai:name) (offset ai:offset-matrix)) bone
+                  (let ((node-transform (gethash name nodes-transforms)))
+                    (setf (aref bones-transforms bone-id)
+                          ;; I got a mesh that has 0 on the bones offsets...
+                          ;; The mesh also didn't have animations so might be
+                          ;; that was the reason...
+                          (if (m4:0p offset)
+                              (m4:* root-offset
+                                    node-transform)
+                              (m4:* root-offset
+                                    node-transform
+                                    (m4:transpose offset))))))))))
 
 (fare-memoization:define-memo-function get-bones-time-tranforms
     (scene nth-animation time)
