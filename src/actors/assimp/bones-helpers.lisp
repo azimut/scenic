@@ -39,7 +39,7 @@
           :do (assert bone-id)
               (loop :for weight :across (ai:weights bone) :do
                 (with-slots ((bid ai:id) (w ai:weight)) weight
-                  (when (<= 0.2 w 1.0) ;; discard bones with low influence
+                  (when (<= 0 w 1) ;; discard bones with wacky weight (paranoid!)
                     (push (cons bone-id w) (aref v-to-bones bid))))))
     ;; Sort descending by weights and keep length under max
     (map 'vector (lambda (v2b) (s:take *max-bones-per-vertex* (sort v2b #'> :key #'cdr)))
