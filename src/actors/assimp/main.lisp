@@ -12,46 +12,16 @@
 
 (defvar *assimp-buffers* (make-hash-table :test #'equal))
 
-;; optimize-meshes:    looks like a good default
-;; flip-u-vs:          needed to unwrap texture correctly
-;; gen-smooth-normals: ONLY needed for meshes without normals
-;; triangulate:        use it ALWAYS
-;; calc-tangent-space: generates arc/bi tan from normals
-;; process-preset-target-realtime-fast
-;; process-preset-target-realtime-max-quality
-;; process-preset-target-realtime-quality
-;; x aiProcess_CalcTangentSpace
-;; x aiProcess_GenSmoothNormals
-;; - aiProcess_JoinIdenticalVertices
-;; - aiProcess_ImproveCacheLocality
-;; x aiProcess_LimitBoneWeights
-;; x aiProcess_RemoveRedundantMaterials
-;; - aiProcess_SplitLargeMeshes
-;; - aiProcess_Triangulate
-;; x aiProcess_GenUVCoords
-;; - aiProcess_SortByPType
-;; - aiProcess_FindDegenerates
-;; - aiProcess_FindInvalidData
 (defparameter *processing-flags*
   '(:ai-process-triangulate
-    :ai-process-flip-u-vs
-    ;;:ai-process-preset-target-realtime-max-quality
-    ;;:ai-process-calc-tangent-space
+    :ai-process-flip-u-vs ;; doc says for D3D but is useful for me too (?)
     ))
-
-#+nil
-(defparameter *processing-flags* '(:ai-process-triangulate
-                                   :ai-process-preset-target-realtime-max-quality
-                                   :ai-process-calc-tangent-space))
 
 (defmethod initialize-instance :after ((obj assimp-thing-with-bones) &key scene)
   (with-slots (scene-offset bones-unique bones-transforms) obj
-    (setf scene-offset     (ai:transform (ai:root-node scene)))
+    (setf scene-offset     (serapeum:~> scene (ai:root-node) (ai:transform)))
     (setf bones-unique     (list-bones-unique scene))
     (setf bones-transforms (make-array (length bones-unique)))))
-
-(defmethod update ((actor assimp-thing) dt))
-(defmethod update ((actor assimp-thing-with-bones) dt))
 
 ;; NOTE: same to a "g-pnt + tb-data", used for the CPU accessors
 (defstruct-g assimp-mesh
@@ -341,7 +311,7 @@
                (cons :ai-process-calc-tangent-space processing-flags)
                processing-flags))
          (scene
-           (ai:import-into-lisp file :processing-flags (print processing-flags)
+           (ai:import-into-lisp file :processing-flags (print (remove-duplicates processing-flags))
                                 ;; :properties
                                 ;; '(:pp-slm-triangle-limit 25000)
                                 ;;'(:pp-slm-vertex-limit 20000)

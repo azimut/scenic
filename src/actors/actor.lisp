@@ -19,7 +19,9 @@
   (:documentation "base object, with tangents"))
 
 (defclass assimp-thing (actor)
-  ((scene :initarg :scene)))
+  ((scene :initarg :scene))
+  (:default-initargs
+   :scene (error "actor needs a :SCENE initarg")))
 
 (defclass assimp-thing-with-bones (assimp-thing)
   ((bones            :initarg :bones

@@ -2,20 +2,20 @@
 
 (defvar *max-bones-per-vertex* 4)
 
+(serapeum:-> list-bones (ai:scene) cons)
 (defun list-bones (scene)
   "returns a plain list with all the bones in SCENE"
-  (declare (ai:scene scene))
   (let* ((meshes (coerce (ai:meshes scene) 'list))
          (bones  (mappend (lambda (m) (coerce (ai:bones m) 'list)) meshes))
          (bones  (remove NIL bones)))
     bones))
 
+(serapeum:-> list-bones-unique (ai:scene) cons)
 (defun list-bones-unique (scene)
-  "returns a plain list with all the bones in SCENE"
-  (declare (ai:scene scene))
-  (let* ((bones (list-bones scene))
-         (bones (remove-duplicates bones :key #'ai:name :test #'string=)))
-    bones))
+  "returns a plain list with all unique bones in SCENE"
+  (serapeum:~>
+   (list-bones scene)
+   (remove-duplicates :key #'ai:name :test #'string=)))
 
 ;;--------------------------------------------------
 ;; Bones loader
@@ -224,7 +224,6 @@
                                   node-transform
                                   (m4:transpose offset)))))))
     bones-transforms))
-
 
 (fare-memoization:define-memo-function get-bones-time-tranforms
     (scene nth-animation time)
