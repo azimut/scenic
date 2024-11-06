@@ -12,7 +12,7 @@ env:
 
   FREEALUT_VERSION: 1.1.0
   OPENAL_VERSION: 1.23.1
-  SBCL_VERSION: 2.1.9
+  SBCL_VERSION: 2.4.4
   SDL_VERSION: 2.0.12
 
 jobs:
@@ -53,7 +53,7 @@ jobs:
             ~/quicklisp
             ~/.cache/common-lisp/
             ~/sbcl
-          key: "${{ steps.current-month.outputs.value }}-${{ env.cache-name }}-${{ runner.os }}"
+          key: "${{ env.SBCL_VERSION }}-${{ env.cache-name }}-${{ runner.os }}"
       - name: Restore Path To Cached Files
         run: |
           echo $HOME/sbcl/bin >> $GITHUB_PATH
