@@ -89,21 +89,6 @@
                    (qinterp (q:lerp start end (coerce factor 'single-float))))
               (q:normalize qinterp)))))))
 
-(s:-> get-frame-transform (ai::node-animation fixnum) rtg-math.types:mat4)
-(defun get-frame-transform (node-animation frame)
-  "returns a matrix"
-  (with-slots ((pos-keys ai::position-keys)
-               (rot-keys ai::rotation-keys)
-               (sca-keys ai::scaling-keys))
-      node-animation
-    (let ((mod-frame (mod frame (length rot-keys))))
-      ;; Calculate transform matrix based on time
-      (m4-n:*
-       (m4:translation (ai:value (aref pos-keys mod-frame)))
-       (q:to-mat4      (ai:value (aref rot-keys mod-frame)))
-       ;;(m4:scale (ai:value (aref sca-keys 0))) ;; No scaling. Here is a vec3. And we use a single float.
-       ))))
-
 (s:-> get-time-transform (ai::node-animation number) rtg-math.types:mat4)
 (defun get-time-transform (node-animation time)
   "calculate the tansform matrix based on time returns a matrix"
@@ -119,11 +104,12 @@
        ;;(m4:scale (ai:value (aref sca-keys 0))) ;; No scaling. Here is a vec3. And we use a single float.
        ))))
 
-(defgeneric get-nodes-transforms (scene node-type &key frame time nth-animation)
+(defgeneric get-nodes-transforms (scene node-type &key time nth-animation)
   (:documentation "returns a hash of mat4's with each node transform
     for value and node name for the key")
-  (:method ((scene ai:scene) (node-type (eql :static)) &key frame time nth-animation)
-    (let ((nodes-transforms (make-hash-table :test #'equal)))
+  (:method ((scene ai:scene) (node-type (eql :static)) &key time nth-animation)
+    (declare (ignore time nth-animation))
+    (s:lret ((nodes-transforms (make-hash-table :test #'equal)))
       (labels ((walk-node (node parent-transform)
                  (declare (type ai:node node)
                           (type vector parent-transform))
@@ -137,9 +123,8 @@
                      (map 'vector
                           (lambda (c) (walk-node c global))
                           children)))))
-        (walk-node (ai:root-node scene) (m4:identity)))
-      nodes-transforms))
-  (:method ((scene ai:scene) (node-type (eql :animated)) &key frame time (nth-animation 0))
+        (walk-node (ai:root-node scene) (m4:identity)))))
+  (:method ((scene ai:scene) (node-type (eql :animated)) &key time (nth-animation 0))
     (let* ((animation        (aref (ai:animations scene) nth-animation))
            (duration         (ai:duration animation))
            ;; NOTE: animation-index is a hash lookup table for BONE>NODE-ANIMATION
@@ -159,9 +144,7 @@
                         (gethash name animation-index))
                       (time-transform
                         (when node-anim
-                          (if frame
-                              (get-frame-transform node-anim frame)
-                              (get-time-transform  node-anim (mod time duration)))))
+                          (get-time-transform  node-anim (mod time duration))))
                       (final-transform
                         (or time-transform (m4:transpose transform)))
                       (global
@@ -175,8 +158,8 @@
                    (m4:identity)))
       nodes-transforms)))
 
-(defun get-bones-tranforms (scene &key (frame 0 frame-p) (time 0 time-p))
-  (declare (ai:scene scene))
+(s:-> get-bones-transforms (ai:scene number) t)
+(defun get-bones-transforms (scene time)
   (let* ((root-offset
            (-> scene
                (ai:root-node)
@@ -184,17 +167,11 @@
                (m4:transpose)
                (m4:inverse)))
          (node-type
-           (cond ((and frame-p time-p)
-                  (error "provide EITHER time or frame offset"))
-                 ((emptyp (ai:animations scene))
-                  :static)
-                 ((not (emptyp (ai:animations scene)))
-                  :animated)
-                 (t (error "cannot figure out boned mesh type"))))
+           (if (emptyp (ai:animations scene))
+               :static
+               :animated))
          (nodes-transforms
-           (if frame-p
-               (get-nodes-transforms scene node-type :frame frame)
-               (get-nodes-transforms scene node-type :time time)))
+           (get-nodes-transforms scene node-type :time time))
          (unique-bones
            (list-bones-unique scene)))
     (declare (type hash-table nodes-transforms))

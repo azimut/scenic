@@ -366,7 +366,7 @@
                           (coerce
                            ;; NOTE: init using the first transform in the animation, for those that only have 1
                            ;; frame of "animation"
-                           (get-bones-tranforms scene :frame 0)
+                           (get-bones-transforms scene 25f0);; !!!!!!!!!!!!!!!!
                            'list) :element-type :mat4))
                 :duration (when (eq type :bones)
                             (if (not (emptyp (ai:animations scene)))
