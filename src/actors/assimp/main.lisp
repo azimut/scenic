@@ -343,7 +343,15 @@
           :collect
           ;; NOTE: We delay the type check because there could be meshes
           ;; with and without bones on the same scene.
-          (let ((type (assimp-get-type mesh)))
+          (let* ((type (assimp-get-type mesh))
+                 (duration
+                   (when (eq type :bones)
+                     (if (not (emptyp (ai:animations scene)))
+                         (coerce
+                          (ai:duration
+                           (aref (ai:animations scene) 0)) ;; hardcoded animation 0
+                          'single-float)
+                         0f0))))
             (destructuring-bind (&key buf albedo normals specular roughmap)
                 (assimp-mesh-to-stream mesh scene path type)
               (remove-nil-plist
@@ -361,20 +369,15 @@
                 :roughmap roughmap
                 :normals normals
                 :specular specular
+                :duration duration
                 :bones (when (eq type :bones)
                          (make-c-array ;; TODO: leaking
                           (coerce
                            ;; NOTE: init using the first transform in the animation, for those that only have 1
                            ;; frame of "animation"
-                           (get-bones-transforms scene 25f0);; !!!!!!!!!!!!!!!!
-                           'list) :element-type :mat4))
-                :duration (when (eq type :bones)
-                            (if (not (emptyp (ai:animations scene)))
-                                (coerce
-                                 (ai:duration
-                                  (aref (ai:animations scene) 0))
-                                 'single-float)
-                                0f0)))))))))
+                           (get-bones-transforms scene duration);; FIXME: i know it exists, but not the best
+                           'list)
+                          :element-type :mat4)))))))))
 
 (defun assimp-load-mesh (file)
   "returns a single buffer"
