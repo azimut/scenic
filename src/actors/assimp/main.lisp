@@ -65,21 +65,9 @@
 ;; Loaders
 ;;--------------------------------------------------
 
-(defmethod free ((actor assimp-thing))
-  #+nil
-  (with-slots (buf) actor
-    (free buf)
-    (free (alexandria:lastcar (buffer-stream-gpu-arrays buf)))
-    (free (car (car (buffer-stream-gpu-arrays buf))))))
-
 (defmethod free ((actor assimp-thing-with-bones))
   (with-slots (bones) actor
-    (free bones))
-  #+nil
-  (with-slots (buf) actor
-    (free buf)
-    (free (alexandria:lastcar (buffer-stream-gpu-arrays buf)))
-    (free (car (car (buffer-stream-gpu-arrays buf))))))
+    (free bones)))
 
 (defun free-assimp-buffers ()
   (alexandria:maphash-values
