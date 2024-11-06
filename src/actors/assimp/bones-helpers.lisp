@@ -58,10 +58,8 @@
         0)))
 
 (s:-> calc-interpolated-position (number vector) rtg-math.types:vec3)
-(defun calc-interpolated-position (etime positions)
-  (declare (type vector positions))
-  (if (or (< etime (slot-value (aref positions 0) 'time))
-          (length= 1 positions))
+(defun calc-interpolated-position (etime positions &aux (start-time (slot-value (aref positions 0) 'time)))
+  (if (or (< etime start-time) (length= 1 positions))
       (ai:value (aref positions 0))
       (let* ((index       (find-index etime positions))
              (next-index  (1+ index))
@@ -98,14 +96,12 @@
                (rot-keys ai::rotation-keys)
                (sca-keys ai::scaling-keys))
       node-animation
-    ;; reset frame position
-    (let ((reset-frame (mod frame (length rot-keys))))
-      ;; Calculate tranform matrix based on time
+    (let ((mod-frame (mod frame (length rot-keys))))
+      ;; Calculate transform matrix based on time
       (m4-n:*
-       (m4:translation (ai:value (aref pos-keys reset-frame)))
-       (q:to-mat4      (ai:value (aref rot-keys reset-frame)))
-       ;;(m4:scale (v3! 1.6))
-       ;;(m4:scale (ai:value (aref sca-keys 0)))
+       (m4:translation (ai:value (aref pos-keys mod-frame)))
+       (q:to-mat4      (ai:value (aref rot-keys mod-frame)))
+       ;;(m4:scale (ai:value (aref sca-keys 0))) ;; No scaling. Here is a vec3. And we use a single float.
        ))))
 
 (s:-> get-time-transform (ai::node-animation number) rtg-math.types:mat4)
@@ -119,9 +115,8 @@
           (irot (calc-interpolated-rotation time rot-keys)))
       (m4-n:*
        (m4:translation ipos)
-       (q:to-mat4 irot)
-       ;;(m4:scale (v3! .9f0))
-       ;;(m4:scale (ai:value (aref sca-keys 0)))
+       (q:to-mat4      irot)
+       ;;(m4:scale (ai:value (aref sca-keys 0))) ;; No scaling. Here is a vec3. And we use a single float.
        ))))
 
 (defgeneric get-nodes-transforms (scene node-type &key frame time nth-animation)
@@ -156,20 +151,21 @@
           ((walk-node (node parent-transform)
              (declare (type ai:node node) (type vector parent-transform))
              (with-slots ((name      ai:name)
-                          (transform ai:transform)
-                          (children  ai:children))
+                          (children  ai:children)
+                          (transform ai:transform))
                  node
                ;; FIXME: see below mess
-               (let* ((node-anim (gethash name animation-index))
+               (let* ((node-anim
+                        (gethash name animation-index))
                       (time-transform
                         (when node-anim
                           (if frame
                               (get-frame-transform node-anim frame)
                               (get-time-transform  node-anim (mod time duration)))))
-                      (final-transform (if time-transform
-                                           time-transform
-                                           (m4:transpose transform)))
-                      (global (m4:* parent-transform final-transform)))
+                      (final-transform
+                        (or time-transform (m4:transpose transform)))
+                      (global
+                        (m4:* parent-transform final-transform)))
                  (setf (gethash name nodes-transforms) global)
                  ;; WALK!
                  (map 'vector
