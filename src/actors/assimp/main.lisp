@@ -116,8 +116,10 @@
                                       :collect (v! 0 0))
                                 'vector))))
     (cond (has-bones
-           (let ((v-arr (make-gpu-array NIL :dimensions n-vertex
-                                            :element-type 'assimp-with-bones)))
+           (s:lret ((v-arr (make-gpu-array
+                            NIL
+                            :dimensions n-vertex
+                            :element-type 'assimp-with-bones)))
              (with-gpu-array-as-c-array (c-arr v-arr)
                (loop :for v  :across vertices
                      :for n  :across normals
@@ -128,21 +130,19 @@
                      :for i  :from 0
                      :for a  := (aref-c c-arr i)
                      :do
-                        (setf (pos a) v
-                              (assimp-mesh-normal a) n
-                              (assimp-mesh-tangent a) ta
-                              (assimp-mesh-bitangent a) bt
-                              (assimp-mesh-uv a) (v! (x tc) (y tc)))
-
+                        (setf (assimp-mesh-uv        a) (v! (x tc) (y tc))
+                              (assimp-mesh-normal    a) n
+                              (assimp-mesh-tangent   a) ta
+                              (assimp-mesh-bitangent a) bt)
+                        (setf (pos a) v)
                         (setf (ids a)
                               (v! (serapeum:pad-end
                                    (map 'vector #'car bv) *max-bones-per-vertex* 0)))
                         (setf (weights a)
                               (v! (serapeum:pad-end
-                                   (map 'vector #'cdr bv) *max-bones-per-vertex*  0))))
-               v-arr)))
+                                   (map 'vector #'cdr bv) *max-bones-per-vertex* 0)))))))
           (has-uvs
-           (let ((v-arr (make-gpu-array NIL :dimensions n-vertex :element-type 'assimp-mesh)))
+           (s:lret ((v-arr (make-gpu-array NIL :dimensions n-vertex :element-type 'assimp-mesh)))
              (with-gpu-array-as-c-array (c-arr v-arr)
                (loop :for v  :across vertices
                      :for n  :across normals
@@ -151,14 +151,13 @@
                      :for tc :across uvs
                      :for i  :from 0
                      :for a  := (aref-c c-arr i)
-                     :do (setf (assimp-mesh-uv        a) (v! (x tc) (y tc))
-                               (pos                   a) v
+                     :do (setf (pos a) v)
+                         (setf (assimp-mesh-uv        a) (v! (x tc) (y tc))
                                (assimp-mesh-normal    a) n
                                (assimp-mesh-tangent   a) ta
-                               (assimp-mesh-bitangent a) bt))
-               v-arr)))
+                               (assimp-mesh-bitangent a) bt)))))
           (t
-           (let ((v-arr (make-gpu-array NIL :dimensions n-vertex :element-type 'g-pnt)))
+           (s:lret ((v-arr (make-gpu-array NIL :dimensions n-vertex :element-type 'g-pnt)))
              (with-gpu-array-as-c-array (c-arr v-arr)
                (loop :for v  :across vertices
                      :for n  :across normals
@@ -166,9 +165,8 @@
                      :for i  :from 0
                      :for a  := (aref-c c-arr i)
                      :do (setf (pos a) v
-                               (assimp-mesh-normal a) n
-                               (assimp-mesh-uv a) (v! (x tc) (y tc))))
-               v-arr))))))
+                               (assimp-mesh-uv     a) (v! (x tc) (y tc))
+                               (assimp-mesh-normal a) n))))))))
 
 (defun make-buffer-stream-cached (file mesh-index vertices faces normals tangents bitangents &optional uvs bones)
   "returns a CEPL:BUFFER-STREAM"
