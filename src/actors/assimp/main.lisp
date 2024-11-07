@@ -45,10 +45,14 @@
 ;; Pretty printers
 ;;--------------------------------------------------
 
+(defmethod print-object ((obj ai::node-animation) stream)
+  (print-unreadable-object (obj stream :type T :identity T)
+    (format stream "~w" (ai:node-name obj))))
+
 (defmethod print-object ((obj ai::quat-key) out)
   (print-unreadable-object (obj out :type t)
-    (with-slots ((time ai::time) (rot ai:value)) obj
-      (format out "T=~$ Q=(~$ ~$ ~$ ~$)" time (x rot) (y rot) (z rot) (w rot)))))
+    (with-slots ((time ai::time)) obj
+      (format out "~$" time))))
 
 (defmethod print-object ((obj ai:vertex-weight) out)
   (print-unreadable-object (obj out :type t)
@@ -258,6 +262,7 @@
            (uvs        (elt texture-coords 0)))
       (assert (length= bitangents tangents normals vertices uvs))
       (assimp-save-embed-textures scene file)
+      (setf (ai:textures scene) #()) ;; we are done with them
       (append
        `(:buf
          ,(make-buffer-stream-cached
@@ -282,6 +287,7 @@
            (bones-per-vertex (get-bones-per-vertex scene bones (length vertices))))
       (assert (length= bitangents tangents normals vertices uvs))
       (assimp-save-embed-textures scene file)
+      (setf (ai:textures scene) #()) ;; we are done with them
       (append
        `(:buf
          ,(make-buffer-stream-cached
