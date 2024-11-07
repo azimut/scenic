@@ -47,7 +47,9 @@
 
 (defmethod print-object ((obj ai::node-animation) stream)
   (print-unreadable-object (obj stream :type T :identity T)
-    (format stream "~w" (ai:node-name obj))))
+    (format stream "~w :SIZE ~a"
+            (ai:node-name obj)
+            (array-total-size (ai:position-keys obj)))))
 
 (defmethod print-object ((obj ai::quat-key) out)
   (print-unreadable-object (obj out :type t)
