@@ -139,17 +139,12 @@
 
                        (loop :for children :across childrens :do
                          (walk-node children node-transform))))))
-          (walk-node (ai:root-node scene) (m4:identity)))))))
+          (walk-node (ai:root-node scene)
+                     (m4:identity)))))))
 
 (s:-> get-bones-transforms (ai:scene number) t)
 (defun get-bones-transforms (scene time)
-  (let* ((root-offset
-           (-> scene
-               (ai:root-node)
-               (ai:transform)
-               (m4:transpose)
-               (m4:inverse)))
-         (node-type
+  (let* ((node-type
            (if (emptyp (ai:animations scene))
                :static
                :animated))
@@ -168,11 +163,8 @@
                           ;; The mesh also didn't have animations so might be
                           ;; that was the reason...
                           (if (m4:0p offset)
-                              (m4:* root-offset
-                                    node-transform)
-                              (m4:* root-offset
-                                    node-transform
-                                    (m4:transpose offset))))))))))
+                              node-transform
+                              (m4:* node-transform (m4:transpose offset))))))))))
 
 (fare-memoization:define-memo-function get-bones-time-tranforms
     (scene nth-animation time)
