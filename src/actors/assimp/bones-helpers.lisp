@@ -114,31 +114,33 @@
       (labels ((walk-node (node parent-transform)
                  (declare (type ai:node node) (type vector parent-transform))
                  (with-slots ((name ai:name) (transform ai:transform) (childrens ai:children)) node
-                   (let ((node-transform (m4:* parent-transform (m4:transpose transform))))
-                     (setf (gethash name nodes-transforms) node-transform)
+                   (let ((new-transform (m4:* parent-transform (m4:transpose transform))))
+                     (setf (gethash name nodes-transforms) new-transform)
                      (loop :for children :across childrens :do
-                       (walk-node children node-transform))))))
+                       (walk-node children new-transform))))))
         (walk-node (ai:root-node scene) (m4:identity)))))
 
   (:method ((scene ai:scene) (node-type (eql :animated)) &key time (nth-animation 0))
     (declare (ignore node-type))
-    (with-slots ((duration ai:duration) (animation-index ai:index)) ;; BONE->NODE-ANIMATION
-        (aref (ai:animations scene) nth-animation)
-      (declare (type hash-table animation-index nodes-transform))
-      (s:lret ((nodes-transforms (make-hash-table :test #'equal))) ;; NODE->TRANSFORM
+    (s:lret ((nodes-transforms (make-hash-table :test #'equal))) ;; NODE->TRANSFORM
+      (with-slots ((duration ai:duration) (animation-index ai:index)) ;; BONE->NODE-ANIMATION
+          (aref (ai:animations scene) nth-animation)
+        (declare (type hash-table animation-index nodes-transform))
         (labels ((walk-node (node parent-transform)
                    (declare (type ai:node node) (type vector parent-transform))
-                   (with-slots ((name ai:name) (childrens ai:children) (transform ai:transform)) node
-                     (let* ((node-transform
+                   (with-slots ((name ai:name) (old-transform ai:transform) (childrens ai:children)) node
+                     (let* ((new-transform
                               (m4:* parent-transform
                                     (a:if-let ((node-anim (gethash name animation-index)))
                                       (get-time-transform node-anim (mod time duration))
-                                      (m4:transpose transform)))))
+                                      ;;(m4:transpose wold-transform)
+                                      (m4:identity)
+                                      ))));; if it's not part of the animation, do nothing (m4:identity)
 
-                       (setf (gethash name nodes-transforms) node-transform)
+                       (setf (gethash name nodes-transforms) new-transform)
 
                        (loop :for children :across childrens :do
-                         (walk-node children node-transform))))))
+                         (walk-node children new-transform))))))
           (walk-node (ai:root-node scene)
                      (m4:identity)))))))
 
