@@ -107,56 +107,39 @@
 (defgeneric get-nodes-transforms (scene node-type &key time nth-animation)
   (:documentation "returns a hash of mat4's with each node transform
     for value and node name for the key")
+
   (:method ((scene ai:scene) (node-type (eql :static)) &key time nth-animation)
-    (declare (ignore time nth-animation))
+    (declare (ignore node-type time nth-animation))
     (s:lret ((nodes-transforms (make-hash-table :test #'equal)))
       (labels ((walk-node (node parent-transform)
-                 (declare (type ai:node node)
-                          (type vector parent-transform))
-                 (with-slots ((name      ai:name)
-                              (transform ai:transform)
-                              (children  ai:children))
-                     node
-                   (let ((global
-                           (m4:* parent-transform (m4:transpose transform))))
-                     (setf (gethash name nodes-transforms) global)
-                     (map 'vector
-                          (lambda (c) (walk-node c global))
-                          children)))))
+                 (declare (type ai:node node) (type vector parent-transform))
+                 (with-slots ((name ai:name) (transform ai:transform) (childrens ai:children)) node
+                   (let ((node-transform (m4:* parent-transform (m4:transpose transform))))
+                     (setf (gethash name nodes-transforms) node-transform)
+                     (loop :for children :across childrens :do
+                       (walk-node children node-transform))))))
         (walk-node (ai:root-node scene) (m4:identity)))))
+
   (:method ((scene ai:scene) (node-type (eql :animated)) &key time (nth-animation 0))
-    (let* ((animation        (aref (ai:animations scene) nth-animation))
-           (duration         (ai:duration animation))
-           ;; NOTE: animation-index is a hash lookup table for BONE>NODE-ANIMATION
-           (animation-index  (ai:index animation))
-           ;; NOTE: temporal lookup table for bones *thinking emoji*
-           (nodes-transforms (make-hash-table :test #'equal)))
-      (declare (type hash-table animation-index))
-      (labels
-          ((walk-node (node parent-transform)
-             (declare (type ai:node node) (type vector parent-transform))
-             (with-slots ((name      ai:name)
-                          (children  ai:children)
-                          (transform ai:transform))
-                 node
-               ;; FIXME: see below mess
-               (let* ((node-anim
-                        (gethash name animation-index))
-                      (time-transform
-                        (when node-anim
-                          (get-time-transform  node-anim (mod time duration))))
-                      (final-transform
-                        (or time-transform (m4:transpose transform)))
-                      (global
-                        (m4:* parent-transform final-transform)))
-                 (setf (gethash name nodes-transforms) global)
-                 ;; WALK!
-                 (map 'vector
-                      (lambda (c) (walk-node c global))
-                      children)))))
-        (walk-node (ai:root-node scene)
-                   (m4:identity)))
-      nodes-transforms)))
+    (declare (ignore node-type))
+    (with-slots ((duration ai:duration) (animation-index ai:index)) ;; BONE->NODE-ANIMATION
+        (aref (ai:animations scene) nth-animation)
+      (declare (type hash-table animation-index nodes-transform))
+      (s:lret ((nodes-transforms (make-hash-table :test #'equal))) ;; NODE->TRANSFORM
+        (labels ((walk-node (node parent-transform)
+                   (declare (type ai:node node) (type vector parent-transform))
+                   (with-slots ((name ai:name) (childrens ai:children) (transform ai:transform)) node
+                     (let* ((node-transform
+                              (m4:* parent-transform
+                                    (a:if-let ((node-anim (gethash name animation-index)))
+                                      (get-time-transform node-anim (mod time duration))
+                                      (m4:transpose transform)))))
+
+                       (setf (gethash name nodes-transforms) node-transform)
+
+                       (loop :for children :across childrens :do
+                         (walk-node children node-transform))))))
+          (walk-node (ai:root-node scene) (m4:identity)))))))
 
 (s:-> get-bones-transforms (ai:scene number) t)
 (defun get-bones-transforms (scene time)
