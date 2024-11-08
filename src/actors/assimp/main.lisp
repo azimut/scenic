@@ -45,6 +45,10 @@
 ;; Pretty printers
 ;;--------------------------------------------------
 
+(defmethod print-object ((obj ai:mesh) out)
+  (print-unreadable-object (obj out :type t)
+    (format out "~w" (ai:name obj))))
+
 (defmethod print-object ((obj ai::node-animation) stream)
   (print-unreadable-object (obj stream :type T :identity T)
     (format stream "~w :SIZE ~a"
@@ -62,11 +66,11 @@
 
 (defmethod print-object ((obj ai:node) out)
   (print-unreadable-object (obj out :type t)
-    (format out "~a" (ai:name obj))))
+    (format out "~a ~w" (array-total-size (ai:children obj)) (ai:name obj))))
 
 (defmethod print-object ((obj ai:bone) out)
   (print-unreadable-object (obj out :type t)
-    (format out "~a" (ai:name obj))))
+    (format out "~a ~w" (array-total-size (ai:weights obj)) (ai:name obj))))
 
 (defmethod print-object ((obj ai::vector-key) out)
   (print-unreadable-object (obj out :type t)
