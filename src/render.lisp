@@ -112,20 +112,24 @@
                                        (world-view  :mat4)
                                        (view-clip   :mat4)
                                        (scale       :float)
-                                       (offsets    (:mat4 41)) ;; FIXME
+                                       (offsets    (:mat4 69)) ;; FIXME
                                        (cam-pos     :vec3))
-  (let* ((model-pos (pos vert))
+  (let* ((bone-transform
+           (with-slots (weights ids) bones
+             (+ (* (x weights) (aref offsets (int (x ids))))
+                (* (y weights) (aref offsets (int (y ids))))
+                (* (z weights) (aref offsets (int (z ids))))
+                (* (w weights) (aref offsets (int (w ids)))))))
+         (model-pos (pos vert))
          (world-pos
            (* (m4:scale (v3! scale)) ;; FIXME
               model-world
-              (with-slots (weights ids) bones
-                (+ (* (x weights) (aref offsets (int (x ids))))
-                   (* (y weights) (aref offsets (int (y ids))))
-                   (* (z weights) (aref offsets (int (z ids))))
-                   (* (w weights) (aref offsets (int (w ids))))))
+              bone-transform
               (v! model-pos 1)))
          ;; Normal
-         (norm (* (m4:to-mat3 model-world) (norm vert)))
+         ;; (norm (* (m4:to-mat3 model-world) (norm vert)))
+         (norm (* bone-transform (v! (norm vert) 0)))
+         (norm (normalize (s~ (* model-world norm) :xyz)))
          ;; TBN
          (normal-m3 (transpose (inverse (m4:to-mat3 model-world))))
          (t0  (normalize (* normal-m3 (tb-data-tangent tb))))
