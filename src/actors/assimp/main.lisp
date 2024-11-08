@@ -374,11 +374,12 @@
               (remove-nil-plist
                (list
                 ;; TODO: concat name of all bones
-                :name (or (and (string/= "" (ai:name mesh))
-                               (ai:name mesh))
-                          (and (plusp (length (ai:bones mesh)))
-                               (ai:name (aref (ai:bones mesh) 0)))
-                          "")
+                :mesh-name
+                (or (and (string/= "" (ai:name mesh))
+                         (ai:name mesh))
+                    (and (plusp (length (ai:bones mesh)))
+                         (ai:name (aref (ai:bones mesh) 0)))
+                    "")
                 :type type
                 :scene scene
                 :buf buf
