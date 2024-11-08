@@ -254,7 +254,7 @@
    (list (make-material :roughness .8 :metallic .02 :specular .1)
          (make-material :roughness .4 :metallic .4  :specular .1)))
   (let ((s1 (make-scene-ode :color (v! .2 .2 .2 1))))
-    #+nil
+    #+nilp
     (register (make-defered :downscale .25 :pos (v! -14.65844 4.4909353 0.22071815)
                             :rot (q! 0.95456934 -0.0030270235 -0.297679 0.013245501))
               s1)
@@ -267,3 +267,48 @@
     (register (make-point :pos (v! -10 5  0) :far 20f0 :fudge 0.2)  s1)
     (register (make-point :pos (v! -11 8 -5) :far 20f0 :fudge 0.08) s1)
     (register s1 *state*)))
+
+
+
+(defun init-all-the-things ()
+  (rocketman:load-file
+   *rocket*
+   "/home/sendai/projects/thirdparty/rocketrocket/otherspin.rocket")
+  (init-default-state)
+  (let ((s1 (make-scene-vxgi
+             :color (v! (light-color 3) 1))))
+    (register (make-defered
+               ;; :dim '(800 600);; !!!!!!!!!!!!!!!!!!!1
+               ;; :downscale .5
+               :pos (v! 7.65844 2.4909353 0.22071815)
+               :rot (q:point-at (v! 0 1 0) (v! 7 3 0) (v! 0 0 0)))
+              s1)
+    (let ((color (random-v3 :min .1 :max .4)))
+
+      (register (make-box  :w 10f0 :d 10f0 :pos (v! 0 -2 0) :color (random-v3 :min .2 :max .7)) s1)
+      (register (make-box :pos (v! -0.75  0 -0.75) :scale (random-in-range 0.8 1f0) :color color) s1)
+      (register (make-box :pos (v!  0.75  0  0.75) :scale (random-in-range 0.8 1f0) :color color) s1)
+      (register (make-box :pos (v! -0.75  0  0.75) :scale (random-in-range 0.8 1f0) :color color) s1)
+      (register (make-box :pos (v!  0.75  0 -0.75) :scale (random-in-range 0.8 1f0) :color color) s1)
+      ;;
+      (register (make-box :pos (v! -0.75  1 -0.75) :scale (random-in-range 0.8 1f0) :color color) s1)
+      (register (make-box :pos (v!  0.75  1  0.75) :scale (random-in-range 0.8 1f0) :color color) s1)
+      (register (make-box :pos (v! -0.75  1  0.75) :scale (random-in-range 0.8 1f0) :color color) s1)
+      (register (make-box :pos (v!  0.75  1 -0.75) :scale (random-in-range 0.8 1f0) :color color) s1)
+
+      )
+    ;; (register (make-directional :pos (v! 150 333 223) :near 400f0 :far 500f0) s1)
+    (register (make-point :pos (v! -10 5  0) :far 20f0 :fudge 0.2)  s1)
+    (register (make-point :pos (v! -11 8 -5) :far 20f0 :fudge 0.08) s1)
+    (register s1 *state*)
+    (with-rocket-commands
+      (rocket-add "frame")
+      (rocket-add "slide")
+      (rocket-add "box:angle")
+      (rocket-add "camera:lookx")
+      (rocket-add "camera:looky")
+      (rocket-add "camera:lookz")
+      (rocket-add "camera:x")
+      (rocket-add "camera:y")
+      (rocket-add "camera:z"))))
+
