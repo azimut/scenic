@@ -98,11 +98,10 @@
       node-animation
     (let ((ipos (calc-interpolated-position time pos-keys))
           (irot (calc-interpolated-rotation time rot-keys)))
-      (m4-n:*
+      (m4-n:* ;; FIXME: Here is a vec3. And we use 1 single float.
        (m4:translation ipos)
        (q:to-mat4      irot)
-       ;;(m4:scale (ai:value (aref sca-keys 0))) ;; No scaling. Here is a vec3. And we use a single float.
-       ))))
+       (m4:scale (ai:value (x sca-keys)))))))
 
 (defgeneric get-nodes-transforms (scene node-type &key time nth-animation)
   (:documentation "returns a hash of mat4's with each node transform
@@ -131,11 +130,10 @@
                    (with-slots ((name ai:name) (old-transform ai:transform) (childrens ai:children)) node
                      (let* ((new-transform
                               (m4:* parent-transform
+                                    ;; if it's NOT part of the animation, do nothing (m4:identity)
                                     (a:if-let ((node-anim (gethash name animation-index)))
                                       (get-time-transform node-anim (mod time duration))
-                                      ;;(m4:transpose wold-transform)
-                                      (m4:identity)
-                                      ))));; if it's not part of the animation, do nothing (m4:identity)
+                                      (m4:identity)))))
 
                        (setf (gethash name nodes-transforms) new-transform)
 
