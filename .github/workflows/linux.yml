@@ -34,6 +34,7 @@ jobs:
       - uses: 40ants/setup-lisp@v4
         with:
           asdf-system: scenic
+          qlot-version: 1.5.15
 
       - name: mkdir
         run: |
