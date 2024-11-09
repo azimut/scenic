@@ -49,16 +49,16 @@
 ;; Bone animation helpers
 
 (s:-> find-index (number vector) fixnum)
-(defun find-index (etime positions)
+(defun find-index (etime keys)
   "returns the index position matching the current ETIME"
-  (let ((pos (position-if (lambda (p) (< etime (slot-value p 'time)))
-                          positions)))
+  (let ((pos (position-if (lambda (k) (< etime (ai:key-time k)))
+                          keys)))
     (if pos
         (max 0 (1- pos))
         0)))
 
 (s:-> calc-interpolated-position (number vector) rtg-math.types:vec3)
-(defun calc-interpolated-position (etime positions &aux (start-time (slot-value (aref positions 0) 'time)))
+(defun calc-interpolated-position (etime positions &aux (start-time (ai:key-time (aref positions 0))))
   (if (or (< etime start-time) (length= 1 positions))
       (ai:value (aref positions 0))
       (let* ((index       (find-index etime positions))
@@ -74,7 +74,7 @@
                     (v3:*s delta (coerce factor 'single-float)))))))))
 
 (s:-> calc-interpolated-rotation (number vector) rtg-math.types:quaternion)
-(defun calc-interpolated-rotation (etime rotations &aux (start-time (slot-value (aref rotations 0) 'time)))
+(defun calc-interpolated-rotation (etime rotations &aux (start-time (ai:key-time (aref rotations 0))))
   (if (or (< etime start-time) (length= 1 rotations))
       (ai:value (aref rotations 0))
       (let* ((index       (find-index etime rotations))
@@ -89,7 +89,7 @@
               (q:normalize qinterp)))))))
 
 (s:-> calc-interpolated-scale (number vector) rtg-math.types:vec3)
-(defun calc-interpolated-scale (etime scales &aux (start-time (slot-value (aref scales 0) 'time)))
+(defun calc-interpolated-scale (etime scales &aux (start-time (ai:key-time (aref scales 0))))
   (if (or (< etime start-time) (length= 1 scales))
       (ai:value (aref scales 0))
       (let* ((index       (find-index etime scales))

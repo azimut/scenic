@@ -74,7 +74,7 @@
 
 (defmethod print-object ((obj ai::vector-key) out)
   (print-unreadable-object (obj out :type t)
-    (format out "~$" (slot-value obj 'ai::time))))
+    (format out "~$" (ai:key-time obj))))
 
 ;;--------------------------------------------------
 ;; Loaders
