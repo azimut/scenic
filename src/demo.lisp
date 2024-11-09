@@ -108,7 +108,10 @@
                  "static/SFX/Step/Step8.wav"))))
 
 (defun ode-human ()
-  (let* ((s1  (make-scene-ode-ibl :name "defered ibl audio ode")))
+  (let* ((s1  (make-scene-ode-ibl
+               :name "defered ibl audio ode"
+               :post (list (make-instance 'hdr-acesfilm :exposure .8)
+                           (make-instance 'fxaa3)))))
     (register s1 *state*) ;; first registered, needed for ODE scenes
     ;;(register (make-physic-camera :pos (v! 2 1 2) :fakeambient .01) s1)
     (register (make-instance 'fps :pos (v! 2 1 2)) s1)
