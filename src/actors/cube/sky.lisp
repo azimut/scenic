@@ -194,7 +194,9 @@
                       (log4cl:log-info "Printing face ~d" cube-face)
                       (with-slots (sky-buf intensity) actor
                         (map-g #'sky-pipe sky-buf
-                               :sun-intensity intensity
+                               :sun-intensity
+                               (* intensity
+                                  (x (color (first (lights scene)))))
                                :light-pos   (pos   (first (lights scene)))
                                :light-color (color (first (lights scene)))
                                ;; Rotation without translation
