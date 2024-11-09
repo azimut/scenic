@@ -6,6 +6,7 @@
   :serial t
   :pathname "src"
   :depends-on (#:alexandria
+               #:asdf
                #:classimp
                #:arrow-macros
                #:bodge-ode
