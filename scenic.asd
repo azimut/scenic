@@ -25,6 +25,7 @@
                #:rtg-math.vari
                #:serapeum
                #:temporal-functions
+               #:uiop
                #:with-setf)
   :defsystem-depends-on (:deploy)
   :build-operation "deploy-op"
