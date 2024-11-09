@@ -32,7 +32,6 @@
                      (uiop:getenv "APPDIR"))
     (free *state*)
     (ode-stop-world)
-    (reset-material-counter)
     (skitter-cleanup)
     (skitter-listen)
     (ode-init-world)
@@ -54,7 +53,7 @@
         (issue scene 'tick :tt tt :dt dt :fc fc))
       (upload scene)
       (update scene dt)
-      ;; (rocket-update)
+      (rocket-update)
       (decay-events)
       ;; Lights/Shadows
       (dolist (l (remove-if #'point-p (lights scene)))
