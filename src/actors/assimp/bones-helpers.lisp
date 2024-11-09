@@ -74,9 +74,8 @@
                     (v3:*s delta (coerce factor 'single-float)))))))))
 
 (s:-> calc-interpolated-rotation (number vector) rtg-math.types:quaternion)
-(defun calc-interpolated-rotation (etime rotations)
-  (if (or (< etime (slot-value (aref rotations 0) 'time))
-          (length= 1 rotations))
+(defun calc-interpolated-rotation (etime rotations &aux (start-time (slot-value (aref rotations 0) 'time)))
+  (if (or (< etime start-time) (length= 1 rotations))
       (ai:value (aref rotations 0))
       (let* ((index       (find-index etime rotations))
              (next-index  (1+ index))
@@ -89,6 +88,22 @@
                    (qinterp (q:lerp start end (coerce factor 'single-float))))
               (q:normalize qinterp)))))))
 
+(s:-> calc-interpolated-scale (number vector) rtg-math.types:vec3)
+(defun calc-interpolated-scale (etime scales &aux (start-time (slot-value (aref scales 0) 'time)))
+  (if (or (< etime start-time) (length= 1 scales))
+      (ai:value (aref scales 0))
+      (let* ((index       (find-index etime scales))
+             (next-index  (1+ index))
+             (current-pos (aref scales index))
+             (next-pos    (aref scales next-index)))
+        (with-slots ((ctime time) (start ai:value)) current-pos
+          (with-slots ((ntime time) (end ai:value)) next-pos
+            (let* ((dt     (- ntime ctime))
+                   (factor (/ (- etime ctime) dt))
+                   (delta  (v3:- end start)))
+              (v3:+ start
+                    (v3:*s delta (coerce factor 'single-float)))))))))
+
 (s:-> get-time-transform (ai::node-animation number) rtg-math.types:mat4)
 (defun get-time-transform (node-animation time)
   "calculate the tansform matrix based on time returns a matrix"
@@ -97,11 +112,12 @@
                (sca-keys ai::scaling-keys))
       node-animation
     (let ((ipos (calc-interpolated-position time pos-keys))
-          (irot (calc-interpolated-rotation time rot-keys)))
+          (irot (calc-interpolated-rotation time rot-keys))
+          (isca (calc-interpolated-scale    time sca-keys)))
       (m4-n:* ;; FIXME: Here is a vec3. And we use 1 single float.
        (m4:translation ipos)
        (q:to-mat4      irot)
-       (m4:scale (ai:value (x sca-keys)))))))
+       (m4:scale       isca)))))
 
 (s:-> get-static-bone-transforms (ai:scene) hash-table)
 (defun get-static-bone-transforms (scene)
