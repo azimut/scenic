@@ -31,33 +31,25 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libassimp5 sbcl libzstd-dev
 
+      - uses: 40ants/setup-lisp@v4
+        with:
+          asdf-system: scenic
+
       - name: mkdir
         run: |
           mkdir -pv ~/Downloads
-          mkdir -pv ~/sbcl
-          mkdir -pv ~/quicklisp
-          mkdir -pv ~/.cache/common-lisp
         shell: bash
 
-      - name: Get Current Month
-        id: current-month
-        run: echo "::set-output name=value::$(date -u '+%Y-%m')"
       - name: Cache SBCL Setup
         id: cache
         uses: actions/cache@v2
         env:
-          cache-name: cache-sbcl-compressed-sdl
+          cache-name: cache-qlot
         with:
           path: |
             ~/Downloads/
-            ~/quicklisp
-            ~/.cache/common-lisp/
-            ~/sbcl
-          key: "${{ env.SBCL_VERSION }}-${{ env.cache-name }}-${{ runner.os }}"
-      - name: Restore Path To Cached Files
-        run: |
-          echo $HOME/sbcl/bin >> $GITHUB_PATH
-        if: steps.cache.outputs.cache-hit == 'true'
+          key: "${{ env.cache-name }}-${{ runner.os }}"
+
 
       # I believe I do this to have it less dynlink than ubuntu's default
       - name: Build SDL ${{ env.SDL_VERSION }}
@@ -105,51 +97,6 @@ jobs:
         run: |
           cd ~/Downloads/freealut-${{ env.FREEALUT_VERSION }}
           sudo make install prefix=/usr
-
-      - name: Download SBCL ${{ env.SBCL_VERSION }}
-        run: |
-          cd ~/Downloads
-          wget http://downloads.sourceforge.net/project/sbcl/sbcl/${{ env.SBCL_VERSION }}/sbcl-${{ env.SBCL_VERSION }}-source.tar.bz2
-          tar xjf sbcl-${{ env.SBCL_VERSION }}-source.tar.bz2
-        if: steps.cache.outputs.cache-hit != 'true'
-      - name: Install SBCL ${{ env.SBCL_VERSION }}
-        run: |
-          cd ~/Downloads/sbcl-${{ env.SBCL_VERSION }}
-          sh make.sh --with-sb-core-compression
-          unset SBCL_HOME
-          INSTALL_ROOT=~/sbcl ./install.sh
-        if: steps.cache.outputs.cache-hit != 'true'
-
-      - name: Install quicklisp
-        run: |
-          cd ~/Downloads
-          export PATH="$HOME/sbcl/bin:${PATH}"
-          wget https://beta.quicklisp.org/quicklisp.lisp
-          sbcl --non-interactive \
-               --eval '(load "quicklisp.lisp")' \
-               --eval '(quicklisp-quickstart:install)' \
-               --eval '(ql-util:without-prompting (ql:add-to-init-file))' \
-               --eval '(ql:update-all-dists)'
-
-        if: steps.cache.outputs.cache-hit != 'true'
-
-      - name: Get LISP deps
-        run: |
-          cd ~/quicklisp/local-projects/
-          (test -d cl-openal) || git clone -b fixalut --depth=1 https://github.com/azimut/cl-openal
-          ( cd cl-openal/ ; git pull )
-          (test -d nepal)     || git clone --depth=1 https://github.com/azimut/nepal
-          ( cd nepal/     ; git pull )
-          (test -d rocketman) || git clone --depth=1 https://github.com/azimut/rocketman
-          ( cd rocketman/ ; git pull )
-          (test -d cepl)      || git clone --depth=1 https://github.com/azimut/cepl
-          ( cd cepl/      ; git pull )
-          (test -d glsl-spec) || git clone --depth=1 https://github.com/azimut/glsl-spec
-          ( cd glsl-spec/ ; git pull )
-          (test -d cepl.fond) || git clone --depth=1 https://github.com/cbaggers/cepl.fond
-          ( cd cepl.fond/ ; git pull )
-          (test -d cm)        || git clone --depth=1 https://github.com/ormf/cm
-          ( cd cm/        ; git pull )
 
       - name: Build Binary
         run: |

@@ -6,7 +6,6 @@
   :serial t
   :pathname "src"
   :depends-on (#:alexandria
-               #:asdf
                #:classimp
                #:arrow-macros
                #:bodge-ode
@@ -26,7 +25,6 @@
                #:rtg-math.vari
                #:serapeum
                #:temporal-functions
-               #:uiop
                #:with-setf)
   :defsystem-depends-on (:deploy)
   :build-operation "deploy-op"
