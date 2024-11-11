@@ -13,6 +13,7 @@ env:
   FREEALUT_VERSION: 1.1.0
   OPENAL_VERSION: 1.23.1
   SDL_VERSION: 2.0.12
+  LISP: sbcl-bin
 
 jobs:
   build:
