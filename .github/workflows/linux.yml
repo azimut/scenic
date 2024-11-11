@@ -101,7 +101,7 @@ jobs:
 
       - name: Build Binary
         run: |
-          export SBCL="ros run"
+          export SBCL="qlot exec ros run"
           cd bin/
           make tar scenic.AppImage
 
