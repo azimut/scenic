@@ -153,7 +153,7 @@
                                  ;; if it's NOT part of the animation, do nothing (m4:identity)
                                  (a:if-let ((node-anim (gethash name animation-index)))
                                    (get-time-transform node-anim (mod time duration))
-                                   (m4:identity)))))
+                                   (m4:transpose old-transform)))))
 
                      (setf (gethash name nodes-transforms) new-transform)
 

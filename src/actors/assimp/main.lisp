@@ -303,7 +303,8 @@
 (defun assimp-safe-import-into-lisp (file)
   "wrapper around ai:import-into-lisp, attempts to return a valid scene"
   (let* ((scene (or (let ((ai::*translate-verbose* t))
-                      (ai:import-into-lisp file))
+                      (ai:import-into-lisp
+                       file :properties '(:import-fbx-read-textures nil)))
                     (error "cannot simple load the file")))
          (processing-flags ;; try to ensure normals
            (if (emptyp (ai:normals (aref (ai:meshes scene) 0)))
@@ -314,11 +315,14 @@
                (cons :ai-process-calc-tangent-space processing-flags)
                processing-flags))
          (scene
-           (ai:import-into-lisp file :processing-flags (print (remove-duplicates processing-flags))
-                                ;; :properties
-                                ;; '(:pp-slm-triangle-limit 25000)
-                                ;;'(:pp-slm-vertex-limit 20000)
-                                )))
+           (ai:import-into-lisp
+            file
+            :properties '(:import-fbx-preserve-pivots nil)
+            :processing-flags (print (remove-duplicates processing-flags))
+            ;; :properties
+            ;; '(:pp-slm-triangle-limit 25000)
+            ;;'(:pp-slm-vertex-limit 20000)
+            )))
     ;; TODO: error instead if there is an untextured among textured
     ;; Error if all texture coords are missing :(
     #+nil
