@@ -2,7 +2,7 @@
   (load "~/quicklisp/setup.lisp"));; NOT NEEDED FOR QLOT
 
 (ql:quickload :deploy)
-(load "../scenic.asd") ;; QLOT WOULD RUN FROM ./ INSTEAD
+(load "scenic.asd")
 (ql:quickload :scenic)
 
 (deploy:define-library CL-OPENGL-BINDINGS::OPENGL :dont-deploy t)

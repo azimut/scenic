@@ -1,8 +1,8 @@
 OS ?= Linux
-SBCL ?= sbcl
+SBCL ?= qlot exec ros run
 
 AppDir/scenic:
-	$(SBCL) --non-interactive --load ./deploy.lisp
+	$(SBCL) --non-interactive --load bin/deploy.lisp
 ifeq ($(OS),Linux)
 	find . -name '*.so*' -exec strip {} \;
 	rm -vf AppDir/libstdc* # NOTE: bodge-ode dep
