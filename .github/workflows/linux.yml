@@ -12,7 +12,6 @@ env:
 
   FREEALUT_VERSION: 1.1.0
   OPENAL_VERSION: 1.23.1
-  SBCL_VERSION: 2.4.10
   SDL_VERSION: 2.0.12
 
 jobs:
@@ -29,19 +28,14 @@ jobs:
       - name: APT deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y libassimp5 sbcl libzstd-dev
-
-      - uses: 40ants/setup-lisp@v4
-        with:
-          asdf-system: scenic
-          qlot-version: 1.5.15
+          sudo apt-get install -y libassimp5
 
       - name: mkdir
         run: |
           mkdir -pv ~/Downloads
         shell: bash
 
-      - name: Cache SBCL Setup
+      - name: Cache .so libraries
         id: cache
         uses: actions/cache@v2
         env:
@@ -99,9 +93,14 @@ jobs:
           cd ~/Downloads/freealut-${{ env.FREEALUT_VERSION }}
           sudo make install prefix=/usr
 
+      - uses: 40ants/setup-lisp@v4
+        with:
+          asdf-system: scenic
+          qlot-version: 1.5.15
+
       - name: Build Binary
         run: |
-          export PATH="$HOME/sbcl/bin:${PATH}"
+          export SBCL="ros run"
           cd bin/
           make tar scenic.AppImage
 
