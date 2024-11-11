@@ -1,4 +1,5 @@
-(load "~/quicklisp/setup.lisp");; NOT NEEDED FOR QLOT
+(when (probe-file "~/quicklisp/setup.lisp")
+  (load "~/quicklisp/setup.lisp"));; NOT NEEDED FOR QLOT
 
 (ql:quickload :deploy)
 (load "../scenic.asd") ;; QLOT WOULD RUN FROM ./ INSTEAD
