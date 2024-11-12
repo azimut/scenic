@@ -34,9 +34,10 @@
   (let ((v-to-bones (make-array n-vertices :initial-element NIL)))
     (loop :with unique-scene-bones = (list-bones-unique scene)
           :for bone :across mesh-bones
-          :for bone-id = (position (ai:name bone) unique-scene-bones
-                                   :test #'string=
-                                   :key  #'ai:name)
+          :for bone-id
+            = (position (ai:name bone) unique-scene-bones
+                        :test #'string=
+                        :key  #'ai:name)
           :do (assert bone-id)
               (loop :for weight :across (ai:weights bone) :do
                 (with-slots ((bid ai:id) (w ai:weight)) weight
@@ -89,8 +90,8 @@
                    (qinterp (q:lerp start end (coerce factor 'single-float))))
               (q:normalize qinterp)))))))
 
-(s:-> calc-interpolated-scale (number vector) rtg-math.types:vec3)
-(defun calc-interpolated-scale (etime scales &aux (start-time (ai:key-time (aref scales 0))))
+(s:-> calc-interpolated-scaling (number vector) rtg-math.types:vec3)
+(defun calc-interpolated-scaling (etime scales &aux (start-time (ai:key-time (aref scales 0))))
   (if (or (< etime start-time) (length= 1 scales))
       (ai:value (aref scales 0))
       (let* ((index       (find-index etime scales))
@@ -114,7 +115,7 @@
       node-animation
     (let ((ipos (calc-interpolated-position time pos-keys))
           (irot (calc-interpolated-rotation time rot-keys))
-          (isca (calc-interpolated-scale    time sca-keys)))
+          (isca (calc-interpolated-scaling  time sca-keys)))
       (m4-n:*
        (m4:translation ipos)
        (q:to-mat4      irot)
@@ -152,18 +153,6 @@
         (walk (ai:root-node scene) (m4:identity))))))
 
 (defun push-static-bones-transforms (actor)
-  (with-slots (scene bones bones-offsets) actor
-    (labels ((walk (node parent-transform)
-               (declare (type ai:node node) (type vector parent-transform))
-               (with-slots ((name ai:name) (old-transform ai:transform) (childrens ai:children))
-                   node
-                 (let ((new-transform (m4:* parent-transform (m4:transpose old-transform))))
-                   (when-let ((id-offsets (gethash name bones-offsets)))
-                     (destructuring-bind (id . offset) id-offsets
-                       (setf (aref-c bones id)
-                             (if (m4:0p offset)
-                                 new-transform
-                                 (m4:* new-transform offset)))))
-                   (loop :for children :across childrens :do
-                     (walk children new-transform))))))
-      (walk (ai:root-node scene) (m4:identity)))))
+  (with-slots (bones) actor
+    (dotimes (i (first (c-array-dimensions bones)))
+      (setf (aref-c bones i) (m4:identity)))))
