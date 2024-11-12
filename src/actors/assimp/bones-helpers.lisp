@@ -114,28 +114,26 @@
     (let ((ipos (calc-interpolated-position time pos-keys))
           (irot (calc-interpolated-rotation time rot-keys))
           (isca (calc-interpolated-scale    time sca-keys)))
-      (m4-n:* ;; FIXME: Here is a vec3. And we use 1 single float.
+      (m4-n:*
        (m4:translation ipos)
        (q:to-mat4      irot)
        (m4:scale       isca)))))
 
-(s:-> get-static-bone-transforms (ai:scene) hash-table)
-(defun get-static-bone-transforms (scene)
+(s:-> get-static-bone-transforms (ai:node) hash-table)
+(defun get-static-bone-transforms (root-node)
   "returns a hash of mat4's:
    - key being the node/bone name
    - value the node transform"
   (s:lret ((nodes-transforms (make-hash-table :test #'equal)))
-    (labels ((walk-node (node parent-transform)
+    (labels ((walk (node parent-transform)
                (declare (type ai:node node) (type vector parent-transform))
                (with-slots ((name ai:name) (transform ai:transform) (childrens ai:children))
                    node
                  (let ((new-transform (m4:* parent-transform (m4:transpose transform))))
                    (setf (gethash name nodes-transforms) new-transform)
                    (loop :for children :across childrens :do
-                     (walk-node children new-transform))))))
-      (walk-node
-       (ai:root-node scene)
-       (m4:identity)))))
+                     (walk children new-transform))))))
+      (walk root-node (m4:identity)))))
 
 (s:-> get-animated-bone-transforms (ai:scene number fixnum) hash-table)
 (defun get-animated-bone-transforms (scene time nth-animation)
@@ -146,7 +144,7 @@
     (with-slots ((duration ai:duration) (animation-index ai:index)) ;; BONE->NODE-ANIMATION
         (aref (ai:animations scene) nth-animation)
       (declare (type hash-table animation-index nodes-transform))
-      (labels ((walk-node (node parent-transform)
+      (labels ((walk (node parent-transform)
                  (declare (type ai:node node) (type vector parent-transform))
                  (with-slots ((name ai:name) (old-transform ai:transform) (childrens ai:children))
                      node
@@ -160,10 +158,8 @@
                      (setf (gethash name nodes-transforms) new-transform)
 
                      (loop :for children :across childrens :do
-                       (walk-node children new-transform))))))
-        (walk-node
-         (ai:root-node scene)
-         (m4:identity))))))
+                       (walk children new-transform))))))
+        (walk (ai:root-node scene) (m4:identity))))))
 
 ;; TODO: remove, still used for initialization of c-array
 (s:-> get-bones-transforms (ai:scene number) simple-vector)
@@ -173,7 +169,7 @@
    and applies the bone offset."
   (let ((nodes-transforms
           (if (emptyp (ai:animations scene))
-              (get-static-bone-transforms scene)
+              (get-static-bone-transforms (ai:root-node scene))
               (get-animated-bone-transforms scene time 0)));; FIXME: nth-animation
         (unique-bones
           (list-bones-unique scene)))
@@ -195,7 +191,7 @@
   (with-slots (scene bones-unique bones) actor
     (let ((nodes-transforms ;; FIXME: nth-animation
             (if (emptyp (ai:animations scene))
-                (get-static-bone-transforms scene)
+                (get-static-bone-transforms (ai:root-node scene))
                 (get-animated-bone-transforms scene time 0))))
       (declare (type hash-table nodes-transforms))
       (loop :for bone :in bones-unique
