@@ -120,17 +120,16 @@
 (defun-g shadowmap-point-bones-vert
     ((vert g-pnt) (tb tb-data) (bones assimp-bones)
      &uniform (model->world :mat4) (offsets (:mat4 41)) (scale :float))
-  (* (m4:scale (v3! scale)) ;; FIXME
-     model->world
-     (+ (* (aref (assimp-bones-weights bones) 0)
-           (aref offsets (int (aref (assimp-bones-ids bones) 0))))
-        (* (aref (assimp-bones-weights bones) 1)
-           (aref offsets (int (aref (assimp-bones-ids bones) 1))))
-        (* (aref (assimp-bones-weights bones) 2)
-           (aref offsets (int (aref (assimp-bones-ids bones) 2))))
-        (* (aref (assimp-bones-weights bones) 3)
-           (aref offsets (int (aref (assimp-bones-ids bones) 3)))))
-     (v! (pos vert) 1)))
+  (let ((bone-transform
+          (with-slots (weights ids) bones
+            (+ (* (x weights) (aref offsets (int (x ids))))
+               (* (y weights) (aref offsets (int (y ids))))
+               (* (z weights) (aref offsets (int (z ids))))
+               (* (w weights) (aref offsets (int (w ids))))))))
+    (* model->world
+       (m4:scale (v3! scale))
+       bone-transform
+       (v! (pos vert) 1))))
 
 (defpipeline-g shadowmap-point-bones-pipe ()
   :vertex   (shadowmap-point-bones-vert g-pnt tb-data assimp-bones)
