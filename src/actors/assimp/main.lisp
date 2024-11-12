@@ -367,11 +367,9 @@
                  (duration
                    (when (eq type :bones)
                      (if (not (emptyp (ai:animations scene)))
-                         (coerce
-                          (ai:duration
-                           (aref (ai:animations scene) 0)) ;; hardcoded animation 0
-                          'single-float)
-                         0f0))))
+                         (ai:duration
+                          (aref (ai:animations scene) 0)) ;; hardcoded animation 0
+                         0d0))))
             (destructuring-bind (&key buf albedo normals specular roughmap)
                 (assimp-mesh-to-stream mesh scene path type)
               (remove-nil-plist
