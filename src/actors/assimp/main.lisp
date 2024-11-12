@@ -18,9 +18,13 @@
     ))
 
 (defmethod initialize-instance :after ((obj assimp-thing-with-bones) &key scene)
-  (with-slots (bones-unique bones-transforms) obj
+  (with-slots (bones-unique bones-transforms bones-offsets) obj
     (setf bones-unique     (list-bones-unique scene))
-    (setf bones-transforms (make-array (length bones-unique)))))
+    (setf bones-transforms (make-array (length bones-unique)))
+    (setf bones-offsets    (make-hash-table :test #'equal))
+    (dolist (bone bones-unique)
+      (with-slots ((name ai:name) (offset ai:offset-matrix)) bone
+        (setf (gethash name bones-offsets) (m4:transpose offset))))))
 
 ;; NOTE: same to a "g-pnt + tb-data", used for the CPU accessors
 (defstruct-g assimp-mesh

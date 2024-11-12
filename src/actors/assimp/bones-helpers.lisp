@@ -165,6 +165,7 @@
          (ai:root-node scene)
          (m4:identity))))))
 
+;; TODO: remove, still used for initialization of c-array
 (s:-> get-bones-transforms (ai:scene number) simple-vector)
 (defun get-bones-transforms (scene time)
   "Returns the final array of bones transformations.
@@ -183,6 +184,25 @@
             :do (with-slots ((name ai:name) (offset ai:offset-matrix)) bone
                   (let ((node-transform (gethash name nodes-transforms)))
                     (setf (aref bones-transforms bone-id)
+                          ;; I got a mesh that has 0 on the bones offsets...
+                          ;; The mesh also didn't have animations so might be
+                          ;; that was the reason...
+                          (if (m4:0p offset)
+                              node-transform
+                              (m4:* node-transform (m4:transpose offset))))))))))
+
+(defun push-bones-transforms (actor time)
+  (with-slots (scene bones-unique bones) actor
+    (let ((nodes-transforms ;; FIXME: nth-animation
+            (if (emptyp (ai:animations scene))
+                (get-static-bone-transforms scene)
+                (get-animated-bone-transforms scene time 0))))
+      (declare (type hash-table nodes-transforms))
+      (loop :for bone :in bones-unique
+            :for bone-id :from 0
+            :do (with-slots ((name ai:name) (offset ai:offset-matrix)) bone
+                  (let ((node-transform (gethash name nodes-transforms)))
+                    (setf (aref-c bones bone-id)
                           ;; I got a mesh that has 0 on the bones offsets...
                           ;; The mesh also didn't have animations so might be
                           ;; that was the reason...
