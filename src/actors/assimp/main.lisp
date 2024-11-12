@@ -22,9 +22,10 @@
     (setf bones-unique     (list-bones-unique scene))
     (setf bones-transforms (make-array (length bones-unique)))
     (setf bones-offsets    (make-hash-table :test #'equal))
-    (dolist (bone bones-unique)
-      (with-slots ((name ai:name) (offset ai:offset-matrix)) bone
-        (setf (gethash name bones-offsets) (m4:transpose offset))))))
+    (loop :for bone :in bones-unique
+          :for bone-id :from 0
+          :do (with-slots ((name ai:name) (offset ai:offset-matrix)) bone
+                (setf (gethash name bones-offsets) (cons bone-id (m4:transpose offset)))))))
 
 ;; NOTE: same to a "g-pnt + tb-data", used for the CPU accessors
 (defstruct-g assimp-mesh
@@ -394,12 +395,9 @@
                 :specular specular
                 :duration duration
                 :bones (when (eq type :bones)
-                         (make-c-array ;; TODO: leaking
-                          (coerce
-                           ;; NOTE: init using the first transform in the animation, for those that only have 1
-                           ;; frame of "animation"
-                           (get-bones-transforms scene duration);; FIXME: i know it exists, but not the best
-                           'list)
+                         (make-c-array
+                          (loop :repeat (length (list-bones-unique scene))
+                                :collect (m4:identity))
                           :element-type :mat4)))))))))
 
 (defun assimp-load-mesh (file)

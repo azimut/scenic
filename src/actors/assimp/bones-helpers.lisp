@@ -15,7 +15,8 @@
   "returns a plain list with all unique bones in SCENE"
   (serapeum:~>
    (list-bones scene)
-   (remove-duplicates :key #'ai:name :test #'string=)))
+   (remove-duplicates :key #'ai:name :test #'string=)
+   (sort #'string< :key #'ai:name)))
 
 ;;--------------------------------------------------
 ;; Bones loader
@@ -119,31 +120,17 @@
        (q:to-mat4      irot)
        (m4:scale       isca)))))
 
-(s:-> get-static-bone-transforms (ai:node) hash-table)
-(defun get-static-bone-transforms (root-node)
-  "returns a hash of mat4's:
-   - key being the node/bone name
-   - value the node transform"
-  (s:lret ((nodes-transforms (make-hash-table :test #'equal)))
-    (labels ((walk (node parent-transform)
-               (declare (type ai:node node) (type vector parent-transform))
-               (with-slots ((name ai:name) (transform ai:transform) (childrens ai:children))
-                   node
-                 (let ((new-transform (m4:* parent-transform (m4:transpose transform))))
-                   (setf (gethash name nodes-transforms) new-transform)
-                   (loop :for children :across childrens :do
-                     (walk children new-transform))))))
-      (walk root-node (m4:identity)))))
+(defun push-bones-transforms (actor time nth-animation)
+  (with-slots (scene) actor
+    (if (emptyp (ai:animations scene))
+        (push-static-bones-transforms actor)
+        (push-animated-bones-transforms actor time nth-animation))))
 
-(s:-> get-animated-bone-transforms (ai:scene number fixnum) hash-table)
-(defun get-animated-bone-transforms (scene time nth-animation)
-  "returns a hash of mat4's:
-   - key being the node/bone name
-   - value the node transform at TIME"
-  (s:lret ((nodes-transforms (make-hash-table :test #'equal))) ;; NODE->TRANSFORM
+(defun push-animated-bones-transforms (actor time nth-animation)
+  (with-slots (scene bones bones-offsets) actor
     (with-slots ((duration ai:duration) (animation-index ai:index)) ;; BONE->NODE-ANIMATION
         (aref (ai:animations scene) nth-animation)
-      (declare (type hash-table animation-index nodes-transform))
+      (declare (type hash-table animation-index))
       (labels ((walk (node parent-transform)
                  (declare (type ai:node node) (type vector parent-transform))
                  (with-slots ((name ai:name) (old-transform ai:transform) (childrens ai:children))
@@ -154,54 +141,29 @@
                                  (a:if-let ((node-anim (gethash name animation-index)))
                                    (get-time-transform node-anim (mod time duration))
                                    (m4:transpose old-transform)))))
-
-                     (setf (gethash name nodes-transforms) new-transform)
-
+                     (when-let ((id-offsets (gethash name bones-offsets)))
+                       (destructuring-bind (id . offset) id-offsets
+                         (setf (aref-c bones id)
+                               (if (m4:0p offset)
+                                   new-transform
+                                   (m4:* new-transform offset)))))
                      (loop :for children :across childrens :do
                        (walk children new-transform))))))
         (walk (ai:root-node scene) (m4:identity))))))
 
-;; TODO: remove, still used for initialization of c-array
-(s:-> get-bones-transforms (ai:scene number) simple-vector)
-(defun get-bones-transforms (scene time)
-  "Returns the final array of bones transformations.
-   Creates the hashmap of the hierarchical bone transformations at TIME,
-   and applies the bone offset."
-  (let ((nodes-transforms
-          (if (emptyp (ai:animations scene))
-              (get-static-bone-transforms (ai:root-node scene))
-              (get-animated-bone-transforms scene time 0)));; FIXME: nth-animation
-        (unique-bones
-          (list-bones-unique scene)))
-    (declare (type hash-table nodes-transforms))
-    (s:lret ((bones-transforms (make-array (length unique-bones))))
-      (loop :for bone :in unique-bones
-            :for bone-id :from 0
-            :do (with-slots ((name ai:name) (offset ai:offset-matrix)) bone
-                  (let ((node-transform (gethash name nodes-transforms)))
-                    (setf (aref bones-transforms bone-id)
-                          ;; I got a mesh that has 0 on the bones offsets...
-                          ;; The mesh also didn't have animations so might be
-                          ;; that was the reason...
-                          (if (m4:0p offset)
-                              node-transform
-                              (m4:* node-transform (m4:transpose offset))))))))))
-
-(defun push-bones-transforms (actor time)
-  (with-slots (scene bones-unique bones) actor
-    (let ((nodes-transforms ;; FIXME: nth-animation
-            (if (emptyp (ai:animations scene))
-                (get-static-bone-transforms (ai:root-node scene))
-                (get-animated-bone-transforms scene time 0))))
-      (declare (type hash-table nodes-transforms))
-      (loop :for bone :in bones-unique
-            :for bone-id :from 0
-            :do (with-slots ((name ai:name) (offset ai:offset-matrix)) bone
-                  (let ((node-transform (gethash name nodes-transforms)))
-                    (setf (aref-c bones bone-id)
-                          ;; I got a mesh that has 0 on the bones offsets...
-                          ;; The mesh also didn't have animations so might be
-                          ;; that was the reason...
-                          (if (m4:0p offset)
-                              node-transform
-                              (m4:* node-transform (m4:transpose offset))))))))))
+(defun push-static-bones-transforms (actor)
+  (with-slots (scene bones bones-offsets) actor
+    (labels ((walk (node parent-transform)
+               (declare (type ai:node node) (type vector parent-transform))
+               (with-slots ((name ai:name) (old-transform ai:transform) (childrens ai:children))
+                   node
+                 (let ((new-transform (m4:* parent-transform (m4:transpose old-transform))))
+                   (when-let ((id-offsets (gethash name bones-offsets)))
+                     (destructuring-bind (id . offset) id-offsets
+                       (setf (aref-c bones id)
+                             (if (m4:0p offset)
+                                 new-transform
+                                 (m4:* new-transform offset)))))
+                   (loop :for children :across childrens :do
+                     (walk children new-transform))))))
+      (walk (ai:root-node scene) (m4:identity)))))
