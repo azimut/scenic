@@ -122,8 +122,8 @@
                 (* (w weights) (aref offsets (int (w ids)))))))
          (model-pos (pos vert))
          (world-pos
-           (* (m4:scale (v3! scale)) ;; FIXME
-              model-world
+           (* model-world
+              (m4:scale (v3! scale))
               bone-transform
               (v! model-pos 1)))
          ;; Normal

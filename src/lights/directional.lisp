@@ -67,16 +67,18 @@
                      (world-view  :mat4)
                      (view-clip   :mat4)
                      (scale       :float))
-  (let* ((pos       (pos vert))
+  (let* ((bone-transform
+           (with-slots (weights ids) bones
+             (+ (* (x weights) (aref offsets (int (x ids))))
+                (* (y weights) (aref offsets (int (y ids))))
+                (* (z weights) (aref offsets (int (z ids))))
+                (* (w weights) (aref offsets (int (w ids)))))))
+         (model-pos (pos vert))
          (world-pos
-           (* (m4:scale (v3! scale)) ;; FIXME
-              model-world
-              (with-slots (weights ids) bones
-                (+ (* (x weights) (aref offsets (int (x ids))))
-                   (* (y weights) (aref offsets (int (y ids))))
-                   (* (z weights) (aref offsets (int (z ids))))
-                   (* (w weights) (aref offsets (int (w ids))))))
-              (v! pos 1)))
+           (* model-world
+              (m4:scale (v3! scale))
+              bone-transform
+              (v! model-pos 1)))
          (view-pos   (* world-view  world-pos))
          (clip-pos   (* view-clip   view-pos))
          (tex        (tex vert))

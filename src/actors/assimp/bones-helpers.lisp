@@ -133,7 +133,9 @@
                    (setf (gethash name nodes-transforms) new-transform)
                    (loop :for children :across childrens :do
                      (walk-node children new-transform))))))
-      (walk-node (ai:root-node scene) (m4:identity)))))
+      (walk-node
+       (ai:root-node scene)
+       (m4:identity)))))
 
 (s:-> get-animated-bone-transforms (ai:scene number fixnum) hash-table)
 (defun get-animated-bone-transforms (scene time nth-animation)
@@ -159,8 +161,9 @@
 
                      (loop :for children :across childrens :do
                        (walk-node children new-transform))))))
-        (walk-node (ai:root-node scene)
-                   (m4:identity))))))
+        (walk-node
+         (ai:root-node scene)
+         (m4:identity))))))
 
 (s:-> get-bones-transforms (ai:scene number) simple-vector)
 (defun get-bones-transforms (scene time)

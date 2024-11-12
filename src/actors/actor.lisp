@@ -30,7 +30,6 @@
                      "c-array of mat4s, of transforms for each bone in the whole scene")
    (bones-unique     :reader bones-unique)
    (bones-transforms :reader bones-transforms)
-   (scene-offset     :reader scene-offset)
    (duration         :initform 0f0 :initarg :duration)))
 
 (defmethod print-object ((obj actor) stream)

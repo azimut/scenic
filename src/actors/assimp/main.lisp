@@ -18,8 +18,7 @@
     ))
 
 (defmethod initialize-instance :after ((obj assimp-thing-with-bones) &key scene)
-  (with-slots (scene-offset bones-unique bones-transforms) obj
-    (setf scene-offset     (serapeum:~> scene (ai:root-node) (ai:transform)))
+  (with-slots (bones-unique bones-transforms) obj
     (setf bones-unique     (list-bones-unique scene))
     (setf bones-transforms (make-array (length bones-unique)))))
 
@@ -80,7 +79,7 @@
 ;; Loaders
 ;;--------------------------------------------------
 
-(defmethod free ((actor assimp-thing-with-bones))
+(defmethod free :AFTER ((actor assimp-thing-with-bones))
   (with-slots (bones) actor
     (free bones)))
 
