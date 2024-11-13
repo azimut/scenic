@@ -166,3 +166,17 @@
                    (coerce 1/1000000 'double-float)))))
   #-sbcl (* (get-internal-real-time)
             (coerce (/ internal-time-units-per-second) 'double-float)))
+
+(defun remove-nil-plist (plist)
+  "Returns a new property list with nil properties removed."
+  (loop :for (p v) :on plist :by #'cddr
+        :when v
+          :append (list p v)))
+
+(defun vector-add (vector new-element)
+  "Returns a new instance of VECTOR with NEW-ELEMENT added."
+  (s:lret ((arr (make-array (1+ (length vector)))))
+    (loop :for v :across vector
+          :for i :from 0
+          :do (setf (aref arr i) v)
+          :finally (setf (aref arr (length vector)) new-element))))

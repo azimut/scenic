@@ -55,9 +55,9 @@
 
 (defmethod print-object ((obj ai::node-animation) stream)
   (print-unreadable-object (obj stream :type T :identity T)
-    (format stream "~w :SIZE ~a"
-            (ai:node-name obj)
-            (array-total-size (ai:position-keys obj)))))
+    (format stream "~a ~w"
+            (array-total-size (ai:position-keys obj))
+            (ai:node-name obj))))
 
 (defmethod print-object ((obj ai::quat-key) out)
   (print-unreadable-object (obj out :type t)
@@ -79,6 +79,10 @@
 (defmethod print-object ((obj ai::vector-key) out)
   (print-unreadable-object (obj out :type t)
     (format out "~$" (ai:key-time obj))))
+
+(defmethod print-object ((obj ai::animation) out)
+  (print-unreadable-object (obj out :type t)
+    (format out "~w" (ai:name obj))))
 
 ;;--------------------------------------------------
 ;; Loaders
@@ -349,11 +353,6 @@
 
 ;;--------------------------------------------------
 
-(defun remove-nil-plist (plist)
-  (loop :for (p v) :on plist :by #'cddr
-        :when v
-          :append (list p v)))
-
 (defun assimp-load-meshes (file)
   "returns a list of meshes, each one being a plist. Everything should
    be cached."
@@ -406,3 +405,27 @@
                (assimp-load-meshes)
                (first)
                (getf :buf)))
+
+(s:-> assimp-load-animation (string) ai::animation)
+(defun assimp-load-animation (file)
+  "Loads animation from .FBX, assumes it only has one animation."
+  (s:lret ((animation
+            (s:~> file
+                  (ai:import-into-lisp
+                   :properties
+                   '(:import-fbx-preserve-pivots nil
+                     :import-fbx-read-textures   nil
+                     :import-no-skeleton-meshes  t))
+                  (ai:animations)
+                  (aref 0))))
+    (setf (ai:name animation) (s:path-basename file))))
+
+(defgeneric add-animation (scene file)
+  (:documentation "Adds first animation on given FILE to SCENE.")
+  (:method ((scene ai:scene) (paths list))
+    (map nil (s:op (add-animation scene _)) paths))
+  (:method ((scene ai:scene) (animation ai::animation))
+    (setf (ai:animations scene) (vector-add (ai:animations scene) animation)))
+  (:method ((scene ai:scene) (filepath string))
+    (log4cl:log-info "Loading animation from: ~a" filepath)
+    (add-animation scene (assimp-load-animation filepath))))
