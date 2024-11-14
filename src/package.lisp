@@ -1,4 +1,4 @@
-(uiop:define-package #:scenic
+(defpackage #:scenic
   (:local-nicknames (#:a #:alexandria) (#:s #:serapeum) (#:re #:cl-ppcre))
   (:use #:cepl
         #:cepl.skitter
